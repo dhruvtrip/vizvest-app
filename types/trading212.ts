@@ -30,6 +30,15 @@ export interface Trading212Transaction {
 }
 
 /**
+ * Normalized Transaction with base currency conversion
+ * Extends Trading212Transaction with computed base currency amount
+ */
+export interface NormalizedTransaction extends Trading212Transaction {
+  totalInBaseCurrency: number
+  detectedBaseCurrency: string
+}
+
+/**
  * CSV Validation Result
  */
 export interface CSVValidationResult {
