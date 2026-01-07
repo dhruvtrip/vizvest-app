@@ -48,6 +48,8 @@ export interface StockPosition {
   totalShares: number
   totalInvested: number
   baseCurrency: string
+  status: 'holding' | 'sold'
+  realizedResult: number
 }
 
 /**
