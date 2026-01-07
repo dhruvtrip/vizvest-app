@@ -1,17 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { CSVUpload } from '@/components/features/csv-upload'
+import { PortfolioOverview } from '@/components/features/portfolio-overview'
+import { StockDetail } from '@/components/features/stock-detail'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { normalizeAllTransactions } from '@/lib/currency-normalizer'
 import type { Trading212Transaction } from '@/types/trading212'
 
 export default function Home() {
   const [transactions, setTransactions] = useState<Trading212Transaction[]>([])
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null)
+
+  // Normalize transactions to base currency
+  const normalizedTransactions = useMemo(
+    () => normalizeAllTransactions(transactions),
+    [transactions]
+  )
 
   const handleDataParsed = (data: Trading212Transaction[]) => {
     setTransactions(data)
+    setSelectedTicker(null) // Reset selection when new data is loaded
     console.log('Parsed transactions:', data)
+  }
+
+  const handleSelectTicker = (ticker: string) => {
+    setSelectedTicker(ticker)
+  }
+
+  const handleBackToOverview = () => {
+    setSelectedTicker(null)
   }
 
   return (
@@ -29,59 +48,25 @@ export default function Home() {
         <CSVUpload onDataParsed={handleDataParsed} />
       </ErrorBoundary>
 
-      {/* Data Preview Section */}
-      {transactions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction Preview</CardTitle>
-            <CardDescription>
-              Showing first 5 transactions from your CSV
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2 font-medium">Action</th>
-                    <th className="text-left p-2 font-medium">Time</th>
-                    <th className="text-left p-2 font-medium">Ticker</th>
-                    <th className="text-left p-2 font-medium">Name</th>
-                    <th className="text-right p-2 font-medium">Shares</th>
-                    <th className="text-right p-2 font-medium">Price</th>
-                    <th className="text-right p-2 font-medium">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.slice(0, 5).map((transaction, index) => (
-                    <tr key={index} className="border-b hover:bg-muted/50">
-                      <td className="p-2">{transaction.Action}</td>
-                      <td className="p-2 text-muted-foreground">{transaction.Time}</td>
-                      <td className="p-2 font-medium">{transaction.Ticker || '-'}</td>
-                      <td className="p-2">{transaction.Name || '-'}</td>
-                      <td className="p-2 text-right">
-                        {transaction['No. of shares'] !== undefined ? transaction['No. of shares'] : '-'}
-                      </td>
-                      <td className="p-2 text-right">
-                        {transaction['Price / share'] !== undefined 
-                          ? `${transaction['Price / share'].toFixed(2)} ${transaction['Currency (Price / share)'] || ''}` 
-                          : '-'}
-                      </td>
-                      <td className="p-2 text-right font-medium">
-                        {transaction.Total.toFixed(2)} {transaction['Currency (Total)']}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {transactions.length > 5 && (
-                <p className="text-sm text-muted-foreground text-center mt-4">
-                  ...and {transactions.length - 5} more transactions
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stock Detail View */}
+      {selectedTicker && normalizedTransactions.length > 0 && (
+        <ErrorBoundary>
+          <StockDetail
+            ticker={selectedTicker}
+            transactions={normalizedTransactions}
+            onBack={handleBackToOverview}
+          />
+        </ErrorBoundary>
+      )}
+
+      {/* Portfolio Overview */}
+      {!selectedTicker && normalizedTransactions.length > 0 && (
+        <ErrorBoundary>
+          <PortfolioOverview
+            transactions={normalizedTransactions}
+            onSelectTicker={handleSelectTicker}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Getting Started Section */}
@@ -117,4 +102,3 @@ export default function Home() {
     </main>
   )
 }
-
