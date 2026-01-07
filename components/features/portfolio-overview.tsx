@@ -59,6 +59,7 @@ interface PortfolioOverviewProps {
 /**
  * Aggregates transactions by ticker to calculate stock positions
  * Excludes dividend actions from share and investment calculations
+ * Returns both current holdings and sold positions
  */
 function aggregatePositions(transactions: NormalizedTransaction[]): StockPosition[] {
   // Filter to only include transactions with tickers (excludes deposits, etc.)
@@ -78,6 +79,7 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
   const positions: StockPosition[] = Object.entries(grouped).map(([ticker, tickerTransactions]) => {
     let totalShares = 0
     let totalInvested = 0
+    let realizedResult = 0
     let name = ''
 
     for (const transaction of tickerTransactions) {
@@ -100,27 +102,37 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
       } else if (transaction.Action === 'Market sell') {
         totalShares -= shares
         totalInvested -= Math.abs(amount)
+        // Track realized gains/losses from sell transactions
+        realizedResult += transaction.Result || 0
       }
     }
+
+    // Determine if this is a current holding or sold position
+    const status = totalShares > 0.0001 ? 'holding' : 'sold'
 
     return {
       ticker,
       name: name || ticker,
       totalShares,
       totalInvested,
-      baseCurrency
+      baseCurrency,
+      status,
+      realizedResult
     }
   })
 
-  // Filter out positions with zero or negative shares (fully sold)
-  // and sort by total invested descending
-  return positions
-    .filter(p => p.totalShares > 0)
-    .sort((a, b) => b.totalInvested - a.totalInvested)
+  // Sort by total invested descending (absolute value for sold positions)
+  return positions.sort((a, b) => {
+    // Holdings first, then sold positions
+    if (a.status !== b.status) {
+      return a.status === 'holding' ? -1 : 1
+    }
+    return Math.abs(b.totalInvested) - Math.abs(a.totalInvested)
+  })
 }
 
 /**
- * Individual stock position tile component
+ * Individual stock position tile component for current holdings
  */
 function StockPositionTile({
   position,
@@ -174,6 +186,60 @@ function StockPositionTile({
 }
 
 /**
+ * Individual sold position tile component
+ * Shows realized gains/losses instead of current investment
+ */
+function SoldPositionTile({
+  position,
+  onClick
+}: {
+  position: StockPosition
+  onClick: () => void
+}) {
+  const isProfit = position.realizedResult >= 0
+
+  return (
+    <Card
+      className={cn(
+        'cursor-pointer transition-all duration-200',
+        'hover:shadow-md hover:scale-[1.02]',
+        'active:scale-[0.98]',
+        'bg-muted/30'
+      )}
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold text-muted-foreground truncate">
+              {position.ticker}
+            </h3>
+            <p className="text-sm text-muted-foreground/70 truncate">
+              {position.name}
+            </p>
+          </div>
+          <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+            Sold
+          </span>
+        </div>
+        
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Result</span>
+            <span className={cn(
+              'text-sm font-medium',
+              isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+            )}>
+              {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
  * Empty state component when no stocks are found
  */
 function EmptyState() {
@@ -190,6 +256,7 @@ function EmptyState() {
 /**
  * Portfolio Overview Component
  * Displays aggregated stock positions as a responsive grid of clickable tiles
+ * Shows both current holdings and sold positions in separate sections
  */
 export function PortfolioOverview({
   transactions,
@@ -202,31 +269,96 @@ export function PortfolioOverview({
     [transactions]
   )
 
+  // Split positions into current holdings and sold positions
+  const currentHoldings = useMemo(
+    () => positions.filter(p => p.status === 'holding'),
+    [positions]
+  )
+
+  const soldPositions = useMemo(
+    () => positions.filter(p => p.status === 'sold'),
+    [positions]
+  )
+
+  // Calculate total realized result for sold positions
+  const totalRealizedResult = useMemo(
+    () => soldPositions.reduce((sum, p) => sum + p.realizedResult, 0),
+    [soldPositions]
+  )
+
   // Handle empty state
   if (positions.length === 0) {
     return <EmptyState />
   }
 
+  const baseCurrency = positions[0]?.baseCurrency || 'USD'
+
   return (
-    <div className={cn('space-y-4', className)}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-foreground">
-          Your Portfolio
-        </h2>
-        <span className="text-sm text-muted-foreground">
-          {positions.length} {positions.length === 1 ? 'stock' : 'stocks'}
-        </span>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {positions.map(position => (
-          <StockPositionTile
-            key={position.ticker}
-            position={position}
-            onClick={() => onSelectTicker(position.ticker)}
-          />
-        ))}
-      </div>
+    <div className={cn('space-y-8', className)}>
+      {/* Current Holdings Section */}
+      {currentHoldings.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground">
+              Your Portfolio
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {currentHoldings.map(position => (
+              <StockPositionTile
+                key={position.ticker}
+                position={position}
+                onClick={() => onSelectTicker(position.ticker)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sold Positions Section */}
+      {soldPositions.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium text-muted-foreground">
+              Sold Positions
+            </h2>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
+              </span>
+              <span className={cn(
+                'text-sm font-medium',
+                totalRealizedResult >= 0 
+                  ? 'text-green-600 dark:text-green-400' 
+                  : 'text-red-600 dark:text-red-400'
+              )}>
+                Total: {totalRealizedResult >= 0 ? '+' : ''}{formatCurrency(totalRealizedResult, baseCurrency)}
+              </span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {soldPositions.map(position => (
+              <SoldPositionTile
+                key={position.ticker}
+                position={position}
+                onClick={() => onSelectTicker(position.ticker)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edge case: Only sold positions, no current holdings */}
+      {currentHoldings.length === 0 && soldPositions.length > 0 && (
+        <div className="text-center py-4 text-sm text-muted-foreground">
+          No current holdings. All positions shown above have been sold.
+        </div>
+      )}
     </div>
   )
 }
