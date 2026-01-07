@@ -30,6 +30,27 @@ export interface Trading212Transaction {
 }
 
 /**
+ * Normalized Transaction with base currency conversion
+ * Extends Trading212Transaction with computed base currency amount
+ */
+export interface NormalizedTransaction extends Trading212Transaction {
+  totalInBaseCurrency: number
+  detectedBaseCurrency: string
+}
+
+/**
+ * Aggregated stock position from transactions
+ * Represents a single stock holding with calculated totals
+ */
+export interface StockPosition {
+  ticker: string
+  name: string
+  totalShares: number
+  totalInvested: number
+  baseCurrency: string
+}
+
+/**
  * CSV Validation Result
  */
 export interface CSVValidationResult {
