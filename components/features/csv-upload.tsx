@@ -23,12 +23,10 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
   const [parsedData, setParsedData] = useState<Trading212Transaction[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [rowCount, setRowCount] = useState<number>(0)
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
+  const processFile = (file: File) => {
     // Reset state
     setErrors([])
     setParsedData([])
@@ -71,6 +69,39 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
         setErrors([`Failed to parse CSV: ${error.message}`])
       }
     })
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    processFile(file)
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragging(false)
+
+    const file = event.dataTransfer.files?.[0]
+    if (!file) return
+    processFile(file)
+  }
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
+  const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragging(false)
   }
 
   const handleParseComplete = (results: Papa.ParseResult<Trading212Transaction>) => {
@@ -145,11 +176,17 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
           <div
             className={cn(
               'flex flex-col items-center justify-center',
-              'border-2 border-dashed border-border rounded-lg',
+              'border-2 border-dashed rounded-lg',
               'p-12 cursor-pointer transition-colors',
-              'hover:border-primary hover:bg-muted/50'
+              isDragging
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary hover:bg-muted/50'
             )}
             onClick={handleButtonClick}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 handleButtonClick()
@@ -157,11 +194,11 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
             }}
             role="button"
             tabIndex={0}
-            aria-label="Click to upload CSV file"
+            aria-label="Click to upload CSV file or drag and drop"
           >
             <Upload className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-sm font-medium mb-2">
-              Click to upload or drag and drop
+              {isDragging ? 'Drop your file here' : 'Click to upload or drag and drop'}
             </p>
             <p className="text-xs text-muted-foreground">
               Trading 212 CSV export only (max 5MB)

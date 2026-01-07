@@ -108,7 +108,7 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
     }
 
     // Determine if this is a current holding or sold position
-    const status = totalShares > 0.0001 ? 'holding' : 'sold'
+    const status = totalShares > 0 ? 'holding' : 'sold'
 
     return {
       ticker,
