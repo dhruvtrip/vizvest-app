@@ -1,4 +1,4 @@
-import { Hero, Features, HowItWorks, CTA } from './(landing)/_components'
+import { Hero, Features, HowItWorks, CTA, Copyright } from './(landing)/_components'
 
 export default function LandingPage() {
   return (
@@ -36,9 +36,7 @@ export default function LandingPage() {
             </div>
             
             {/* Copyright */}
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Vizvest. All rights reserved.
-            </p>
+            <Copyright />
           </div>
         </div>
       </footer>
