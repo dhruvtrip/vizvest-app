@@ -1,37 +1,74 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { Loader2 } from 'lucide-react'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { StockDetail } from '@/components/features/stock-detail'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { normalizeAllTransactions } from '@/lib/currency-normalizer'
-import type { Trading212Transaction } from '@/types/trading212'
+import type { Trading212Transaction, NormalizedTransaction } from '@/types/trading212'
 
 export default function Home() {
-  const [transactions, setTransactions] = useState<Trading212Transaction[]>([])
+  // Core state
+  const [rawTransactions, setRawTransactions] = useState<Trading212Transaction[]>([])
+  const [normalizedTransactions, setNormalizedTransactions] = useState<NormalizedTransaction[]>([])
+  const [baseCurrency, setBaseCurrency] = useState<string>('USD')
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null)
 
-  // Normalize transactions to base currency
-  const normalizedTransactions = useMemo(
-    () => normalizeAllTransactions(transactions),
-    [transactions]
-  )
+  // Loading and error states
+  const [isNormalizing, setIsNormalizing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleDataParsed = (data: Trading212Transaction[]) => {
-    setTransactions(data)
-    setSelectedTicker(null) // Reset selection when new data is loaded
-    console.log('Parsed transactions:', data)
-  }
+  // Normalize transactions when rawTransactions changes
+  useEffect(() => {
+    if (rawTransactions.length === 0) {
+      setNormalizedTransactions([])
+      setBaseCurrency('USD')
+      return
+    }
 
-  const handleSelectTicker = (ticker: string) => {
-    setSelectedTicker(ticker)
-  }
+    setIsNormalizing(true)
+    setError(null)
 
-  const handleBackToOverview = () => {
+    try {
+      const normalized = normalizeAllTransactions(rawTransactions)
+      const detected = normalized[0]?.detectedBaseCurrency || 'USD'
+
+      setNormalizedTransactions(normalized)
+      setBaseCurrency(detected)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to normalize transactions')
+      setNormalizedTransactions([])
+    } finally {
+      setIsNormalizing(false)
+    }
+  }, [rawTransactions])
+
+  // Handler: CSV data parsed
+  const handleDataParsed = useCallback((data: Trading212Transaction[]) => {
+    setRawTransactions(data)
     setSelectedTicker(null)
-  }
+    setError(null)
+  }, [])
+
+  // Handler: Select a stock ticker
+  const handleSelectTicker = useCallback((ticker: string) => {
+    setSelectedTicker(ticker)
+  }, [])
+
+  // Handler: Back to portfolio overview
+  const handleBackToOverview = useCallback(() => {
+    setSelectedTicker(null)
+  }, [])
+
+  // Derived view states
+  const hasData = normalizedTransactions.length > 0
+  const showOverview = hasData && !selectedTicker
+  const showDetail = hasData && selectedTicker !== null
+  const showWelcome = !hasData && !isNormalizing
 
   return (
     <main className="container mx-auto p-6 space-y-8">
@@ -41,6 +78,11 @@ export default function Home() {
         <p className="text-xl text-muted-foreground">
           Trading 212 Portfolio Analysis & Visualization
         </p>
+        {hasData && (
+          <p className="text-sm text-muted-foreground">
+            Base currency: {baseCurrency}
+          </p>
+        )}
       </header>
 
       {/* CSV Upload Section */}
@@ -48,8 +90,26 @@ export default function Home() {
         <CSVUpload onDataParsed={handleDataParsed} />
       </ErrorBoundary>
 
+      {/* Loading State */}
+      {isNormalizing && (
+        <Card className="p-8">
+          <div className="flex items-center justify-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-muted-foreground">Normalizing transactions...</p>
+          </div>
+        </Card>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       {/* Stock Detail View */}
-      {selectedTicker && normalizedTransactions.length > 0 && (
+      {showDetail && selectedTicker && (
         <ErrorBoundary>
           <StockDetail
             ticker={selectedTicker}
@@ -60,7 +120,7 @@ export default function Home() {
       )}
 
       {/* Portfolio Overview */}
-      {!selectedTicker && normalizedTransactions.length > 0 && (
+      {showOverview && (
         <ErrorBoundary>
           <PortfolioOverview
             transactions={normalizedTransactions}
@@ -70,7 +130,7 @@ export default function Home() {
       )}
 
       {/* Getting Started Section */}
-      {transactions.length === 0 && (
+      {showWelcome && (
         <Card>
           <CardHeader>
             <CardTitle>Getting Started</CardTitle>
