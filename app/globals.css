@@ -4,13 +4,16 @@
 
 @layer base {
   :root {
+    /* =======================================================================
+       SHADCN BASE COLORS - LIGHT MODE
+       ======================================================================= */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,30 +25,79 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 221 83% 53%;
     --radius: 0.5rem;
+
+    /* =======================================================================
+       VIZVEST CUSTOM VARIABLES - LIGHT MODE
+       ======================================================================= */
+    /* Glow colors */
+    --glow-cyan: rgba(6, 182, 212, 0.4);
+    --glow-blue: rgba(59, 130, 246, 0.4);
+    --glow-purple: rgba(139, 92, 246, 0.4);
+    
+    /* Glass colors */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-bg-medium: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-border-light: rgba(0, 0, 0, 0.05);
+    
+    /* Gradient text colors */
+    --gradient-start: #06b6d4;
+    --gradient-middle: #3b82f6;
+    --gradient-end: #8b5cf6;
+    
+    /* Grid pattern colors */
+    --grid-color: rgba(0, 0, 0, 0.05);
+    --dot-color: rgba(0, 0, 0, 0.1);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* =======================================================================
+       SHADCN BASE COLORS - DARK MODE (Enhanced with deep navy)
+       ======================================================================= */
+    --background: 222 47% 5%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222 47% 7%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 47% 7%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 187 94% 43%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 217.2 32.6% 12%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 217.2 32.6% 12%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 217.2 32.6% 15%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 217.2 32.6% 15%;
+    --input: 217.2 32.6% 15%;
+    --ring: 187 94% 43%;
+
+    /* =======================================================================
+       VIZVEST CUSTOM VARIABLES - DARK MODE
+       ======================================================================= */
+    /* Glow colors (stronger in dark mode) */
+    --glow-cyan: rgba(6, 182, 212, 0.5);
+    --glow-blue: rgba(59, 130, 246, 0.5);
+    --glow-purple: rgba(139, 92, 246, 0.5);
+    
+    /* Glass colors */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-bg-medium: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-light: rgba(255, 255, 255, 0.05);
+    
+    /* Gradient text colors */
+    --gradient-start: #22d3ee;
+    --gradient-middle: #60a5fa;
+    --gradient-end: #a78bfa;
+    
+    /* Grid pattern colors */
+    --grid-color: rgba(255, 255, 255, 0.05);
+    --dot-color: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -53,8 +105,456 @@
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better focus styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Selection colors */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
   }
 }
 
+@layer components {
+  /* =======================================================================
+     GLASSMORPHISM COMPONENTS
+     ======================================================================= */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .glass-strong {
+    background: var(--glass-bg-medium);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border-light);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* =======================================================================
+     GRADIENT COMPONENTS
+     ======================================================================= */
+  .text-gradient {
+    background: linear-gradient(to right, var(--gradient-start), var(--gradient-middle), var(--gradient-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-cyan-blue {
+    background: linear-gradient(to right, #06b6d4, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-blue-purple {
+    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-purple-pink {
+    background: linear-gradient(to right, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animated gradient text */
+  .text-gradient-animated {
+    background: linear-gradient(
+      270deg,
+      var(--gradient-start),
+      var(--gradient-middle),
+      var(--gradient-end),
+      var(--gradient-middle),
+      var(--gradient-start)
+    );
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  /* =======================================================================
+     BUTTON VARIANTS
+     ======================================================================= */
+  .btn-gradient {
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient:hover {
+    background: linear-gradient(135deg, #22d3ee, #60a5fa);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+  }
+
+  .btn-glow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-glow:hover::before {
+    opacity: 1;
+    filter: blur(10px);
+  }
+
+  /* =======================================================================
+     CARD VARIANTS
+     ======================================================================= */
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-glow {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .card-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, transparent, rgba(6, 182, 212, 0.3), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card-glow:hover::before {
+    opacity: 1;
+  }
+
+  /* =======================================================================
+     GRID PATTERNS
+     ======================================================================= */
+  .bg-grid {
+    background-image: 
+      linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .bg-grid-small {
+    background-image: 
+      linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .bg-grid-large {
+    background-image: 
+      linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* =======================================================================
+     HERO BACKGROUNDS
+     ======================================================================= */
+  .bg-hero-dark {
+    background: linear-gradient(to bottom right, #0a0f1a, #111827, #0d1321);
+  }
+
+  .bg-hero-light {
+    background: linear-gradient(to bottom right, #f8fafc, #e2e8f0, #f1f5f9);
+  }
+
+  .bg-hero-mesh {
+    background: 
+      radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, rgba(236, 72, 153, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+  }
+
+  /* =======================================================================
+     GLOW EFFECTS
+     ======================================================================= */
+  .glow-cyan {
+    box-shadow: 0 0 20px var(--glow-cyan);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px var(--glow-blue);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px var(--glow-purple);
+  }
+
+  .glow-hover-cyan {
+    transition: box-shadow 0.3s ease;
+  }
+
+  .glow-hover-cyan:hover {
+    box-shadow: 0 0 30px var(--glow-cyan);
+  }
+
+  /* =======================================================================
+     BORDERS
+     ======================================================================= */
+  .border-gradient {
+    border: 1px solid transparent;
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+                linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6) border-box;
+  }
+
+  .border-glow {
+    position: relative;
+  }
+
+  .border-glow::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+    z-index: -1;
+    opacity: 0.5;
+    filter: blur(8px);
+  }
+
+  /* =======================================================================
+     SHIMMER LOADING
+     ======================================================================= */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+@layer utilities {
+  /* =======================================================================
+     ANIMATION UTILITIES
+     ======================================================================= */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .animation-delay-700 {
+    animation-delay: 700ms;
+  }
+
+  .animation-delay-1000 {
+    animation-delay: 1000ms;
+  }
+
+  /* =======================================================================
+     MASK UTILITIES
+     ======================================================================= */
+  .mask-fade-bottom {
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+
+  .mask-fade-top {
+    -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
+    mask-image: linear-gradient(to top, black 60%, transparent 100%);
+  }
+
+  .mask-fade-edges {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+  }
+
+  /* =======================================================================
+     SCROLL UTILITIES
+     ======================================================================= */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* =======================================================================
+     PERSPECTIVE UTILITIES
+     ======================================================================= */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .perspective-2000 {
+    perspective: 2000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  /* =======================================================================
+     TEXT UTILITIES
+     ======================================================================= */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Highlight text on hover */
+  .highlight-hover {
+    position: relative;
+  }
+
+  .highlight-hover::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(to right, #06b6d4, #3b82f6);
+    transition: width 0.3s ease;
+  }
+
+  .highlight-hover:hover::after {
+    width: 100%;
+  }
+}
+
+/* =======================================================================
+   KEYFRAME ANIMATIONS (for CSS-only animations)
+   ======================================================================= */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* =======================================================================
+   RESPONSIVE TYPOGRAPHY (Fluid typography scale)
+   ======================================================================= */
+@media screen and (min-width: 640px) {
+  :root {
+    --fluid-min-width: 640;
+    --fluid-max-width: 1536;
+  }
+}
