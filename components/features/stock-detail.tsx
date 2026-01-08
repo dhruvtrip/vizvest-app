@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
+import { DividendSection } from './dividend-section'
 
 /**
  * Currency symbols for common currencies
@@ -295,6 +296,13 @@ export function StockDetail({
           </Card>
         )}
       </div>
+
+      {/* Dividend Income Section */}
+      <DividendSection
+        ticker={ticker}
+        transactions={transactions}
+        baseCurrency={metrics.baseCurrency}
+      />
     </div>
   )
 }
