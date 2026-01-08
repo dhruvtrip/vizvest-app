@@ -9,7 +9,7 @@ export default function NotFound() {
   return (
     <main className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-hero-dark dark:bg-hero-dark bg-hero-light" />
+      <div className="absolute inset-0 bg-hero-light dark:bg-hero-dark" />
       <div className="absolute inset-0 bg-grid-pattern bg-grid-md opacity-20" />
       
       {/* Glow Effects */}

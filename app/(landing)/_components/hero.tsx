@@ -32,7 +32,7 @@ export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-hero-dark dark:bg-hero-dark bg-hero-light" />
+      <div className="absolute inset-0 bg-hero-light dark:bg-hero-dark" />
       <div className="absolute inset-0 bg-hero-mesh opacity-60" />
       <div className="absolute inset-0 bg-grid-pattern bg-grid-md opacity-30" />
       

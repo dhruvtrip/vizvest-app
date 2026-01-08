@@ -3,7 +3,22 @@
 import { motion } from 'framer-motion'
 import { Upload, Cpu, BarChart3, ArrowRight } from 'lucide-react'
 
-const steps = [
+// Tailwind requires complete class names for static analysis
+const colorClasses = {
+  'electric-cyan': 'text-electric-cyan',
+  'electric-blue': 'text-electric-blue',
+  'electric-purple': 'text-electric-purple',
+} as const
+
+type StepColor = keyof typeof colorClasses
+
+const steps: Array<{
+  number: string
+  icon: typeof Upload
+  title: string
+  description: string
+  color: StepColor
+}> = [
   {
     number: '01',
     icon: Upload,
@@ -104,9 +119,9 @@ export function HowItWorks() {
                 {/* Number & Icon */}
                 <div className="relative flex-shrink-0">
                   <div className="w-16 h-16 rounded-2xl glass-card flex items-center justify-center group-hover:shadow-glow-sm transition-all duration-300">
-                    <step.icon className={`w-7 h-7 text-${step.color}`} />
+                    <step.icon className={`w-7 h-7 ${colorClasses[step.color]}`} />
                   </div>
-                  <span className={`absolute -top-2 -right-2 text-xs font-bold text-${step.color} bg-background px-2 py-0.5 rounded-full border border-glass-border`}>
+                  <span className={`absolute -top-2 -right-2 text-xs font-bold ${colorClasses[step.color]} bg-background px-2 py-0.5 rounded-full border border-glass-border`}>
                     {step.number}
                   </span>
                 </div>
