@@ -122,7 +122,7 @@ export function Hero() {
             variants={itemVariants}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
-            <Link href="/app">
+            <Link href="/dashboard">
               <Button
                 size="lg"
                 className="btn-gradient text-lg px-8 py-6 rounded-xl shadow-glow-md hover:shadow-glow-lg transition-all duration-300 group"

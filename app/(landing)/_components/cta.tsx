@@ -65,7 +65,7 @@ export function CTA() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Link href="/app">
+            <Link href="/dashboard">
               <Button
                 size="lg"
                 className="btn-gradient text-lg px-10 py-7 rounded-xl shadow-glow-lg hover:shadow-glow-xl transition-all duration-300 group"

@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { normalizeAllTransactions } from '@/lib/currency-normalizer'
 import type { Trading212Transaction, NormalizedTransaction } from '@/types/trading212'
 
-export default function AppPage() {
+export default function DashboardPage() {
   // Core state
   const [rawTransactions, setRawTransactions] = useState<Trading212Transaction[]>([])
   const [normalizedTransactions, setNormalizedTransactions] = useState<NormalizedTransaction[]>([])

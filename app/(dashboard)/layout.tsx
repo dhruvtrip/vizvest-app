@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes'
 import { ArrowLeft, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export default function AppLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
@@ -31,7 +31,7 @@ export default function AppLayout({
                 </Button>
               </Link>
               <div className="h-6 w-px bg-border" />
-              <Link href="/app" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-xl font-bold text-gradient">Vizvest</span>
               </Link>
             </div>

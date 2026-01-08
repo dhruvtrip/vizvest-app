@@ -66,14 +66,14 @@ export default function NotFound() {
                 Go Home
               </Button>
             </Link>
-            <Link href="/app">
+            <Link href="/dashboard">
               <Button
                 variant="outline"
                 size="lg"
                 className="px-8 py-6 rounded-xl glass border-glass-border hover:bg-glass-light-medium transition-all duration-300"
               >
                 <ArrowLeft className="mr-2 w-5 h-5" />
-                Open App
+                Open Dashboard
               </Button>
             </Link>
           </motion.div>
