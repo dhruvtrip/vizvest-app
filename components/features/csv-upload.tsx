@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Papa from 'papaparse'
-import { Upload, FileUp, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Upload, FileUp, CheckCircle2, AlertCircle, X, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -151,16 +151,20 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
 
   return (
     <Card className={cn('w-full', className)}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileUp className="h-5 w-5" />
-          Upload Trading 212 CSV
-        </CardTitle>
-        <CardDescription>
-          Import your Trading 212 transaction history to analyze your portfolio
-        </CardDescription>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <FileUp className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-sm">Upload Trading 212 CSV</CardTitle>
+            <CardDescription className="text-xs">
+              Import your transaction history to analyze
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {/* File Input (Hidden) */}
         <input
           ref={fileInputRef}
@@ -177,10 +181,10 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
             className={cn(
               'flex flex-col items-center justify-center',
               'border-2 border-dashed rounded-lg',
-              'p-12 cursor-pointer transition-colors',
+              'p-8 cursor-pointer transition-all duration-200',
               isDragging
-                ? 'border-primary bg-primary/10'
-                : 'border-border hover:border-primary hover:bg-muted/50'
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50 hover:bg-muted/50'
             )}
             onClick={handleButtonClick}
             onDrop={handleDrop}
@@ -196,84 +200,82 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
             tabIndex={0}
             aria-label="Click to upload CSV file or drag and drop"
           >
-            <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-sm font-medium mb-2">
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-3">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-xs font-medium mb-1">
               {isDragging ? 'Drop your file here' : 'Click to upload or drag and drop'}
             </p>
             <p className="text-xs text-muted-foreground">
-              Trading 212 CSV export only (max 5MB)
+              CSV files only (max 5MB)
             </p>
           </div>
         )}
 
         {/* Parsing State */}
         {uploadState === 'parsing' && (
-          <Alert>
-            <AlertCircle className="h-4 w-4 animate-pulse" />
-            <AlertTitle>Processing</AlertTitle>
-            <AlertDescription>
-              Parsing {fileName}...
-            </AlertDescription>
-          </Alert>
+          <div className="flex items-center gap-2 p-4 bg-muted/50 rounded-lg">
+            <AlertCircle className="h-4 w-4 animate-pulse text-primary" />
+            <span className="text-xs">Parsing {fileName}...</span>
+          </div>
         )}
 
         {/* Success State */}
         {uploadState === 'success' && (
-          <div className="space-y-4">
-            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-              <AlertTitle className="text-green-600 dark:text-green-400">
-                Success
-              </AlertTitle>
-              <AlertDescription className="text-green-700 dark:text-green-300">
-                Successfully parsed {rowCount} transaction{rowCount !== 1 ? 's' : ''} from {fileName}
-              </AlertDescription>
-            </Alert>
-
-            <div className="flex gap-2">
-              <Button onClick={handleReset} variant="outline" className="flex-1">
-                <X className="h-4 w-4 mr-2" />
-                Upload Different File
-              </Button>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <div className="flex-1">
+                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  Successfully parsed {rowCount} transaction{rowCount !== 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80">{fileName}</p>
+              </div>
             </div>
+
+            <Button onClick={handleReset} variant="outline" size="sm" className="w-full text-xs h-8">
+              <X className="h-3 w-3 mr-1.5" />
+              Upload Different File
+            </Button>
           </div>
         )}
 
         {/* Error State */}
         {uploadState === 'error' && (
-          <div className="space-y-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Upload Failed</AlertTitle>
-              <AlertDescription>
-                {fileName && <p className="font-medium mb-2">File: {fileName}</p>}
-                {rowCount > 0 && (
-                  <p className="mb-2">Found {rowCount} rows with the following errors:</p>
-                )}
-                <ul className="list-disc list-inside space-y-1">
-                  {errors.map((error, index) => (
-                    <li key={index} className="text-sm">
-                      {error}
-                    </li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
+          <div className="space-y-3">
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-destructive">Upload Failed</p>
+                  {fileName && <p className="text-xs text-destructive/80 mt-0.5">{fileName}</p>}
+                  <ul className="mt-2 space-y-1">
+                    {errors.map((error, index) => (
+                      <li key={index} className="text-xs text-destructive/80">
+                        • {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
 
-            <Button onClick={handleReset} variant="outline" className="w-full">
-              <Upload className="h-4 w-4 mr-2" />
+            <Button onClick={handleReset} variant="outline" size="sm" className="w-full text-xs h-8">
+              <Upload className="h-3 w-3 mr-1.5" />
               Try Again
             </Button>
           </div>
         )}
 
         {/* Security Notice */}
-        <div className="text-xs text-muted-foreground space-y-1 p-4 bg-muted/50 rounded-lg">
-          <p className="font-medium">🔒 Your data stays private</p>
-          <p>Your portfolio data is processed locally in your browser and never sent to external servers.</p>
+        <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+          <Lock className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+          <div className="text-xs text-muted-foreground">
+            <span className="font-medium">Your data stays private.</span>
+            <span className="hidden sm:inline"> Processed locally in your browser.</span>
+          </div>
         </div>
       </CardContent>
     </Card>
   )
 }
-

@@ -90,7 +90,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
       className={cn('group relative', feature.className)}
     >
       <Card className={cn(
-        'h-full overflow-hidden transition-all duration-500',
+        'relative h-full overflow-hidden transition-all duration-500',
         'border-border/50 hover:border-border',
         'bg-card/50 backdrop-blur-sm',
         'hover:shadow-xl hover:shadow-primary/5',

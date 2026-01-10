@@ -149,9 +149,9 @@ function MetricCard({
 }) {
   return (
     <Card className={className}>
-      <CardContent className="p-4">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-xl font-semibold text-foreground mt-1">{value}</p>
+      <CardContent className="p-3">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-semibold text-foreground mt-0.5">{value}</p>
       </CardContent>
     </Card>
   )
@@ -182,30 +182,30 @@ export function StockDetail({
   }, [transactions, ticker])
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-5', className)}>
       {/* Header Section */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="gap-2 text-muted-foreground hover:text-foreground"
+          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back to Portfolio
         </Button>
 
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-foreground">
               {metrics.companyName}
             </h1>
-            <span className="px-2 py-1 text-sm font-medium bg-primary/10 text-primary rounded">
+            <span className="px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
               {ticker}
             </span>
           </div>
           {metrics.isin && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               ISIN: {metrics.isin}
             </p>
           )}
@@ -213,7 +213,7 @@ export function StockDetail({
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <MetricCard
           label="Total Shares"
           value={formatShares(metrics.totalShares)}
@@ -237,52 +237,52 @@ export function StockDetail({
       </div>
 
       {/* Transaction History */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">
           Transaction History
         </h2>
 
         {tableTransactions.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground">No transactions found</p>
+          <Card className="p-6 text-center border-dashed">
+            <p className="text-xs text-muted-foreground">No transactions found</p>
           </Card>
         ) : (
           <Card>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead className="text-right">Shares</TableHead>
-                  <TableHead className="text-right">Price/Share</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-xs">Date</TableHead>
+                  <TableHead className="text-xs">Action</TableHead>
+                  <TableHead className="text-xs text-right">Shares</TableHead>
+                  <TableHead className="text-xs text-right">Price/Share</TableHead>
+                  <TableHead className="text-xs text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tableTransactions.map((transaction, index) => {
                   const isBuy = transaction.Action === 'Market buy'
                   const actionColor = isBuy
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-red-500'
 
                   return (
                     <TableRow key={transaction.ID || index}>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground py-2">
                         {formatDate(transaction.Time)}
                       </TableCell>
-                      <TableCell className={cn('font-medium', actionColor)}>
+                      <TableCell className={cn('text-xs font-medium py-2', actionColor)}>
                         {isBuy ? 'Buy' : 'Sell'}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-xs text-right py-2">
                         {formatShares(transaction['No. of shares'] || 0)}
                       </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
+                      <TableCell className="text-xs text-right text-muted-foreground py-2">
                         {formatCurrency(
                           transaction['Price / share'] || 0,
                           transaction['Currency (Price / share)'] || metrics.baseCurrency
                         )}
                       </TableCell>
-                      <TableCell className={cn('text-right font-medium', actionColor)}>
+                      <TableCell className={cn('text-xs text-right font-medium py-2', actionColor)}>
                         {formatCurrency(
                           transaction.totalInBaseCurrency || 0,
                           metrics.baseCurrency
@@ -306,4 +306,3 @@ export function StockDetail({
     </div>
   )
 }
-

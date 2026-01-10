@@ -1,0 +1,6 @@
+export { Navbar } from './navbar'
+export { Hero } from './hero'
+export { FeaturesBento } from './features-bento'
+export { HowItWorks } from './how-it-works'
+export { CTA } from './cta'
+export { Footer } from './footer'

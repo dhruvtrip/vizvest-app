@@ -145,35 +145,35 @@ function StockPositionTile({
     <Card
       className={cn(
         'cursor-pointer transition-all duration-200',
-        'hover:shadow-md hover:scale-[1.02]',
-        'active:scale-[0.98]'
+        'hover:shadow-md hover:-translate-y-0.5',
+        'active:scale-[0.99]'
       )}
       onClick={onClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold text-foreground truncate">
+            <h3 className="text-sm font-semibold text-foreground truncate">
               {position.ticker}
             </h3>
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate">
               {position.name}
             </p>
           </div>
         </div>
         
-        <div className="mt-4 space-y-2">
+        <div className="mt-3 space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Shares</span>
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-xs text-muted-foreground">Shares</span>
+            <span className="text-xs font-medium text-foreground">
               {formatShares(position.totalShares)}
             </span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Invested</span>
+            <span className="text-xs text-muted-foreground">Invested</span>
             <span className={cn(
-              'text-sm font-medium',
+              'text-xs font-medium',
               position.totalInvested >= 0 ? 'text-foreground' : 'text-destructive'
             )}>
               {formatCurrency(position.totalInvested, position.baseCurrency)}
@@ -202,8 +202,8 @@ function SoldPositionTile({
     <Card
       className={cn(
         'cursor-pointer transition-all duration-200',
-        'hover:shadow-md hover:scale-[1.02]',
-        'active:scale-[0.98]',
+        'hover:shadow-md hover:-translate-y-0.5',
+        'active:scale-[0.99]',
         'bg-muted/30'
       )}
       onClick={onClick}
@@ -211,24 +211,24 @@ function SoldPositionTile({
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold text-muted-foreground truncate">
+            <h3 className="text-sm font-semibold text-muted-foreground truncate">
               {position.ticker}
             </h3>
-            <p className="text-sm text-muted-foreground/70 truncate">
+            <p className="text-xs text-muted-foreground/70 truncate">
               {position.name}
             </p>
           </div>
-          <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
             Sold
           </span>
         </div>
         
-        <div className="mt-4 space-y-2">
+        <div className="mt-3 space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Result</span>
+            <span className="text-xs text-muted-foreground">Result</span>
             <span className={cn(
-              'text-sm font-medium',
-              isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+              'text-xs font-medium',
+              isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
             )}>
               {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
             </span>
@@ -244,9 +244,9 @@ function SoldPositionTile({
  */
 function EmptyState() {
   return (
-    <Card className="p-12 text-center">
-      <p className="text-muted-foreground">No stocks found</p>
-      <p className="text-sm text-muted-foreground mt-2">
+    <Card className="p-8 text-center border-dashed">
+      <p className="text-sm text-muted-foreground">No stocks found</p>
+      <p className="text-xs text-muted-foreground mt-1">
         Upload a CSV file to see your portfolio
       </p>
     </Card>
@@ -294,20 +294,20 @@ export function PortfolioOverview({
   const baseCurrency = positions[0]?.baseCurrency || 'USD'
 
   return (
-    <div className={cn('space-y-8', className)}>
+    <div className={cn('space-y-6', className)}>
       {/* Current Holdings Section */}
       {currentHoldings.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-sm font-semibold text-foreground">
               Your Portfolio
             </h2>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {currentHoldings.map(position => (
               <StockPositionTile
                 key={position.ticker}
@@ -321,27 +321,27 @@ export function PortfolioOverview({
 
       {/* Sold Positions Section */}
       {soldPositions.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-muted-foreground">
+            <h2 className="text-sm font-medium text-muted-foreground">
               Sold Positions
             </h2>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>
               <span className={cn(
-                'text-sm font-medium',
+                'text-xs font-medium',
                 totalRealizedResult >= 0 
-                  ? 'text-green-600 dark:text-green-400' 
-                  : 'text-red-600 dark:text-red-400'
+                  ? 'text-emerald-600 dark:text-emerald-400' 
+                  : 'text-red-500'
               )}>
                 Total: {totalRealizedResult >= 0 ? '+' : ''}{formatCurrency(totalRealizedResult, baseCurrency)}
               </span>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {soldPositions.map(position => (
               <SoldPositionTile
                 key={position.ticker}
@@ -355,11 +355,10 @@ export function PortfolioOverview({
 
       {/* Edge case: Only sold positions, no current holdings */}
       {currentHoldings.length === 0 && soldPositions.length > 0 && (
-        <div className="text-center py-4 text-sm text-muted-foreground">
+        <div className="text-center py-3 text-xs text-muted-foreground">
           No current holdings. All positions shown above have been sold.
         </div>
       )}
     </div>
   )
 }
-

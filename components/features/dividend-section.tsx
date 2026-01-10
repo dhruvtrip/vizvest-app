@@ -206,9 +206,9 @@ function MetricCard({
 }) {
   return (
     <Card className={className}>
-      <CardContent className="p-4">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className={cn('text-xl font-semibold text-foreground mt-1', valueClassName)}>
+      <CardContent className="p-3">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className={cn('text-sm font-semibold text-foreground mt-0.5', valueClassName)}>
           {value}
         </p>
       </CardContent>
@@ -231,8 +231,8 @@ function CustomTooltip({
   if (!active || !payload || payload.length === 0) return null
 
   return (
-    <div className="bg-popover border border-border rounded-md shadow-md px-3 py-2">
-      <p className="text-sm font-medium text-foreground">
+    <div className="bg-popover border border-border rounded-md shadow-md px-2 py-1.5">
+      <p className="text-xs font-medium text-foreground">
         {formatCurrency(payload[0].value, baseCurrency)}
       </p>
     </div>
@@ -264,20 +264,20 @@ export function DividendSection({
   const hasDividends = dividends.length > 0
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-3', className)}>
       {/* Section Header */}
-      <h2 className="text-lg font-semibold text-foreground">
+      <h2 className="text-sm font-semibold text-foreground">
         Dividend Income
       </h2>
 
       {!hasDividends ? (
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">No dividends received</p>
+        <Card className="p-6 text-center border-dashed">
+          <p className="text-xs text-muted-foreground">No dividends received</p>
         </Card>
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <MetricCard
               label="Total Dividends"
               value={formatCurrency(metrics.totalGross, baseCurrency)}
@@ -290,7 +290,7 @@ export function DividendSection({
             <MetricCard
               label="Net Dividends"
               value={formatCurrency(metrics.totalNet, baseCurrency)}
-              valueClassName="text-green-600 dark:text-green-400"
+              valueClassName="text-emerald-600 dark:text-emerald-400"
             />
             <MetricCard
               label="Payments"
@@ -302,25 +302,25 @@ export function DividendSection({
           {chartData.length > 1 && (
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-3">
                   Dividend History
                 </p>
-                <div className="h-48">
+                <div className="h-36">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 10 }}
                         tickLine={false}
                         axisLine={false}
                         className="text-muted-foreground"
                       />
                       <YAxis
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 10 }}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                        width={80}
+                        width={60}
                         className="text-muted-foreground"
                       />
                       <Tooltip
@@ -330,7 +330,7 @@ export function DividendSection({
                       <Bar
                         dataKey="amount"
                         fill="hsl(var(--primary))"
-                        radius={[4, 4, 0, 0]}
+                        radius={[3, 3, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -344,27 +344,27 @@ export function DividendSection({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Gross Amount</TableHead>
-                  <TableHead className="text-right">Tax</TableHead>
-                  <TableHead className="text-right">Net Amount</TableHead>
+                  <TableHead className="text-xs">Date</TableHead>
+                  <TableHead className="text-xs text-right">Gross</TableHead>
+                  <TableHead className="text-xs text-right">Tax</TableHead>
+                  <TableHead className="text-xs text-right">Net</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {dividends.map((dividend, index) => (
                   <TableRow key={`${dividend.date}-${index}`}>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-xs text-muted-foreground py-2">
                       {formatDate(dividend.date)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-xs text-right py-2">
                       {formatCurrency(dividend.gross, baseCurrency)}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
+                    <TableCell className="text-xs text-right text-muted-foreground py-2">
                       {dividend.tax > 0
                         ? formatCurrency(dividend.tax, baseCurrency)
                         : '—'}
                     </TableCell>
-                    <TableCell className="text-right font-medium text-green-600 dark:text-green-400">
+                    <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400 py-2">
                       {formatCurrency(dividend.net, baseCurrency)}
                     </TableCell>
                   </TableRow>

@@ -1,7 +1,0 @@
-Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total,Currency (Total),Withholding tax
-Market buy,2024-01-15 10:30:00,US0378331005,AAPL,Apple Inc.,10,150.25,USD,1,0,1502.5,USD,0
-Market buy,2024-01-16 14:20:00,US5949181045,MSFT,Microsoft Corporation,5,380.50,USD,1,0,1902.5,USD,0
-Market sell,2024-01-20 09:15:00,US0378331005,AAPL,Apple Inc.,5,155.75,USD,1,27.5,778.75,USD,0
-Dividend,2024-01-25 00:00:00,US0378331005,AAPL,Apple Inc.,0,0.24,USD,1,1.2,1.2,USD,0.18
-Market buy,2024-02-01 11:45:00,US88160R1014,TSLA,Tesla Inc.,3,195.30,USD,1,0,585.9,USD,0
-
