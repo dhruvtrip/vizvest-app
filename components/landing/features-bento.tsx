@@ -26,7 +26,7 @@ const features = [
     iconColor: 'text-blue-500',
     badge: 'One-click',
     showStats: true,
-    stats: { value: '1,247', label: 'transactions parsed' }
+    stats: { value: '247', label: 'transactions parsed' }
   },
   {
     icon: TrendingUp,
@@ -47,7 +47,9 @@ const features = [
     gradient: 'from-amber-500/10 to-orange-500/10',
     iconBg: 'bg-amber-500/10',
     iconColor: 'text-amber-500',
-    badge: 'Popular'
+    badge: 'Popular',
+    showYield: true,
+    yieldValue: '3.8%'
   },
   {
     icon: Globe,
@@ -67,6 +69,14 @@ const features = [
     gradient: 'from-pink-500/10 to-rose-500/10',
     iconBg: 'bg-pink-500/10',
     iconColor: 'text-pink-500',
+    showTransactions: true,
+    transactions: [
+      { type: 'BUY', ticker: 'AAPL' },
+      { type: 'BUY', ticker: 'MSFT' },
+      { type: 'SELL', ticker: 'TSLA' },
+      { type: 'BUY', ticker: 'GOOGL' },
+      { type: 'SELL', ticker: 'NVDA' },
+    ]
   },
 ]
 
@@ -154,17 +164,61 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
             </div>
           )}
 
-          {feature.showBars && (
-            <div className="mt-4 flex items-end gap-1.5 h-16">
-              {[40, 65, 45, 80, 55, 70, 85, 60].map((h, i) => (
+          {feature.showYield && (
+            <div className="mt-4 flex items-center justify-center">
+              <div className="relative w-16 h-16">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle 
+                    cx="50" cy="50" r="40" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="10" 
+                    className="text-muted/30" 
+                  />
+                  <motion.circle 
+                    cx="50" cy="50" r="40" 
+                    fill="none" 
+                    stroke="url(#yieldGradient)" 
+                    strokeWidth="10" 
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 0.38 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1, delay: 0.3 }}
+                  />
+                  <defs>
+                    <linearGradient id="yieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#f97316" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-500">
+                  {feature.yieldValue}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {feature.showTransactions && feature.transactions && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {feature.transactions.map((tx, i) => (
                 <motion.div 
                   key={i}
-                  className="flex-1 bg-gradient-to-t from-amber-500/80 to-orange-400/60 rounded-sm"
-                  initial={{ height: 0 }}
-                  whileInView={{ height: `${h}%` }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ delay: 0.3 + i * 0.05, duration: 0.5 }}
-                />
+                  transition={{ delay: 0.2 + i * 0.08, duration: 0.3 }}
+                  className={cn(
+                    'px-2 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1',
+                    tx.type === 'BUY' 
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                      : 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                  )}
+                >
+                  <span>{tx.type}</span>
+                  <span className="text-muted-foreground font-mono">{tx.ticker}</span>
+                </motion.div>
               ))}
             </div>
           )}
@@ -198,7 +252,7 @@ export function FeaturesBento() {
       {/* Background */}
       <div className="absolute inset-0 bg-muted/30 dark:bg-muted/10" />
       
-      <div className="container mx-auto px-6 relative">
+      <div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 max-w-7xl relative">
         {/* Section Header */}
         <motion.div 
           className="text-center max-w-2xl mx-auto mb-16"
