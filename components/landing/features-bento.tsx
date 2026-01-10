@@ -271,7 +271,7 @@ export function FeaturesBento() {
           </motion.div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
             Everything you need to understand
-            <span className="block text-primary">your investments</span>
+            <span className="block text-primary">about your investments</span>
           </h2>
           <p className="text-muted-foreground">
             Powerful features designed to give you clarity and control over your portfolio.

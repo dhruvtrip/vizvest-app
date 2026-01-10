@@ -87,7 +87,7 @@ export function HowItWorks() {
             How it works
           </motion.div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
-            Get started in minutes
+            Get started in seconds
           </h2>
           <p className="text-muted-foreground">
             No account required, no data stored on servers. Your privacy is our priority.
