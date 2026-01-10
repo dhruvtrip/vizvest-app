@@ -263,7 +263,7 @@ export function StockDetail({
                   const isBuy = transaction.Action === 'Market buy'
                   const actionColor = isBuy
                     ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-red-500'
+                    : 'text-red-600 dark:text-red-400'
 
                   return (
                     <TableRow key={transaction.ID || index}>

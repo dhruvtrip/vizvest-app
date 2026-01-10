@@ -228,7 +228,7 @@ function SoldPositionTile({
             <span className="text-xs text-muted-foreground">Result</span>
             <span className={cn(
               'text-xs font-medium',
-              isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
+              isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
             )}>
               {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
             </span>
@@ -334,7 +334,7 @@ export function PortfolioOverview({
                 'text-xs font-medium',
                 totalRealizedResult >= 0 
                   ? 'text-emerald-600 dark:text-emerald-400' 
-                  : 'text-red-500'
+                  : 'text-red-600 dark:text-red-400'
               )}>
                 Total: {totalRealizedResult >= 0 ? '+' : ''}{formatCurrency(totalRealizedResult, baseCurrency)}
               </span>
