@@ -98,7 +98,7 @@ export function Hero() {
 
           {/* Heading */}
           <motion.div variants={fadeInUp} className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-semibold tracking-tight leading-[1.1]">
               Visualize Your
               <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
                 Investment Portfolio
