@@ -100,11 +100,11 @@ export function Hero() {
           <motion.div variants={fadeInUp} className="space-y-4">
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-semibold tracking-tight leading-[1.1]">
               Visualize Your
-              <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+              <span className="block text-foreground">
                 Investment Portfolio
               </span>
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
               Transform your Trading 212 exports into powerful insights. 
               Track dividends, analyze performance, and make smarter investment decisions.
             </p>
