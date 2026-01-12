@@ -10,6 +10,7 @@ import { Menu, X, ChevronRight } from 'lucide-react'
 const navLinks = [
   { label: 'Features', href: '#features' },
   { label: 'How it works', href: '#how-it-works' },
+  { label: 'Articles', href: '/articles' },
 ]
 
 export function Navbar() {
@@ -37,7 +38,7 @@ export function Navbar() {
         )}
       >
         <nav className="container mx-auto px-6">
-          <div className="flex h-14 items-center justify-between">
+          <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link 
               href="/" 
@@ -49,26 +50,21 @@ export function Navbar() {
               <span>Vizvest</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-1">
+            {/* Center: Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
+                  className="px-3 py-2 text-sm sm:text-base text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
 
-            {/* Desktop CTA */}
-            <div className="hidden md:flex items-center gap-3">
-              <Button asChild variant="ghost" size="sm" className="text-xs h-8">
-                <Link href="#how-it-works">
-                  Learn more
-                </Link>
-              </Button>
+            {/* Right: Desktop CTA */}
+            <div className="hidden md:flex items-center">
               <Button asChild size="sm" className="text-xs h-8 gap-1">
                 <Link href="/dashboard">
                   Open App
@@ -96,7 +92,7 @@ export function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-14 z-40 bg-background/95 backdrop-blur-lg border-b border-border md:hidden"
+            className="fixed inset-x-0 top-16 z-40 bg-background/95 backdrop-blur-lg border-b border-border md:hidden"
           >
             <nav className="container mx-auto px-6 py-4 space-y-2">
               {navLinks.map((link) => (

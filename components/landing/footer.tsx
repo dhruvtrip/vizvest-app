@@ -8,6 +8,7 @@ const footerLinks = {
   product: [
     { label: 'Features', href: '#features' },
     { label: 'How it works', href: '#how-it-works' },
+    { label: 'Articles', href: '/articles' },
     { label: 'Dashboard', href: '/dashboard' },
   ],
   resources: [
@@ -117,9 +118,6 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
             &copy; {currentYear} Vizvest. All rights reserved.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Built with Next.js and Tailwind CSS
           </p>
         </div>
       </div>
