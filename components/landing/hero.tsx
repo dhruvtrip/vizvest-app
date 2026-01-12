@@ -33,7 +33,7 @@ export function Hero() {
   }, [])
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-14">
+    <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
       {/* Enhanced Background for Dark Mode */}
       <div className="absolute inset-0 -z-10">
         {/* Base gradient */}
@@ -105,8 +105,8 @@ export function Hero() {
               </span>
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
-              Transform your Trading 212 exports into powerful insights. 
-              Track dividends, analyze performance, and make smarter investment decisions.
+              Transform your Trading 212 exports into powerful insights
+             <br></br>Track dividends, analyze performance, and make smarter investment decisions
             </p>
           </motion.div>
 
