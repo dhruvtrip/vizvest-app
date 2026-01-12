@@ -1,15 +1,22 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Loader2, Upload, FileSpreadsheet, HelpCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Loader2, CheckCircle2, Upload, X } from 'lucide-react'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
+import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
 import { ErrorBoundary } from '@/components/error-boundary'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { normalizeAllTransactions } from '@/lib/currency-normalizer'
 import type { Trading212Transaction, NormalizedTransaction } from '@/types/trading212'
+
+interface UploadInfo {
+  fileName: string
+  rowCount: number
+}
 
 export default function DashboardPage() {
   // Core state
@@ -17,6 +24,11 @@ export default function DashboardPage() {
   const [normalizedTransactions, setNormalizedTransactions] = useState<NormalizedTransaction[]>([])
   const [baseCurrency, setBaseCurrency] = useState<string>('USD')
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null)
+
+  // Upload state
+  const [uploadInfo, setUploadInfo] = useState<UploadInfo | null>(null)
+  const [showUpload, setShowUpload] = useState(true)
+  const [isAlertDismissed, setIsAlertDismissed] = useState(false)
 
   // Loading and error states
   const [isNormalizing, setIsNormalizing] = useState(false)
@@ -48,10 +60,13 @@ export default function DashboardPage() {
   }, [rawTransactions])
 
   // Handler: CSV data parsed
-  const handleDataParsed = useCallback((data: Trading212Transaction[]) => {
+  const handleDataParsed = useCallback((data: Trading212Transaction[], result: UploadInfo) => {
     setRawTransactions(data)
     setSelectedTicker(null)
     setError(null)
+    setUploadInfo(result)
+    setShowUpload(false)
+    setIsAlertDismissed(false) // Reset dismissed state on new upload
   }, [])
 
   // Handler: Select a stock ticker
@@ -64,132 +79,179 @@ export default function DashboardPage() {
     setSelectedTicker(null)
   }, [])
 
+  // Handler: Upload different file
+  const handleUploadAnother = useCallback(() => {
+    setShowUpload(true)
+    setRawTransactions([])
+    setNormalizedTransactions([])
+    setUploadInfo(null)
+    setSelectedTicker(null)
+    setIsAlertDismissed(false)
+  }, [])
+
+  // Handler: Dismiss success alert
+  const handleDismissAlert = useCallback(() => {
+    setIsAlertDismissed(true)
+  }, [])
+
   // Derived view states
   const hasData = normalizedTransactions.length > 0
   const showOverview = hasData && !selectedTicker
   const showDetail = hasData && selectedTicker !== null
-  const showWelcome = !hasData && !isNormalizing
+  const showWelcome = !hasData && !isNormalizing && showUpload
 
   return (
-    <main className="container mx-auto px-6 py-6 space-y-6">
-      {/* Header */}
-      <header className="space-y-1">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Portfolio Analysis</h1>
-            <p className="text-sm text-muted-foreground">
-              Trading 212 Portfolio Visualization
-            </p>
-          </div>
-          {hasData && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
-              <span className="text-xs text-muted-foreground">Base currency:</span>
-              <span className="text-xs font-medium">{baseCurrency}</span>
+    <main className="min-h-[calc(100vh-3.5rem)]">
+      {/* Success Alert - shows after upload */}
+      <AnimatePresence>
+        {uploadInfo && hasData && !isAlertDismissed && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="border-b border-border bg-emerald-500/5"
+          >
+            <div className="container mx-auto px-6 py-3">
+              <Alert className="border-emerald-500/20 bg-transparent">
+                <div className="flex items-center justify-between w-full gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <AlertDescription className="text-sm flex-1 min-w-0">
+                      <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                        Successfully loaded {uploadInfo.rowCount} transactions
+                      </span>
+                      <span className="text-muted-foreground ml-2">
+                        from {uploadInfo.fileName}
+                      </span>
+                    </AlertDescription>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleUploadAnother}
+                      className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      Upload Different File
+                    </Button>
+                    <button
+                      onClick={handleDismissAlert}
+                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      aria-label="Dismiss alert"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </Alert>
             </div>
-          )}
-        </div>
-      </header>
-
-      {/* CSV Upload Section */}
-      <ErrorBoundary>
-        <CSVUpload onDataParsed={handleDataParsed} />
-      </ErrorBoundary>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Loading State */}
-      {isNormalizing && (
-        <Card className="border-dashed">
-          <CardContent className="py-8">
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Normalizing transactions...</p>
+      <AnimatePresence>
+        {isNormalizing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="container mx-auto px-6 py-16"
+          >
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Loader2 className="w-7 h-7 animate-spin text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium">Processing transactions</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Normalizing currencies and calculating positions...
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Error State */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle className="text-sm">Error</AlertTitle>
-          <AlertDescription className="text-xs">{error}</AlertDescription>
-        </Alert>
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="container mx-auto px-6 py-6"
+          >
+            <Alert variant="destructive">
+              <AlertDescription className="text-sm">{error}</AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Welcome State - Upload Section */}
+      {showWelcome && (
+        <ErrorBoundary>
+          <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
+        </ErrorBoundary>
       )}
 
       {/* Stock Detail View */}
-      {showDetail && selectedTicker && (
+      <AnimatePresence mode="wait">
+        {showDetail && selectedTicker && (
+          <motion.div
+            key="detail"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="container mx-auto px-6 py-6"
+          >
+            <ErrorBoundary>
+              <StockDetail
+                ticker={selectedTicker}
+                transactions={normalizedTransactions}
+                onBack={handleBackToOverview}
+              />
+            </ErrorBoundary>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Portfolio Overview with Metrics */}
+      <AnimatePresence mode="wait">
+        {showOverview && (
+          <motion.div
+            key="overview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="container mx-auto px-6 py-6 space-y-8"
+          >
+            {/* Global Portfolio Metrics */}
+            <ErrorBoundary>
+              <PortfolioMetrics transactions={normalizedTransactions} />
+            </ErrorBoundary>
+
+            {/* Stock Positions Grid */}
+            <ErrorBoundary>
+              <PortfolioOverview
+                transactions={normalizedTransactions}
+                onSelectTicker={handleSelectTicker}
+              />
+            </ErrorBoundary>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hidden Upload Component (for re-upload) */}
+      {!showWelcome && !hasData && showUpload && (
         <ErrorBoundary>
-          <StockDetail
-            ticker={selectedTicker}
-            transactions={normalizedTransactions}
-            onBack={handleBackToOverview}
-          />
+          <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
         </ErrorBoundary>
-      )}
-
-      {/* Portfolio Overview */}
-      {showOverview && (
-        <ErrorBoundary>
-          <PortfolioOverview
-            transactions={normalizedTransactions}
-            onSelectTicker={handleSelectTicker}
-          />
-        </ErrorBoundary>
-      )}
-
-      {/* Getting Started Section */}
-      {showWelcome && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border-dashed">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Upload className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm">Upload CSV</CardTitle>
-                  <CardDescription className="text-xs">
-                    Drag and drop your Trading 212 export
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ol className="list-decimal list-inside space-y-1.5 text-xs text-muted-foreground">
-                <li>Open the Trading 212 app or website</li>
-                <li>Navigate to your account history</li>
-                <li>Look for the export or download option</li>
-                <li>Select CSV format</li>
-                <li>Upload the downloaded file above</li>
-              </ol>
-            </CardContent>
-          </Card>
-
-          <Card className="border-dashed">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                  <FileSpreadsheet className="w-4 h-4 text-violet-500" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm">Required Columns</CardTitle>
-                  <CardDescription className="text-xs">
-                    Your CSV must include these fields
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5 text-xs text-muted-foreground">
-                {['Action', 'Ticker', 'No. of shares', 'Price / share', 'Total'].map((col) => (
-                  <li key={col} className="flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-primary" />
-                    {col}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
       )}
     </main>
   )

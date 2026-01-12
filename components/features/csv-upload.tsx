@@ -2,67 +2,83 @@
 
 import { useRef, useState } from 'react'
 import Papa from 'papaparse'
-import { Upload, FileUp, CheckCircle2, AlertCircle, X, Lock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { motion } from 'framer-motion'
+import { Upload, FileUp, AlertCircle, Lock, FileSpreadsheet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { validateCSVColumns, validateTransactions } from '@/lib/csv-validator'
-import type { Trading212Transaction, CSVParseResult } from '@/types/trading212'
+import type { Trading212Transaction } from '@/types/trading212'
+
+interface UploadResult {
+  fileName: string
+  rowCount: number
+}
 
 interface CSVUploadProps {
-  onDataParsed?: (data: Trading212Transaction[]) => void
+  onDataParsed?: (data: Trading212Transaction[], result: UploadResult) => void
+  isHidden?: boolean
   className?: string
 }
 
-type UploadState = 'idle' | 'parsing' | 'success' | 'error'
+type UploadState = 'idle' | 'parsing' | 'error'
 
-export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+}
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1
+    }
+  }
+}
+
+export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUploadProps) {
   const [uploadState, setUploadState] = useState<UploadState>('idle')
   const [fileName, setFileName] = useState<string>('')
-  const [parsedData, setParsedData] = useState<Trading212Transaction[]>([])
   const [errors, setErrors] = useState<string[]>([])
-  const [rowCount, setRowCount] = useState<number>(0)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // If hidden, don't render anything
+  if (isHidden) {
+    return null
+  }
+
   const processFile = (file: File) => {
-    // Reset state
     setErrors([])
-    setParsedData([])
-    setRowCount(0)
     setUploadState('parsing')
     setFileName(file.name)
 
-    // Validate file type
     if (!file.name.toLowerCase().endsWith('.csv')) {
       setUploadState('error')
       setErrors(['Invalid file type. Please upload a .csv file.'])
       return
     }
 
-    // Validate file size (max 5MB as per security guidelines)
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    const maxSize = 5 * 1024 * 1024
     if (file.size > maxSize) {
       setUploadState('error')
       setErrors(['File too large. Maximum file size is 5MB.'])
       return
     }
 
-    // Check if file is empty
     if (file.size === 0) {
       setUploadState('error')
       setErrors(['File is empty. Please upload a valid Trading 212 CSV file.'])
       return
     }
 
-    // Parse CSV with PapaParse
     Papa.parse<Trading212Transaction>(file, {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
       complete: (results) => {
-        handleParseComplete(results)
+        handleParseComplete(results, file.name)
       },
       error: (error) => {
         setUploadState('error')
@@ -104,8 +120,7 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
     setIsDragging(false)
   }
 
-  const handleParseComplete = (results: Papa.ParseResult<Trading212Transaction>) => {
-    // Validate column headers
+  const handleParseComplete = (results: Papa.ParseResult<Trading212Transaction>, name: string) => {
     const columnValidation = validateCSVColumns(results.meta.fields || [])
     if (!columnValidation.isValid) {
       setUploadState('error')
@@ -113,33 +128,30 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
       return
     }
 
-    // Validate parsed data
     const dataValidation = validateTransactions(results.data)
     if (!dataValidation.isValid) {
       setUploadState('error')
       setErrors(dataValidation.errors)
-      setRowCount(dataValidation.rowCount || 0)
       return
     }
 
-    // Success - store the data
     const validData = results.data as Trading212Transaction[]
-    setParsedData(validData)
-    setRowCount(validData.length)
-    setUploadState('success')
     
-    // Call the callback if provided
     if (onDataParsed) {
-      onDataParsed(validData)
+      onDataParsed(validData, {
+        fileName: name,
+        rowCount: validData.length
+      })
     }
+
+    // Reset state after successful upload (component will be hidden by parent)
+    setUploadState('idle')
   }
 
   const handleReset = () => {
     setUploadState('idle')
     setFileName('')
-    setParsedData([])
     setErrors([])
-    setRowCount(0)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -150,22 +162,34 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
   }
 
   return (
-    <Card className={cn('w-full', className)}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <FileUp className="h-4 w-4 text-primary" />
+    <section className={cn('relative py-16 lg:py-24', className)}>
+      {/* Background gradient */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(120,119,198,0.1),transparent)] dark:bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(120,119,198,0.15),transparent)]" />
+      </div>
+
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="container mx-auto px-6 max-w-2xl"
+      >
+        {/* Header */}
+        <motion.div variants={fadeInUp} className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-4">
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            Trading 212 CSV Import
           </div>
-          <div>
-            <CardTitle className="text-sm">Upload Trading 212 CSV</CardTitle>
-            <CardDescription className="text-xs">
-              Import your transaction history to analyze
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {/* File Input (Hidden) */}
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
+            Upload your transaction history
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Export your data from Trading 212 and drop it here to visualize your portfolio performance
+          </p>
+        </motion.div>
+
+        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
@@ -176,106 +200,118 @@ export function CSVUpload({ onDataParsed, className }: CSVUploadProps) {
         />
 
         {/* Upload Area */}
-        {uploadState === 'idle' && (
-          <div
-            className={cn(
-              'flex flex-col items-center justify-center',
-              'border-2 border-dashed rounded-lg',
-              'p-8 cursor-pointer transition-all duration-200',
-              isDragging
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50 hover:bg-muted/50'
-            )}
-            onClick={handleButtonClick}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                handleButtonClick()
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Click to upload CSV file or drag and drop"
-          >
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-3">
-              <Upload className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="text-xs font-medium mb-1">
-              {isDragging ? 'Drop your file here' : 'Click to upload or drag and drop'}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              CSV files only (max 5MB)
-            </p>
-          </div>
-        )}
+        <motion.div variants={fadeInUp}>
+          {uploadState === 'idle' && (
+            <div
+              className={cn(
+                'relative flex flex-col items-center justify-center',
+                'border-2 border-dashed rounded-2xl',
+                'p-12 cursor-pointer transition-all duration-300',
+                'bg-card/50 backdrop-blur-sm',
+                isDragging
+                  ? 'border-primary bg-primary/5 scale-[1.02]'
+                  : 'border-border/50 hover:border-primary/50 hover:bg-muted/30'
+              )}
+              onClick={handleButtonClick}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleButtonClick()
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Click to upload CSV file or drag and drop"
+            >
+              {/* Animated icon container */}
+              <motion.div 
+                className={cn(
+                  'w-16 h-16 rounded-2xl flex items-center justify-center mb-5',
+                  'bg-gradient-to-br from-primary/10 to-accent/10',
+                  'border border-primary/20'
+                )}
+                animate={isDragging ? { scale: 1.1, y: -5 } : { scale: 1, y: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              >
+                <Upload className={cn(
+                  'w-7 h-7 transition-colors',
+                  isDragging ? 'text-primary' : 'text-muted-foreground'
+                )} />
+              </motion.div>
 
-        {/* Parsing State */}
-        {uploadState === 'parsing' && (
-          <div className="flex items-center gap-2 p-4 bg-muted/50 rounded-lg">
-            <AlertCircle className="h-4 w-4 animate-pulse text-primary" />
-            <span className="text-xs">Parsing {fileName}...</span>
-          </div>
-        )}
+              <p className="text-sm font-medium mb-1">
+                {isDragging ? 'Drop your file here' : 'Click to upload or drag and drop'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                CSV files only (max 5MB)
+              </p>
 
-        {/* Success State */}
-        {uploadState === 'success' && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <div className="flex-1">
-                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                  Successfully parsed {rowCount} transaction{rowCount !== 1 ? 's' : ''}
+              {/* How to export hint */}
+              <div className="mt-6 pt-6 border-t border-border/50 w-full max-w-xs">
+                <p className="text-xs text-muted-foreground text-center">
+                  <span className="font-medium text-foreground">How to export:</span>
+                  {' '}Trading 212 → History → Export
                 </p>
-                <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80">{fileName}</p>
               </div>
             </div>
+          )}
 
-            <Button onClick={handleReset} variant="outline" size="sm" className="w-full text-xs h-8">
-              <X className="h-3 w-3 mr-1.5" />
-              Upload Different File
-            </Button>
-          </div>
-        )}
+          {/* Parsing State */}
+          {uploadState === 'parsing' && (
+            <div className="flex flex-col items-center gap-4 p-12 bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                  <FileUp className="w-7 h-7 text-primary" />
+                </motion.div>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium mb-1">Processing your file</p>
+                <p className="text-xs text-muted-foreground">{fileName}</p>
+              </div>
+            </div>
+          )}
 
-        {/* Error State */}
-        {uploadState === 'error' && (
-          <div className="space-y-3">
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
-                <div>
-                  <p className="text-xs font-medium text-destructive">Upload Failed</p>
-                  {fileName && <p className="text-xs text-destructive/80 mt-0.5">{fileName}</p>}
-                  <ul className="mt-2 space-y-1">
+          {/* Error State */}
+          {uploadState === 'error' && (
+            <div className="p-6 bg-card/50 backdrop-blur-sm rounded-2xl border border-destructive/30">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-6 h-6 text-destructive" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-destructive mb-1">Upload Failed</p>
+                  {fileName && <p className="text-xs text-muted-foreground mb-2">{fileName}</p>}
+                  <ul className="space-y-1">
                     {errors.map((error, index) => (
                       <li key={index} className="text-xs text-destructive/80">
-                        • {error}
+                        {error}
                       </li>
                     ))}
                   </ul>
+                  <button
+                    onClick={handleReset}
+                    className="mt-4 text-xs font-medium text-primary hover:underline"
+                  >
+                    Try again
+                  </button>
                 </div>
               </div>
             </div>
+          )}
+        </motion.div>
 
-            <Button onClick={handleReset} variant="outline" size="sm" className="w-full text-xs h-8">
-              <Upload className="h-3 w-3 mr-1.5" />
-              Try Again
-            </Button>
-          </div>
-        )}
-
-        {/* Security Notice */}
-        <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-          <Lock className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-          <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Your data stays private.</span>
-            <span className="hidden sm:inline"> Processed locally in your browser.</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        {/* Privacy Notice */}
+        <motion.div variants={fadeInUp} className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <Lock className="w-3.5 h-3.5" />
+          <span>Your data stays private. Processed locally in your browser.</span>
+        </motion.div>
+      </motion.div>
+    </section>
   )
 }

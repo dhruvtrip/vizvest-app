@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import groupBy from 'lodash/groupBy'
+import { ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
@@ -144,25 +145,28 @@ function StockPositionTile({
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all duration-200',
+        'cursor-pointer transition-all duration-200 group',
         'hover:shadow-md hover:-translate-y-0.5',
-        'active:scale-[0.99]'
+        'hover:border-primary/50 hover:bg-primary/5',
+        'active:scale-[0.99]',
+        'h-full flex flex-col'
       )}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
+      <CardContent className="p-4 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-foreground truncate">
+            <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
               {position.ticker}
             </h3>
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {position.name}
             </p>
           </div>
+          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all duration-200 flex-shrink-0" />
         </div>
         
-        <div className="mt-3 space-y-1.5">
+        <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Shares</span>
             <span className="text-xs font-medium text-foreground">
@@ -178,6 +182,12 @@ function StockPositionTile({
             )}>
               {formatCurrency(position.totalInvested, position.baseCurrency)}
             </span>
+          </div>
+          
+          <div className="mt-2 pt-2 border-t border-border/50">
+            <p className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              Click to view details
+            </p>
           </div>
         </div>
       </CardContent>
@@ -201,29 +211,34 @@ function SoldPositionTile({
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all duration-200',
+        'cursor-pointer transition-all duration-200 group',
         'hover:shadow-md hover:-translate-y-0.5',
+        'hover:border-primary/50 hover:bg-primary/5',
         'active:scale-[0.99]',
-        'bg-muted/30'
+        'bg-muted/30',
+        'h-full flex flex-col'
       )}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
+      <CardContent className="p-4 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-muted-foreground truncate">
+            <h3 className="text-sm font-semibold text-muted-foreground truncate group-hover:text-primary transition-colors">
               {position.ticker}
             </h3>
-            <p className="text-xs text-muted-foreground/70 truncate">
+            <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
               {position.name}
             </p>
           </div>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-            Sold
-          </span>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+              Sold
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all duration-200" />
+          </div>
         </div>
         
-        <div className="mt-3 space-y-1.5">
+        <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Result</span>
             <span className={cn(
@@ -232,6 +247,12 @@ function SoldPositionTile({
             )}>
               {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
             </span>
+          </div>
+          
+          <div className="mt-2 pt-2 border-t border-border/50">
+            <p className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              Click to view details
+            </p>
           </div>
         </div>
       </CardContent>
@@ -299,9 +320,14 @@ export function PortfolioOverview({
       {currentHoldings.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">
-              Your Portfolio
-            </h2>
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">
+                Your Portfolio
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Click any tile to view detailed analytics
+              </p>
+            </div>
             <span className="text-xs text-muted-foreground">
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
@@ -323,9 +349,14 @@ export function PortfolioOverview({
       {soldPositions.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-muted-foreground">
-              Sold Positions
-            </h2>
+            <div>
+              <h2 className="text-sm font-medium text-muted-foreground">
+                Sold Positions
+              </h2>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">
+                Click any tile to view transaction history
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground">
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
