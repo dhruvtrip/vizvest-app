@@ -7,6 +7,7 @@ import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
+import { TradingHeatmap } from '@/components/ui/trading-heatmap'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -234,6 +235,11 @@ export default function DashboardPage() {
             {/* Global Portfolio Metrics */}
             <ErrorBoundary>
               <PortfolioMetrics transactions={normalizedTransactions} />
+            </ErrorBoundary>
+
+            {/* Trading Activity Heatmap */}
+            <ErrorBoundary>
+              <TradingHeatmap transactions={normalizedTransactions} />
             </ErrorBoundary>
 
             {/* Stock Positions Grid */}
