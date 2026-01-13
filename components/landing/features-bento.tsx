@@ -11,8 +11,7 @@ import {
   DollarSign, 
   Globe, 
   BarChart3,
-  Zap,
-  ArrowUpRight
+  Zap
 } from 'lucide-react'
 
 const features = [
@@ -160,7 +159,6 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
           {feature.showPercentage && (
             <div className="mt-4 flex items-center gap-2">
               <span className="text-2xl font-bold text-emerald-500">{feature.percentage}</span>
-              <ArrowUpRight className="w-5 h-5 text-emerald-500" />
             </div>
           )}
 
@@ -233,10 +231,6 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
             </div>
           )}
 
-          {/* Hover arrow */}
-          <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-            <ArrowUpRight className="w-4 h-4 text-primary" />
-          </div>
         </CardContent>
       </Card>
     </motion.div>
