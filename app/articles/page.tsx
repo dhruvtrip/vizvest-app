@@ -83,7 +83,7 @@ export default function ArticlesPage() {
 
             {/* CTA */}
             <motion.div variants={fadeInUp} className="pt-4">
-              <Button asChild variant="outline" size="lg" className="text-sm h-11 px-8 gap-2">
+              <Button asChild variant="outline" size="lg" className="text-sm h-11 px-8 gap-2 hover:bg-primary/10 hover:text-primary hover:border-primary/50 dark:hover:bg-primary/10 dark:hover:text-primary">
                 <Link href="/">
                   <ArrowLeft className="w-4 h-4" />
                   Back to Home

@@ -133,7 +133,7 @@ export default function DashboardPage() {
                       variant="ghost"
                       size="sm"
                       onClick={handleUploadAnother}
-                      className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground"
+                      className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       Upload Different File
