@@ -250,7 +250,7 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
       <CardContent className="pt-0">
         <div className="flex items-start gap-4">
           {/* Scrollable heatmap container */}
-          <div className="overflow-x-auto max-w-full">
+          <div className="overflow-x-auto md:overflow-x-visible max-w-full">
             {/* Main heatmap grid */}
             <div 
               className="relative flex-shrink-0" 
