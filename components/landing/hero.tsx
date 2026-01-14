@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Magnetic } from '@/components/ui/magnetic'
 import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern'
+import { RotatingText } from '@/components/ui/rotating-text'
 import { ArrowRight, Shield, Zap, Lock, HandCoins } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -99,9 +100,19 @@ export function Hero() {
           {/* Heading */}
           <motion.div variants={fadeInUp} className="space-y-4">
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-semibold tracking-tight leading-[1.1]">
-              Visualize Your
-              <span className="block text-foreground">
-                Investment Portfolio
+              Visualize Your{' '}
+              <span className="block">
+                <RotatingText
+                  words={[
+                    'Complete Portfolio',
+                    'Dividend Income',
+                    'Trading Performance',
+                    'Investment Journey',
+                    'Market Winners'
+                  ]}
+                  gradientColors={['#3b82f6', '#8b5cf6']}
+                  className="text-foreground"
+                />
               </span>
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
