@@ -26,12 +26,11 @@ import {
  */
 const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$',
-  EUR: '€',
+  GBX: 'p',
   GBP: '£',
-  JPY: '¥',
+  EUR: '€',
   CHF: 'CHF',
-  CAD: 'C$',
-  AUD: 'A$'
+  CAD: 'C$'
 }
 
 /**

@@ -30,7 +30,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const getColorClass = (level: number) => {
   switch (level) {
     case 0:
-      return 'bg-neutral-200 dark:bg-neutral-800'
+      return 'bg-neutral-200 dark:bg-slate-900'
     case 1:
       return 'bg-green-400/40 dark:bg-green-400/30'
     case 2:
@@ -40,7 +40,7 @@ const getColorClass = (level: number) => {
     case 4:
       return 'bg-green-700/100 dark:bg-green-700/90'
     default:
-      return 'bg-neutral-200 dark:bg-neutral-800'
+      return 'bg-neutral-200 dark:bg-slate-900'
   }
 }
 

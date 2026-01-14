@@ -58,7 +58,7 @@ const features = [
     gradient: 'from-cyan-500/10 to-teal-500/10',
     iconBg: 'bg-cyan-500/10',
     iconColor: 'text-cyan-500',
-    currencies: ['USD', 'EUR', 'GBP']
+    currencies: ['USD', 'GBX', 'GBP', 'EUR', 'CHF', 'CAD']
   },
   {
     icon: BarChart3,
