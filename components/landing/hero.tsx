@@ -105,8 +105,7 @@ export function Hero() {
               </span>
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
-              Transform your Trading 212 exports into powerful insights
-             <br></br>Track dividends, analyze performance, and make smarter investment decisions
+              Transform your Trading 212 exports into powerful insights. Track dividends, analyze performance, and make smarter investment decisions
             </p>
           </motion.div>
 
@@ -114,28 +113,28 @@ export function Hero() {
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Magnetic intensity={0.3}>
               <Button asChild size="lg" className="text-sm h-11 px-8 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2">
-                <Link href="/dashboard">
+                <Link href="/dashboard" aria-label="Open dashboard to analyze your portfolio">
                   Open Dashboard
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </Link>
               </Button>
             </Magnetic>
             <Button asChild variant="outline" size="lg" className="text-sm h-11 px-8 hover:bg-muted/50 transition-colors border-border/50 backdrop-blur-sm">
-              <Link href="#how-it-works">
+              <Link href="#how-it-works" aria-label="Learn how Vizvest works">
                 Learn how it works
               </Link>
             </Button>
           </motion.div>
 
           {/* Trust Indicators */}
-          <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-8 pt-8">
+          <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-8 pt-8" role="list" aria-label="Key features">
             {[
               { icon: Zap, text: 'Instant analysis' },
               { icon: Lock, text: 'Privacy first' },
               { icon: HandCoins, text: 'Free to use' }
             ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="w-8 h-8 rounded-lg bg-muted/50 dark:bg-muted/30 flex items-center justify-center">
+              <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground" role="listitem">
+                <div className="w-8 h-8 rounded-lg bg-muted/50 dark:bg-muted/30 flex items-center justify-center" aria-hidden="true">
                   <Icon className="w-4 h-4 text-primary" />
                 </div>
                 <span>{text}</span>

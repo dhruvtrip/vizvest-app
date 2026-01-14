@@ -82,8 +82,10 @@ export function HowItWorks() {
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.1 }}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-6"
+            role="status"
+            aria-label="How it works section"
           >
-            <Wrench className="w-3 h-3" />
+            <Wrench className="w-3 h-3" aria-hidden="true" />
             How it works
           </motion.div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">

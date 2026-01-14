@@ -94,9 +94,9 @@ export function CTA() {
                     size="lg"
                     className="h-12 px-8 text-sm font-medium bg-white text-primary hover:bg-white/90 shadow-xl shadow-black/20 transition-all duration-300 gap-2"
                   >
-                    <Link href="/dashboard">
+                    <Link href="/dashboard" aria-label="Get started with Vizvest dashboard">
                       Get Started Now
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4" aria-hidden="true" />
                     </Link>
                   </Button>
                 </Magnetic>

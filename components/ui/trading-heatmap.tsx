@@ -258,7 +258,12 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
               style={{ width: `${dayLabelWidth + heatmapWidth}px` }}
             >
             {/* Month labels */}
-            <div className="relative mb-1" style={{ marginLeft: `${dayLabelWidth}px`, height: '14px' }}>
+            <div 
+              className="relative mb-1" 
+              style={{ marginLeft: `${dayLabelWidth}px`, height: '14px' }}
+              role="row"
+              aria-label="Month labels"
+            >
               {monthLabels.map((label) => {
                 const monthName = MONTHS[label.month]
                 const leftPosition = label.week * weekWidth
@@ -270,6 +275,8 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
                     style={{
                       left: `${leftPosition}px`
                     }}
+                    role="columnheader"
+                    aria-label={monthName}
                   >
                     {monthName}
                   </div>
@@ -280,7 +287,7 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
             {/* Grid with day labels */}
             <div className="flex gap-1">
               {/* Day of week labels */}
-              <div className="flex flex-col gap-1 pt-0.5">
+              <div className="flex flex-col gap-1 pt-0.5" role="rowgroup" aria-label="Day of week">
                 {DAYS.map((day, idx) => {
                   // Only show Mon, Wed, Fri (indices 1, 3, 5)
                   if (idx === 1 || idx === 3 || idx === 5) {
@@ -288,12 +295,14 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
                       <div
                         key={day}
                         className="text-[10px] text-muted-foreground h-[11px] leading-[11px]"
+                        role="rowheader"
+                        aria-label={day}
                       >
                         {day}
                       </div>
                     )
                   }
-                  return <div key={day} className="h-[11px]" />
+                  return <div key={day} className="h-[11px]" aria-hidden="true" />
                 })}
               </div>
 
@@ -308,13 +317,24 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
                           return <div key={`${dayIdx}-${weekIdx}`} className="w-[11px] h-[11px]" />
                         }
 
+                        const dateStr = cell.date.toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })
+                        const activityLevel = cell.count === 0 
+                          ? 'no trades' 
+                          : `${cell.count} ${cell.count === 1 ? 'trade' : 'trades'}`
+                        
                         return (
                           <motion.div
                             key={`${dayIdx}-${weekIdx}`}
                             className={cn(
-                              'w-[11px] h-[11px] rounded-[2px] cursor-pointer transition-all relative',
+                              'w-[11px] h-[11px] rounded-[2px] transition-all relative',
+                              cell.count > 0 ? 'cursor-pointer' : 'cursor-default',
                               getColorClass(cell.level),
-                              'hover:ring-2 hover:ring-primary/50 hover:ring-offset-1'
+                              'hover:ring-2 hover:ring-primary/50 hover:ring-offset-1',
+                              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1'
                             )}
                             onMouseEnter={(e) => {
                               if (cell.date) {
@@ -332,10 +352,29 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
                               }
                             }}
                             onMouseLeave={() => setHoveredCell(null)}
+                            onFocus={(e) => {
+                              if (cell.date) {
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                const container = document.getElementById('heatmap-container')
+                                if (container) {
+                                  const containerRect = container.getBoundingClientRect()
+                                  setHoveredCell({
+                                    date: cell.date,
+                                    count: cell.count,
+                                    x: rect.left - containerRect.left + rect.width / 2,
+                                    y: rect.top - containerRect.top
+                                  })
+                                }
+                              }
+                            }}
+                            onBlur={() => setHoveredCell(null)}
                             whileHover={{ scale: 1.2, zIndex: 10 }}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.2 }}
+                            role="gridcell"
+                            tabIndex={cell.count > 0 ? 0 : -1}
+                            aria-label={`${dateStr}: ${activityLevel}`}
                           />
                         )
                       })}
@@ -344,9 +383,9 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-foreground" role="group" aria-label="Activity intensity legend">
                   <span>Less</span>
-                  <div className="flex gap-[2px]">
+                  <div className="flex gap-[2px]" role="presentation" aria-hidden="true">
                     {[0, 1, 2, 3, 4].map((level) => (
                       <div
                         key={level}
@@ -386,17 +425,20 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
           </div>
 
           {/* Year selector - always visible */}
-          <div className="flex flex-col gap-1 flex-shrink-0">
+          <div className="flex flex-col gap-1 flex-shrink-0" role="group" aria-label="Select year">
             {availableYears.map((year) => (
               <button
                 key={year}
                 onClick={() => setSelectedYear(year)}
                 className={cn(
                   'px-2 py-1 text-xs rounded transition-colors text-right',
+                  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                   selectedYear === year
                     ? 'bg-primary text-primary-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 )}
+                aria-label={`View trading activity for ${year}`}
+                aria-pressed={selectedYear === year}
               >
                 {year}
               </button>

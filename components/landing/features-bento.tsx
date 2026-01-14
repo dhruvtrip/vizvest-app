@@ -164,8 +164,8 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
 
           {feature.showYield && (
             <div className="mt-4 flex items-center justify-center">
-              <div className="relative w-16 h-16">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+              <div className="relative w-16 h-16" role="img" aria-label={`Yield: ${feature.yieldValue}`}>
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
                   <circle 
                     cx="50" cy="50" r="40" 
                     fill="none" 
@@ -259,8 +259,10 @@ export function FeaturesBento() {
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.1 }}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-6"
+            role="status"
+            aria-label="Features section"
           >
-            <Zap className="w-3 h-3" />
+            <Zap className="w-3 h-3" aria-hidden="true" />
             Features
           </motion.div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">

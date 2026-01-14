@@ -189,8 +189,9 @@ export function StockDetail({
           size="sm"
           onClick={onBack}
           className="gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+          aria-label="Return to portfolio overview"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           Back to Portfolio
         </Button>
 
@@ -247,51 +248,59 @@ export function StockDetail({
           </Card>
         ) : (
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Date</TableHead>
-                  <TableHead className="text-xs">Action</TableHead>
-                  <TableHead className="text-xs text-right">Shares</TableHead>
-                  <TableHead className="text-xs text-right">Price/Share</TableHead>
-                  <TableHead className="text-xs text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tableTransactions.map((transaction, index) => {
-                  const isBuy = transaction.Action === 'Market buy'
-                  const actionColor = isBuy
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-red-600 dark:text-red-400'
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs" scope="col">Date</TableHead>
+                    <TableHead className="text-xs" scope="col">Action</TableHead>
+                    <TableHead className="text-xs text-right" scope="col">Shares</TableHead>
+                    <TableHead className="text-xs text-right" scope="col">Price/Share</TableHead>
+                    <TableHead className="text-xs text-right" scope="col">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tableTransactions.map((transaction, index) => {
+                    const isBuy = transaction.Action === 'Market buy'
+                    const actionColor = isBuy
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-red-600 dark:text-red-400'
+                    const dateStr = formatDate(transaction.Time)
+                    const shares = formatShares(transaction['No. of shares'] || 0)
+                    const price = formatCurrency(
+                      transaction['Price / share'] || 0,
+                      transaction['Currency (Price / share)'] || metrics.baseCurrency
+                    )
+                    const total = formatCurrency(
+                      transaction.totalInBaseCurrency || 0,
+                      metrics.baseCurrency
+                    )
 
-                  return (
-                    <TableRow key={transaction.ID || index}>
-                      <TableCell className="text-xs text-muted-foreground py-2">
-                        {formatDate(transaction.Time)}
-                      </TableCell>
-                      <TableCell className={cn('text-xs font-medium py-2', actionColor)}>
-                        {isBuy ? 'Buy' : 'Sell'}
-                      </TableCell>
-                      <TableCell className="text-xs text-right py-2">
-                        {formatShares(transaction['No. of shares'] || 0)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right text-muted-foreground py-2">
-                        {formatCurrency(
-                          transaction['Price / share'] || 0,
-                          transaction['Currency (Price / share)'] || metrics.baseCurrency
-                        )}
-                      </TableCell>
-                      <TableCell className={cn('text-xs text-right font-medium py-2', actionColor)}>
-                        {formatCurrency(
-                          transaction.totalInBaseCurrency || 0,
-                          metrics.baseCurrency
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+                    return (
+                      <TableRow key={transaction.ID || index}>
+                        <TableCell className="text-xs text-muted-foreground py-2">
+                          {dateStr}
+                        </TableCell>
+                        <TableCell className={cn('text-xs font-medium py-2', actionColor)}>
+                          <span aria-label={isBuy ? 'Buy transaction' : 'Sell transaction'}>
+                            {isBuy ? 'Buy' : 'Sell'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs text-right py-2" aria-label={`${shares} shares`}>
+                          {shares}
+                        </TableCell>
+                        <TableCell className="text-xs text-right text-muted-foreground py-2" aria-label={`Price per share: ${price}`}>
+                          {price}
+                        </TableCell>
+                        <TableCell className={cn('text-xs text-right font-medium py-2', actionColor)} aria-label={`Total: ${total}`}>
+                          {total}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         )}
       </div>

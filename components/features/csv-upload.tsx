@@ -196,7 +196,9 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
           accept=".csv"
           onChange={handleFileSelect}
           className="hidden"
-          aria-label="CSV file upload"
+          id="csv-file-input"
+          aria-label="Upload Trading 212 CSV file"
+          aria-describedby="file-upload-description"
         />
 
         {/* Upload Area */}
@@ -219,12 +221,14 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
               onDragLeave={handleDragLeave}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
                   handleButtonClick()
                 }
               }}
               role="button"
               tabIndex={0}
               aria-label="Click to upload CSV file or drag and drop"
+              aria-describedby="file-upload-description"
             >
               {/* Animated icon container */}
               <motion.div 
@@ -245,7 +249,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
               <p className="text-sm font-medium mb-1">
                 {isDragging ? 'Drop your file here' : 'Click to upload or drag and drop'}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p id="file-upload-description" className="text-xs text-muted-foreground">
                 CSV files only (max 5MB)
               </p>
 
@@ -261,8 +265,13 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
 
           {/* Parsing State */}
           {uploadState === 'parsing' && (
-            <div className="flex flex-col items-center gap-4 p-12 bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <div 
+              className="flex flex-col items-center gap-4 p-12 bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50"
+              role="status"
+              aria-live="polite"
+              aria-label="Processing file"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}

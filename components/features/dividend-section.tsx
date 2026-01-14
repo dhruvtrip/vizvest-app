@@ -263,9 +263,9 @@ export function DividendSection({
   const hasDividends = dividends.length > 0
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <section className={cn('space-y-3', className)} aria-labelledby="dividend-heading">
       {/* Section Header */}
-      <h2 className="text-sm font-semibold text-foreground">
+      <h2 id="dividend-heading" className="text-sm font-semibold text-foreground">
         Dividend Income
       </h2>
 
@@ -301,12 +301,12 @@ export function DividendSection({
           {chartData.length > 1 && (
             <Card>
               <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-3">
+                <h3 className="text-xs text-muted-foreground mb-3">
                   Dividend History
-                </p>
-                <div className="h-36">
+                </h3>
+                <div className="h-36" role="img" aria-label={`Bar chart showing dividend income by month for ${ticker}. Total net dividends: ${formatCurrency(metrics.totalNet, baseCurrency)}`}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
+                    <BarChart data={chartData} aria-label={`Dividend income chart for ${ticker}`}>
                       <XAxis
                         dataKey="month"
                         tick={{ fontSize: 10 }}
@@ -340,39 +340,46 @@ export function DividendSection({
 
           {/* Dividend Table */}
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Date</TableHead>
-                  <TableHead className="text-xs text-right">Gross</TableHead>
-                  <TableHead className="text-xs text-right">Tax</TableHead>
-                  <TableHead className="text-xs text-right">Net</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dividends.map((dividend, index) => (
-                  <TableRow key={`${dividend.date}-${index}`}>
-                    <TableCell className="text-xs text-muted-foreground py-2">
-                      {formatDate(dividend.date)}
-                    </TableCell>
-                    <TableCell className="text-xs text-right py-2">
-                      {formatCurrency(dividend.gross, baseCurrency)}
-                    </TableCell>
-                    <TableCell className="text-xs text-right text-muted-foreground py-2">
-                      {dividend.tax > 0
-                        ? formatCurrency(dividend.tax, baseCurrency)
-                        : '—'}
-                    </TableCell>
-                    <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400 py-2">
-                      {formatCurrency(dividend.net, baseCurrency)}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs" scope="col">Date</TableHead>
+                    <TableHead className="text-xs text-right" scope="col">Gross</TableHead>
+                    <TableHead className="text-xs text-right" scope="col">Tax</TableHead>
+                    <TableHead className="text-xs text-right" scope="col">Net</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {dividends.map((dividend, index) => {
+                    const dateStr = formatDate(dividend.date)
+                    const gross = formatCurrency(dividend.gross, baseCurrency)
+                    const tax = dividend.tax > 0 ? formatCurrency(dividend.tax, baseCurrency) : '—'
+                    const net = formatCurrency(dividend.net, baseCurrency)
+                    
+                    return (
+                      <TableRow key={`${dividend.date}-${index}`}>
+                        <TableCell className="text-xs text-muted-foreground py-2">
+                          {dateStr}
+                        </TableCell>
+                        <TableCell className="text-xs text-right py-2" aria-label={`Gross dividend: ${gross}`}>
+                          {gross}
+                        </TableCell>
+                        <TableCell className="text-xs text-right text-muted-foreground py-2" aria-label={`Withholding tax: ${tax}`}>
+                          {tax}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400 py-2" aria-label={`Net dividend: ${net}`}>
+                          {net}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         </>
       )}
-    </div>
+    </section>
   )
 }

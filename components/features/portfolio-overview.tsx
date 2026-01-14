@@ -148,9 +148,19 @@ function StockPositionTile({
         'hover:shadow-md hover:-translate-y-0.5',
         'hover:border-primary/50 hover:bg-primary/5',
         'active:scale-[0.99]',
-        'h-full flex flex-col'
+        'h-full flex flex-col',
+        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2'
       )}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${position.ticker} - ${position.name}`}
     >
       <CardContent className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
@@ -215,9 +225,19 @@ function SoldPositionTile({
         'hover:border-primary/50 hover:bg-primary/5',
         'active:scale-[0.99]',
         'bg-muted/30',
-        'h-full flex flex-col'
+        'h-full flex flex-col',
+        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2'
       )}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View transaction history for ${position.ticker} - ${position.name}`}
     >
       <CardContent className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
@@ -317,39 +337,40 @@ export function PortfolioOverview({
     <div className={cn('space-y-6', className)}>
       {/* Current Holdings Section */}
       {currentHoldings.length > 0 && (
-        <div className="space-y-3">
+        <section className="space-y-3" aria-labelledby="portfolio-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">
+              <h2 id="portfolio-heading" className="text-sm font-semibold text-foreground">
                 Your Portfolio
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Click any tile to view detailed analytics
               </p>
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="Current stock holdings">
             {currentHoldings.map(position => (
-              <StockPositionTile
-                key={position.ticker}
-                position={position}
-                onClick={() => onSelectTicker(position.ticker)}
-              />
+              <div key={position.ticker} role="listitem">
+                <StockPositionTile
+                  position={position}
+                  onClick={() => onSelectTicker(position.ticker)}
+                />
+              </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Sold Positions Section */}
       {soldPositions.length > 0 && (
-        <div className="space-y-3">
+        <section className="space-y-3" aria-labelledby="sold-positions-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-medium text-muted-foreground">
+              <h2 id="sold-positions-heading" className="text-sm font-medium text-muted-foreground">
                 Sold Positions
               </h2>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
@@ -357,30 +378,34 @@ export function PortfolioOverview({
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>
-              <span className={cn(
-                'text-xs font-medium',
-                totalRealizedResult >= 0 
-                  ? 'text-emerald-600 dark:text-emerald-400' 
-                  : 'text-red-600 dark:text-red-400'
-              )}>
+              <span 
+                className={cn(
+                  'text-xs font-medium',
+                  totalRealizedResult >= 0 
+                    ? 'text-emerald-600 dark:text-emerald-400' 
+                    : 'text-red-600 dark:text-red-400'
+                )}
+                aria-label={`Total realized ${totalRealizedResult >= 0 ? 'profit' : 'loss'}: ${totalRealizedResult >= 0 ? '+' : ''}${formatCurrency(totalRealizedResult, baseCurrency)}`}
+              >
                 Total: {totalRealizedResult >= 0 ? '+' : ''}{formatCurrency(totalRealizedResult, baseCurrency)}
               </span>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="Sold stock positions">
             {soldPositions.map(position => (
-              <SoldPositionTile
-                key={position.ticker}
-                position={position}
-                onClick={() => onSelectTicker(position.ticker)}
-              />
+              <div key={position.ticker} role="listitem">
+                <SoldPositionTile
+                  position={position}
+                  onClick={() => onSelectTicker(position.ticker)}
+                />
+              </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Edge case: Only sold positions, no current holdings */}

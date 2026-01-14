@@ -112,12 +112,15 @@ export default function DashboardPage() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             className="border-b border-border bg-emerald-500/5"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
           >
             <div className="container mx-auto px-6 py-3">
               <Alert className="border-emerald-500/20 bg-transparent">
                 <div className="flex items-center justify-between w-full gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     </div>
                     <AlertDescription className="text-sm flex-1 min-w-0">
@@ -135,16 +138,17 @@ export default function DashboardPage() {
                       size="sm"
                       onClick={handleUploadAnother}
                       className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
+                      aria-label="Upload a different CSV file"
                     >
-                      <Upload className="w-3.5 h-3.5" />
+                      <Upload className="w-3.5 h-3.5" aria-hidden="true" />
                       Upload Different File
                     </Button>
                     <button
                       onClick={handleDismissAlert}
-                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      aria-label="Dismiss alert"
+                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      aria-label="Dismiss success message"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4" aria-hidden="true" />
                     </button>
                   </div>
                 </div>
@@ -162,9 +166,12 @@ export default function DashboardPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="container mx-auto px-6 py-16"
+            role="status"
+            aria-live="polite"
+            aria-label="Processing transactions"
           >
             <div className="flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
                 <Loader2 className="w-7 h-7 animate-spin text-primary" />
               </div>
               <div className="text-center">
@@ -186,6 +193,9 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             className="container mx-auto px-6 py-6"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
           >
             <Alert variant="destructive">
               <AlertDescription className="text-sm">{error}</AlertDescription>
