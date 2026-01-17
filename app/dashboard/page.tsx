@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2, CheckCircle2, Upload, X } from 'lucide-react'
 import { CSVUpload } from '@/components/features/csv-upload'
@@ -8,6 +8,7 @@ import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
+import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -101,8 +102,61 @@ export default function DashboardPage() {
   const showDetail = hasData && selectedTicker !== null
   const showWelcome = !hasData && !isNormalizing && showUpload
 
+  // Navigation state
+  const [currentView, setCurrentView] = useState<string>('portfolio')
+  const portfolioRef = useRef<HTMLDivElement>(null)
+  const analyticsRef = useRef<HTMLDivElement>(null)
+  const activityRef = useRef<HTMLDivElement>(null)
+
+  // Update current view based on state
+  useEffect(() => {
+    if (selectedTicker) {
+      setCurrentView('dividends')
+    } else if (hasData) {
+      setCurrentView('portfolio')
+    }
+  }, [selectedTicker, hasData])
+
+  // Handler: Navigate to different sections
+  const handleNavigate = useCallback((view: string) => {
+    setCurrentView(view)
+    setSelectedTicker(null) // Reset ticker selection when navigating
+
+    setTimeout(() => {
+      switch (view) {
+        case 'portfolio':
+          portfolioRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          break
+        case 'analytics':
+          analyticsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          break
+        case 'activity':
+          activityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          break
+        case 'dividends':
+          portfolioRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          break
+      }
+    }, 100)
+  }, [])
+
+  // Handler: Handle upload click from sidebar
+  const handleUploadClick = useCallback(() => {
+    handleUploadAnother()
+  }, [handleUploadAnother])
+
   return (
-    <main className="min-h-[calc(100vh-3.5rem)]">
+    <div className="flex min-h-[calc(100vh-3.5rem)]">
+      {/* Sidebar - only show when data is loaded */}
+      {hasData && (
+        <DashboardSidebar
+          onNavigate={handleNavigate}
+          currentView={currentView}
+          onUploadClick={handleUploadClick}
+        />
+      )}
+      
+      <main className="flex-1 min-w-0">
       {/* Success Alert - shows after upload */}
       <AnimatePresence>
         {uploadInfo && hasData && !isAlertDismissed && (
@@ -243,22 +297,28 @@ export default function DashboardPage() {
             className="container mx-auto px-6 py-6 space-y-8"
           >
             {/* Global Portfolio Metrics */}
-            <ErrorBoundary>
-              <PortfolioMetrics transactions={normalizedTransactions} />
-            </ErrorBoundary>
+            <div ref={analyticsRef}>
+              <ErrorBoundary>
+                <PortfolioMetrics transactions={normalizedTransactions} />
+              </ErrorBoundary>
+            </div>
 
             {/* Trading Activity Heatmap */}
-            <ErrorBoundary>
-              <TradingHeatmap transactions={normalizedTransactions} />
-            </ErrorBoundary>
+            <div ref={activityRef}>
+              <ErrorBoundary>
+                <TradingHeatmap transactions={normalizedTransactions} />
+              </ErrorBoundary>
+            </div>
 
             {/* Stock Positions Grid */}
-            <ErrorBoundary>
-              <PortfolioOverview
-                transactions={normalizedTransactions}
-                onSelectTicker={handleSelectTicker}
-              />
-            </ErrorBoundary>
+            <div ref={portfolioRef}>
+              <ErrorBoundary>
+                <PortfolioOverview
+                  transactions={normalizedTransactions}
+                  onSelectTicker={handleSelectTicker}
+                />
+              </ErrorBoundary>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -269,6 +329,7 @@ export default function DashboardPage() {
           <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
         </ErrorBoundary>
       )}
-    </main>
+      </main>
+    </div>
   )
 }
