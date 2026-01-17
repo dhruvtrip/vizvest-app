@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, CheckCircle2, Upload, X } from 'lucide-react'
+import { Loader2, CheckCircle2, Upload, X, Menu } from 'lucide-react'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
@@ -104,6 +104,7 @@ export default function DashboardPage() {
 
   // Navigation state
   const [currentView, setCurrentView] = useState<string>('portfolio')
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const portfolioRef = useRef<HTMLDivElement>(null)
   const analyticsRef = useRef<HTMLDivElement>(null)
   const activityRef = useRef<HTMLDivElement>(null)
@@ -145,18 +146,37 @@ export default function DashboardPage() {
     handleUploadAnother()
   }, [handleUploadAnother])
 
+  // Handler: Close mobile sidebar
+  const handleMobileSidebarClose = useCallback(() => {
+    setIsMobileSidebarOpen(false)
+  }, [])
+
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)]">
+    <div className="flex min-h-[calc(100vh-3.5rem)] relative">
+      {/* Mobile Menu Button - only show when data is loaded */}
+      {hasData && (
+        <button
+          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          className="lg:hidden fixed top-[4.5rem] right-4 z-[60] p-2.5 bg-background border border-border rounded-lg shadow-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMobileSidebarOpen}
+        >
+          <Menu className="w-5 h-5 text-foreground" aria-hidden="true" />
+        </button>
+      )}
+
       {/* Sidebar - only show when data is loaded */}
       {hasData && (
         <DashboardSidebar
           onNavigate={handleNavigate}
           currentView={currentView}
           onUploadClick={handleUploadClick}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={handleMobileSidebarClose}
         />
       )}
       
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 w-full lg:w-auto">
       {/* Success Alert - shows after upload */}
       <AnimatePresence>
         {uploadInfo && hasData && !isAlertDismissed && (
@@ -165,28 +185,30 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="border-b border-border bg-emerald-500/5"
+            className="border-b border-border bg-emerald-500/5 relative z-40"
             role="status"
             aria-live="polite"
             aria-atomic="true"
           >
-            <div className="container mx-auto px-6 py-3">
+            <div className="container mx-auto px-4 sm:px-6 py-3">
               <Alert className="border-emerald-500/20 bg-transparent">
-                <div className="flex items-center justify-between w-full gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0" aria-hidden="true">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     </div>
                     <AlertDescription className="text-sm flex-1 min-w-0">
-                      <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                        Successfully loaded {uploadInfo.rowCount} transactions
-                      </span>
-                      <span className="text-muted-foreground ml-2">
-                        from {uploadInfo.fileName}
-                      </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          Successfully loaded {uploadInfo.rowCount} transactions
+                        </span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          from {uploadInfo.fileName}
+                        </span>
+                      </div>
                     </AlertDescription>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -194,12 +216,12 @@ export default function DashboardPage() {
                       className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
                       aria-label="Upload a different CSV file"
                     >
-                      <Upload className="w-3.5 h-3.5" aria-hidden="true" />
-                      Upload Different File
+                      <Upload className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" aria-hidden="true" />
+                      <span className="hidden sm:inline">Upload Different File</span>
                     </Button>
                     <button
                       onClick={handleDismissAlert}
-                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
                       aria-label="Dismiss success message"
                     >
                       <X className="w-4 h-4" aria-hidden="true" />
@@ -273,7 +295,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="container mx-auto px-6 py-6"
+            className="container mx-auto px-6 py-6 min-w-0"
           >
             <ErrorBoundary>
               <StockDetail
@@ -294,7 +316,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="container mx-auto px-6 py-6 space-y-8"
+            className="container mx-auto px-6 py-6 space-y-8 min-w-0"
           >
             {/* Global Portfolio Metrics */}
             <div ref={analyticsRef}>

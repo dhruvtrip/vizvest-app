@@ -248,12 +248,12 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 min-w-0">
           {/* Scrollable heatmap container */}
-          <div className="overflow-x-auto md:overflow-x-visible max-w-full">
+          <div className="overflow-x-auto max-w-full min-w-0">
             {/* Main heatmap grid */}
             <div 
-              className="relative flex-shrink-0" 
+              className="relative flex-shrink-0 min-w-0" 
               id="heatmap-container"
               style={{ width: `${dayLabelWidth + heatmapWidth}px` }}
             >
