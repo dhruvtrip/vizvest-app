@@ -7,6 +7,7 @@ import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
+import { DividendsDashboard } from '@/components/features/dividends-dashboard'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
 import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { ErrorBoundary } from '@/components/error-boundary'
@@ -79,6 +80,8 @@ export default function DashboardPage() {
   // Handler: Back to portfolio overview
   const handleBackToOverview = useCallback(() => {
     setSelectedTicker(null)
+    setShowDividendsDashboard(false)
+    setCurrentView('portfolio')
   }, [])
 
   // Handler: Upload different file
@@ -96,50 +99,70 @@ export default function DashboardPage() {
     setIsAlertDismissed(true)
   }, [])
 
-  // Derived view states
-  const hasData = normalizedTransactions.length > 0
-  const showOverview = hasData && !selectedTicker
-  const showDetail = hasData && selectedTicker !== null
-  const showWelcome = !hasData && !isNormalizing && showUpload
-
   // Navigation state
   const [currentView, setCurrentView] = useState<string>('portfolio')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [showDividendsDashboard, setShowDividendsDashboard] = useState(false)
   const portfolioRef = useRef<HTMLDivElement>(null)
   const analyticsRef = useRef<HTMLDivElement>(null)
   const activityRef = useRef<HTMLDivElement>(null)
+  const dividendsRef = useRef<HTMLDivElement>(null)
+
+  // Derived view states
+  const hasData = normalizedTransactions.length > 0
+  const showOverview = hasData && !selectedTicker && !showDividendsDashboard
+  const showDetail = hasData && selectedTicker !== null && !showDividendsDashboard
+  const showWelcome = !hasData && !isNormalizing && showUpload
 
   // Update current view based on state
   useEffect(() => {
-    if (selectedTicker) {
+    if (showDividendsDashboard) {
       setCurrentView('dividends')
+    } else if (selectedTicker) {
+      // Don't change view when viewing stock detail - keep current view
+      // This allows user to see stock detail while maintaining their navigation context
     } else if (hasData) {
       setCurrentView('portfolio')
     }
-  }, [selectedTicker, hasData])
+  }, [showDividendsDashboard, hasData])
+
+  // Helper: Scroll to top of main content
+  const scrollToTop = useCallback(() => {
+    const mainElement = document.querySelector('main')
+    if (mainElement) {
+      mainElement.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [])
 
   // Handler: Navigate to different sections
   const handleNavigate = useCallback((view: string) => {
     setCurrentView(view)
     setSelectedTicker(null) // Reset ticker selection when navigating
+    setShowDividendsDashboard(view === 'dividends') // Show dividends dashboard when dividends is clicked
 
     setTimeout(() => {
       switch (view) {
         case 'portfolio':
-          portfolioRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          setShowDividendsDashboard(false)
+          scrollToTop()
           break
         case 'analytics':
+          setShowDividendsDashboard(false)
           analyticsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           break
         case 'activity':
+          setShowDividendsDashboard(false)
           activityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           break
         case 'dividends':
-          portfolioRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          setShowDividendsDashboard(true)
+          scrollToTop()
           break
       }
     }, 100)
-  }, [])
+  }, [scrollToTop])
 
   // Handler: Handle upload click from sidebar
   const handleUploadClick = useCallback(() => {
@@ -286,6 +309,24 @@ export default function DashboardPage() {
           <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
         </ErrorBoundary>
       )}
+
+      {/* Dividends Dashboard View */}
+      <AnimatePresence mode="wait">
+        {showDividendsDashboard && (
+          <motion.div
+            key="dividends-dashboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-w-0"
+            ref={dividendsRef}
+          >
+            <ErrorBoundary>
+              <DividendsDashboard transactions={normalizedTransactions} />
+            </ErrorBoundary>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stock Detail View */}
       <AnimatePresence mode="wait">
