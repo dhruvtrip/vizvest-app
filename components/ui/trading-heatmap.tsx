@@ -72,9 +72,12 @@ function processTransactions(
 ): Map<string, DayData> {
   const activityMap = new Map<string, DayData>()
 
-  // Filter to only buy/sell trades
+  // Filter to only buy/sell trades (Market and Limit orders)
   const trades = transactions.filter(
-    (t) => t.Action === 'Market buy' || t.Action === 'Market sell'
+    (t) => {
+      const action = t.Action.toLowerCase()
+      return action.includes('buy') || action.includes('sell')
+    }
   )
 
   // Group by date
@@ -176,7 +179,10 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     const trades = transactions.filter(
-      (t) => t.Action === 'Market buy' || t.Action === 'Market sell'
+      (t) => {
+        const action = t.Action.toLowerCase()
+        return action.includes('buy') || action.includes('sell')
+      }
     )
     for (const trade of trades) {
       const date = new Date(trade.Time)
@@ -204,7 +210,10 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
   // Calculate total contributions for selected year
   const totalContributions = useMemo(() => {
     const trades = transactions.filter(
-      (t) => t.Action === 'Market buy' || t.Action === 'Market sell'
+      (t) => {
+        const action = t.Action.toLowerCase()
+        return action.includes('buy') || action.includes('sell')
+      }
     )
     return trades.filter((t) => {
       const date = new Date(t.Time)

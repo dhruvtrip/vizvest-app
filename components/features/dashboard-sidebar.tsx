@@ -6,7 +6,6 @@ import {
   Upload,
   LayoutDashboard,
   DollarSign,
-  BarChart3,
   Activity,
   ChevronsLeft,
   ChevronsRight,
@@ -87,13 +86,6 @@ export function DashboardSidebar({
       icon: DollarSign,
       onClick: () => handleOptionClick(() => onNavigate('dividends')),
       isActive: currentView === 'dividends'
-    },
-    {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: BarChart3,
-      onClick: () => handleOptionClick(() => onNavigate('analytics')),
-      isActive: currentView === 'analytics'
     },
     {
       id: 'activity',

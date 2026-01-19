@@ -8,7 +8,7 @@ import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
 import { DividendsDashboard } from '@/components/features/dividends-dashboard'
-import { TradingHeatmap } from '@/components/ui/trading-heatmap'
+import { TradingActivityDashboard } from '@/components/features/trading-activity-dashboard'
 import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
@@ -81,6 +81,7 @@ export default function DashboardPage() {
   const handleBackToOverview = useCallback(() => {
     setSelectedTicker(null)
     setShowDividendsDashboard(false)
+    setShowTradingActivityDashboard(false)
     setCurrentView('portfolio')
   }, [])
 
@@ -103,28 +104,30 @@ export default function DashboardPage() {
   const [currentView, setCurrentView] = useState<string>('portfolio')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [showDividendsDashboard, setShowDividendsDashboard] = useState(false)
+  const [showTradingActivityDashboard, setShowTradingActivityDashboard] = useState(false)
   const portfolioRef = useRef<HTMLDivElement>(null)
-  const analyticsRef = useRef<HTMLDivElement>(null)
   const activityRef = useRef<HTMLDivElement>(null)
   const dividendsRef = useRef<HTMLDivElement>(null)
 
   // Derived view states
   const hasData = normalizedTransactions.length > 0
-  const showOverview = hasData && !selectedTicker && !showDividendsDashboard
-  const showDetail = hasData && selectedTicker !== null && !showDividendsDashboard
+  const showOverview = hasData && !selectedTicker && !showDividendsDashboard && !showTradingActivityDashboard
+  const showDetail = hasData && selectedTicker !== null && !showDividendsDashboard && !showTradingActivityDashboard
   const showWelcome = !hasData && !isNormalizing && showUpload
 
   // Update current view based on state
   useEffect(() => {
     if (showDividendsDashboard) {
       setCurrentView('dividends')
+    } else if (showTradingActivityDashboard) {
+      setCurrentView('activity')
     } else if (selectedTicker) {
       // Don't change view when viewing stock detail - keep current view
       // This allows user to see stock detail while maintaining their navigation context
     } else if (hasData) {
       setCurrentView('portfolio')
     }
-  }, [showDividendsDashboard, hasData])
+  }, [showDividendsDashboard, showTradingActivityDashboard, hasData])
 
   // Helper: Scroll to top of main content
   const scrollToTop = useCallback(() => {
@@ -141,23 +144,25 @@ export default function DashboardPage() {
     setCurrentView(view)
     setSelectedTicker(null) // Reset ticker selection when navigating
     setShowDividendsDashboard(view === 'dividends') // Show dividends dashboard when dividends is clicked
+    setShowTradingActivityDashboard(view === 'activity') // Show trading activity dashboard when activity is clicked
 
     setTimeout(() => {
       switch (view) {
         case 'portfolio':
           setShowDividendsDashboard(false)
+          setShowTradingActivityDashboard(false)
           scrollToTop()
-          break
-        case 'analytics':
-          setShowDividendsDashboard(false)
-          analyticsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           break
         case 'activity':
           setShowDividendsDashboard(false)
-          activityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          setShowTradingActivityDashboard(true)
+          setTimeout(() => {
+            scrollToTop()
+          }, 50)
           break
         case 'dividends':
           setShowDividendsDashboard(true)
+          setShowTradingActivityDashboard(false)
           scrollToTop()
           break
       }
@@ -198,200 +203,211 @@ export default function DashboardPage() {
           onMobileClose={handleMobileSidebarClose}
         />
       )}
-      
+
       <main className="flex-1 min-w-0 w-full lg:w-auto">
-      {/* Success Alert - shows after upload */}
-      <AnimatePresence>
-        {uploadInfo && hasData && !isAlertDismissed && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="border-b border-border bg-emerald-500/5 relative z-40"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <div className="container mx-auto px-4 sm:px-6 py-3">
-              <Alert className="border-emerald-500/20 bg-transparent">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0" aria-hidden="true">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    </div>
-                    <AlertDescription className="text-sm flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          Successfully loaded {uploadInfo.rowCount} transactions
-                        </span>
-                        <span className="text-muted-foreground text-xs sm:text-sm">
-                          from {uploadInfo.fileName}
-                        </span>
+        {/* Success Alert - shows after upload */}
+        <AnimatePresence>
+          {uploadInfo && hasData && !isAlertDismissed && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="border-b border-border bg-emerald-500/5 relative z-40"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <div className="container mx-auto px-4 sm:px-6 py-3">
+                <Alert className="border-emerald-500/20 bg-transparent">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0" aria-hidden="true">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                       </div>
-                    </AlertDescription>
+                      <AlertDescription className="text-sm flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
+                          <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                            Successfully loaded {uploadInfo.rowCount} transactions
+                          </span>
+                          <span className="text-muted-foreground text-xs sm:text-sm">
+                            from {uploadInfo.fileName}
+                          </span>
+                        </div>
+                      </AlertDescription>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleUploadAnother}
+                        className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
+                        aria-label="Upload a different CSV file"
+                      >
+                        <Upload className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" aria-hidden="true" />
+                        <span className="hidden sm:inline">Upload Different File</span>
+                      </Button>
+                      <button
+                        onClick={handleDismissAlert}
+                        className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
+                        aria-label="Dismiss success message"
+                      >
+                        <X className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleUploadAnother}
-                      className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
-                      aria-label="Upload a different CSV file"
-                    >
-                      <Upload className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" aria-hidden="true" />
-                      <span className="hidden sm:inline">Upload Different File</span>
-                    </Button>
-                    <button
-                      onClick={handleDismissAlert}
-                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
-                      aria-label="Dismiss success message"
-                    >
-                      <X className="w-4 h-4" aria-hidden="true" />
-                    </button>
-                  </div>
+                </Alert>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Loading State */}
+        <AnimatePresence>
+          {isNormalizing && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="container mx-auto px-6 py-16"
+              role="status"
+              aria-live="polite"
+              aria-label="Processing transactions"
+            >
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
+                  <Loader2 className="w-7 h-7 animate-spin text-primary" />
                 </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">Processing transactions</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Normalizing currencies and calculating positions...
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Error State */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="container mx-auto px-6 py-6"
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+            >
+              <Alert variant="destructive">
+                <AlertDescription className="text-sm">{error}</AlertDescription>
               </Alert>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Welcome State - Upload Section */}
+        {showWelcome && (
+          <ErrorBoundary>
+            <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
+          </ErrorBoundary>
         )}
-      </AnimatePresence>
 
-      {/* Loading State */}
-      <AnimatePresence>
-        {isNormalizing && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="container mx-auto px-6 py-16"
-            role="status"
-            aria-live="polite"
-            aria-label="Processing transactions"
-          >
-            <div className="flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
-                <Loader2 className="w-7 h-7 animate-spin text-primary" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium">Processing transactions</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Normalizing currencies and calculating positions...
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Error State */}
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="container mx-auto px-6 py-6"
-            role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
-          >
-            <Alert variant="destructive">
-              <AlertDescription className="text-sm">{error}</AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Welcome State - Upload Section */}
-      {showWelcome && (
-        <ErrorBoundary>
-          <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
-        </ErrorBoundary>
-      )}
-
-      {/* Dividends Dashboard View */}
-      <AnimatePresence mode="wait">
-        {showDividendsDashboard && (
-          <motion.div
-            key="dividends-dashboard"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-w-0"
-            ref={dividendsRef}
-          >
-            <ErrorBoundary>
-              <DividendsDashboard transactions={normalizedTransactions} />
-            </ErrorBoundary>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Stock Detail View */}
-      <AnimatePresence mode="wait">
-        {showDetail && selectedTicker && (
-          <motion.div
-            key="detail"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="container mx-auto px-6 py-6 min-w-0"
-          >
-            <ErrorBoundary>
-              <StockDetail
-                ticker={selectedTicker}
-                transactions={normalizedTransactions}
-                onBack={handleBackToOverview}
-              />
-            </ErrorBoundary>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Portfolio Overview with Metrics */}
-      <AnimatePresence mode="wait">
-        {showOverview && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="container mx-auto px-6 py-6 space-y-8 min-w-0"
-          >
-            {/* Global Portfolio Metrics */}
-            <div ref={analyticsRef}>
+        {/* Dividends Dashboard View */}
+        <AnimatePresence mode="wait">
+          {showDividendsDashboard && (
+            <motion.div
+              key="dividends-dashboard"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="min-w-0"
+              ref={dividendsRef}
+            >
               <ErrorBoundary>
-                <PortfolioMetrics transactions={normalizedTransactions} />
+                <DividendsDashboard transactions={normalizedTransactions} />
               </ErrorBoundary>
-            </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Trading Activity Heatmap */}
-            <div ref={activityRef}>
+        {/* Trading Activity Dashboard View */}
+        <AnimatePresence mode="wait">
+          {showTradingActivityDashboard && (
+            <motion.div
+              key="trading-activity-dashboard"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="min-w-0"
+              ref={activityRef}
+            >
               <ErrorBoundary>
-                <TradingHeatmap transactions={normalizedTransactions} />
+                <TradingActivityDashboard transactions={normalizedTransactions} />
               </ErrorBoundary>
-            </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Stock Positions Grid */}
-            <div ref={portfolioRef}>
+        {/* Stock Detail View */}
+        <AnimatePresence mode="wait">
+          {showDetail && selectedTicker && (
+            <motion.div
+              key="detail"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="container mx-auto px-6 py-6 min-w-0"
+            >
               <ErrorBoundary>
-                <PortfolioOverview
+                <StockDetail
+                  ticker={selectedTicker}
                   transactions={normalizedTransactions}
-                  onSelectTicker={handleSelectTicker}
+                  onBack={handleBackToOverview}
                 />
               </ErrorBoundary>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Hidden Upload Component (for re-upload) */}
-      {!showWelcome && !hasData && showUpload && (
-        <ErrorBoundary>
-          <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
-        </ErrorBoundary>
-      )}
+        {/* Portfolio Overview with Metrics */}
+        <AnimatePresence mode="wait">
+          {showOverview && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="container mx-auto px-6 py-6 space-y-8 min-w-0"
+            >
+              {/* Global Portfolio Metrics */}
+              <div>
+                <ErrorBoundary>
+                  <PortfolioMetrics transactions={normalizedTransactions} />
+                </ErrorBoundary>
+              </div>
+
+              {/* Stock Positions Grid */}
+              <div ref={portfolioRef}>
+                <ErrorBoundary>
+                  <PortfolioOverview
+                    transactions={normalizedTransactions}
+                    onSelectTicker={handleSelectTicker}
+                  />
+                </ErrorBoundary>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Hidden Upload Component (for re-upload) */}
+        {!showWelcome && !hasData && showUpload && (
+          <ErrorBoundary>
+            <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
+          </ErrorBoundary>
+        )}
       </main>
     </div>
   )
