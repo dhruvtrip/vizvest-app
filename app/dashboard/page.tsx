@@ -62,6 +62,19 @@ export default function DashboardPage() {
     }
   }, [rawTransactions])
 
+  // Auto-dismiss success alert after 3 seconds
+  useEffect(() => {
+    if (uploadInfo && normalizedTransactions.length > 0 && !isAlertDismissed) {
+      const timer = setTimeout(() => {
+        setIsAlertDismissed(true)
+      }, 3000)
+
+      return () => {
+        clearTimeout(timer)
+      }
+    }
+  }, [uploadInfo, normalizedTransactions.length, isAlertDismissed])
+
   // Handler: CSV data parsed
   const handleDataParsed = useCallback((data: Trading212Transaction[], result: UploadInfo) => {
     setRawTransactions(data)
