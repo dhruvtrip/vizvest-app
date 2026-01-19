@@ -9,7 +9,6 @@ import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
 import { DividendsDashboard } from '@/components/features/dividends-dashboard'
 import { TradingActivityDashboard } from '@/components/features/trading-activity-dashboard'
-import { TradingHeatmap } from '@/components/ui/trading-heatmap'
 import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
@@ -154,11 +153,6 @@ export default function DashboardPage() {
           setShowDividendsDashboard(false)
           setShowTradingActivityDashboard(false)
           scrollToTop()
-          break
-        case 'analytics':
-          setShowDividendsDashboard(false)
-          setShowTradingActivityDashboard(false)
-          analyticsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           break
         case 'activity':
           setShowDividendsDashboard(false)
@@ -393,13 +387,6 @@ export default function DashboardPage() {
               <div ref={analyticsRef}>
                 <ErrorBoundary>
                   <PortfolioMetrics transactions={normalizedTransactions} />
-                </ErrorBoundary>
-              </div>
-
-              {/* Trading Activity Heatmap */}
-              <div ref={activityRef}>
-                <ErrorBoundary>
-                  <TradingHeatmap transactions={normalizedTransactions} />
                 </ErrorBoundary>
               </div>
 
