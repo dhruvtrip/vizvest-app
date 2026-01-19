@@ -1,6 +1,7 @@
 'use client'
 
 import { Component, ReactNode } from 'react'
+import posthog from 'posthog-js'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
@@ -27,6 +28,15 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: any) {
     console.error('Error caught by boundary:', error, errorInfo)
+
+    // Track error with PostHog
+    posthog.capture('error_boundary_triggered', {
+      error_message: error.message,
+      error_name: error.name,
+    })
+
+    // Also capture as exception for error tracking
+    posthog.captureException(error)
   }
 
   render() {

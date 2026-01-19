@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { PostHogProvider } from '@/app/providers/ph-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,18 +20,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          {/* Sticky Theme Toggle */}
-          <div className="fixed bottom-6 right-6 z-50">
-            <ThemeToggle />
-          </div>
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            {/* Sticky Theme Toggle */}
+            <div className="fixed bottom-6 right-6 z-50">
+              <ThemeToggle />
+            </div>
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   )

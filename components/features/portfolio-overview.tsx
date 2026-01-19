@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import groupBy from 'lodash/groupBy'
+import posthog from 'posthog-js'
 import { ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -35,7 +36,7 @@ function formatCurrency(amount: number, currency: string): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(Math.abs(amount))
-  
+
   const sign = amount < 0 ? '-' : ''
   return `${sign}${symbol}${formatted}`
 }
@@ -64,14 +65,14 @@ interface PortfolioOverviewProps {
 function aggregatePositions(transactions: NormalizedTransaction[]): StockPosition[] {
   // Filter to only include transactions with tickers (excludes deposits, etc.)
   const stockTransactions = transactions.filter(t => t.Ticker)
-  
+
   if (stockTransactions.length === 0) {
     return []
   }
 
   // Group transactions by ticker
   const grouped = groupBy(stockTransactions, 'Ticker')
-  
+
   // Get base currency from first transaction (all should be normalized to same currency)
   const baseCurrency = stockTransactions[0]?.detectedBaseCurrency || 'USD'
 
@@ -174,7 +175,7 @@ function StockPositionTile({
           </div>
           <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all duration-200 flex-shrink-0" />
         </div>
-        
+
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Shares</span>
@@ -182,7 +183,7 @@ function StockPositionTile({
               {formatShares(position.totalShares)}
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Invested</span>
             <span className={cn(
@@ -192,7 +193,7 @@ function StockPositionTile({
               {formatCurrency(position.totalInvested, position.baseCurrency)}
             </span>
           </div>
-          
+
           <div className="mt-2 pt-2 border-t border-border/50">
             <p className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               Click to view details
@@ -256,7 +257,7 @@ function SoldPositionTile({
             <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all duration-200" />
           </div>
         </div>
-        
+
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Result</span>
@@ -267,7 +268,7 @@ function SoldPositionTile({
               {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
             </span>
           </div>
-          
+
           <div className="mt-2 pt-2 border-t border-border/50">
             <p className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               Click to view details
@@ -351,13 +352,16 @@ export function PortfolioOverview({
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="Current stock holdings">
             {currentHoldings.map(position => (
               <div key={position.ticker} role="listitem">
                 <StockPositionTile
                   position={position}
-                  onClick={() => onSelectTicker(position.ticker)}
+                  onClick={() => {
+                    posthog.capture('stock_selected_holding')
+                    onSelectTicker(position.ticker)
+                  }}
                 />
               </div>
             ))}
@@ -381,11 +385,11 @@ export function PortfolioOverview({
               <span className="text-xs text-muted-foreground" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>
-              <span 
+              <span
                 className={cn(
                   'text-xs font-medium',
-                  totalRealizedResult >= 0 
-                    ? 'text-emerald-600 dark:text-emerald-400' 
+                  totalRealizedResult >= 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-red-600 dark:text-red-400'
                 )}
                 aria-label={`Total realized ${totalRealizedResult >= 0 ? 'profit' : 'loss'}: ${totalRealizedResult >= 0 ? '+' : ''}${formatCurrency(totalRealizedResult, baseCurrency)}`}
@@ -394,13 +398,16 @@ export function PortfolioOverview({
               </span>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="Sold stock positions">
             {soldPositions.map(position => (
               <div key={position.ticker} role="listitem">
                 <SoldPositionTile
                   position={position}
-                  onClick={() => onSelectTicker(position.ticker)}
+                  onClick={() => {
+                    posthog.capture('stock_selected_sold')
+                    onSelectTicker(position.ticker)
+                  }}
                 />
               </div>
             ))}

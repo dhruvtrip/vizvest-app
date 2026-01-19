@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Papa from 'papaparse'
+import posthog from 'posthog-js'
 import { motion } from 'framer-motion'
 import { Upload, FileUp, AlertCircle, Lock, FileSpreadsheet } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -54,9 +55,13 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     setUploadState('parsing')
     setFileName(file.name)
 
+    // Track upload started
+    posthog.capture('csv_upload_started')
+
     if (!file.name.toLowerCase().endsWith('.csv')) {
       setUploadState('error')
       setErrors(['Invalid file type. Please upload a .csv file.'])
+      posthog.capture('csv_upload_failed-file-type-invalid')
       return
     }
 
@@ -64,12 +69,14 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     if (file.size > maxSize) {
       setUploadState('error')
       setErrors(['File too large. Maximum file size is 5MB.'])
+      posthog.capture('csv_upload_failed-file-too-large')
       return
     }
 
     if (file.size === 0) {
       setUploadState('error')
       setErrors(['File is empty. Please upload a valid Trading 212 CSV file.'])
+      posthog.capture('csv_upload_failed-file-empty')
       return
     }
 
@@ -83,6 +90,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
       error: (error) => {
         setUploadState('error')
         setErrors([`Failed to parse CSV: ${error.message}`])
+        posthog.capture('csv_upload_failed')
       }
     })
   }
@@ -125,6 +133,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     if (!columnValidation.isValid) {
       setUploadState('error')
       setErrors(columnValidation.errors)
+      posthog.capture('csv_upload_failed-column-validation')
       return
     }
 
@@ -132,11 +141,15 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     if (!dataValidation.isValid) {
       setUploadState('error')
       setErrors(dataValidation.errors)
+      posthog.capture('csv_upload_failed-data-validation')
       return
     }
 
     const validData = results.data as Trading212Transaction[]
-    
+
+    // Track successful upload
+    posthog.capture('csv_upload_completed')
+
     if (onDataParsed) {
       onDataParsed(validData, {
         fileName: name,
@@ -158,6 +171,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
   }
 
   const handleButtonClick = () => {
+    posthog.capture('csv_upload_clicked')
     fileInputRef.current?.click()
   }
 
@@ -231,7 +245,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
               aria-describedby="file-upload-description"
             >
               {/* Animated icon container */}
-              <motion.div 
+              <motion.div
                 className={cn(
                   'w-16 h-16 rounded-2xl flex items-center justify-center mb-5',
                   'bg-gradient-to-br from-primary/10 to-accent/10',
@@ -265,7 +279,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
 
           {/* Parsing State */}
           {uploadState === 'parsing' && (
-            <div 
+            <div
               className="flex flex-col items-center gap-4 p-12 bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50"
               role="status"
               aria-live="polite"

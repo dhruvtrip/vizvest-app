@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import posthog from 'posthog-js'
 import { Loader2, CheckCircle2, Upload, X, Menu } from 'lucide-react'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
@@ -100,6 +101,7 @@ export default function DashboardPage() {
 
   // Handler: Upload different file
   const handleUploadAnother = useCallback(() => {
+    posthog.capture('upload_another_file_clicked')
     setShowUpload(true)
     setRawTransactions([])
     setNormalizedTransactions([])
@@ -159,6 +161,13 @@ export default function DashboardPage() {
     setSelectedTicker(null) // Reset ticker selection when navigating
     setShowDividendsDashboard(view === 'dividends') // Show dividends dashboard when dividends is clicked
     setShowTradingActivityDashboard(view === 'activity') // Show trading activity dashboard when activity is clicked
+
+    // Track navigation events
+    if (view === 'dividends') {
+      posthog.capture('dividends_dashboard_viewed')
+    } else if (view === 'activity') {
+      posthog.capture('trading_activity_viewed')
+    }
 
     setTimeout(() => {
       switch (view) {

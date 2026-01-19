@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Table,
@@ -708,7 +709,10 @@ export function DividendsDashboard({
                 <Button
                   variant={viewMode === 'month' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setViewMode('month')}
+                  onClick={() => {
+                    setViewMode('month')
+                    posthog.capture('dividend_view_mode_changed', { view_mode: 'month' })
+                  }}
                   className="text-xs h-7"
                 >
                   Monthly
@@ -716,7 +720,10 @@ export function DividendsDashboard({
                 <Button
                   variant={viewMode === 'quarter' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setViewMode('quarter')}
+                  onClick={() => {
+                    setViewMode('quarter')
+                    posthog.capture('dividend_view_mode_changed', { view_mode: 'quarter' })
+                  }}
                   className="text-xs h-7"
                 >
                   Quarterly

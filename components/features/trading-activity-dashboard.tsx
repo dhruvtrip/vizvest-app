@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Table,
@@ -285,6 +286,9 @@ export function TradingActivityDashboard({
 
   // Toggle year selection
   const toggleYear = (year: number) => {
+    const wasSelected = selectedYears.has(year)
+    posthog.capture('trading_year_filter_changed')
+
     setSelectedYears((prev) => {
       const next = new Set(prev)
       if (next.has(year)) {

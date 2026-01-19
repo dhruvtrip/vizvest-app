@@ -3,6 +3,7 @@
 import { useRef } from 'react'
 import Link from 'next/link'
 import { motion, useInView } from 'framer-motion'
+import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Magnetic } from '@/components/ui/magnetic'
 import { ArrowRight, Sparkles } from 'lucide-react'
@@ -93,6 +94,7 @@ export function CTA() {
                     asChild
                     size="lg"
                     className="h-12 px-8 text-sm font-medium bg-white text-primary hover:bg-white/90 shadow-xl shadow-black/20 transition-all duration-300 gap-2"
+                    onClick={() => posthog.capture('get_started_cta_clicked', { location: 'cta_section' })}
                   >
                     <Link href="/dashboard" aria-label="Get started with Vizvest dashboard">
                       Get Started Now

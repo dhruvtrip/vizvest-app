@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Magnetic } from '@/components/ui/magnetic'
 import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern'
@@ -123,7 +124,12 @@ export function Hero() {
           {/* CTAs */}
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Magnetic intensity={0.3}>
-              <Button asChild size="lg" className="text-sm h-11 px-8 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2">
+              <Button
+                asChild
+                size="lg"
+                className="text-sm h-11 px-8 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2"
+                onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
+              >
                 <Link href="/dashboard" aria-label="Open dashboard to analyze your portfolio">
                   Open Dashboard
                   <ArrowRight className="w-4 h-4" aria-hidden="true" />
