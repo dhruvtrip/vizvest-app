@@ -9,6 +9,7 @@ import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
 import { DividendsDashboard } from '@/components/features/dividends-dashboard'
 import { TradingActivityDashboard } from '@/components/features/trading-activity-dashboard'
+import { TradingHeatmap } from '@/components/ui/trading-heatmap'
 import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
@@ -106,6 +107,7 @@ export default function DashboardPage() {
   const [showDividendsDashboard, setShowDividendsDashboard] = useState(false)
   const [showTradingActivityDashboard, setShowTradingActivityDashboard] = useState(false)
   const portfolioRef = useRef<HTMLDivElement>(null)
+  const analyticsRef = useRef<HTMLDivElement>(null)
   const activityRef = useRef<HTMLDivElement>(null)
   const dividendsRef = useRef<HTMLDivElement>(null)
 
@@ -152,6 +154,11 @@ export default function DashboardPage() {
           setShowDividendsDashboard(false)
           setShowTradingActivityDashboard(false)
           scrollToTop()
+          break
+        case 'analytics':
+          setShowDividendsDashboard(false)
+          setShowTradingActivityDashboard(false)
+          analyticsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           break
         case 'activity':
           setShowDividendsDashboard(false)
@@ -383,9 +390,16 @@ export default function DashboardPage() {
               className="container mx-auto px-6 py-6 space-y-8 min-w-0"
             >
               {/* Global Portfolio Metrics */}
-              <div>
+              <div ref={analyticsRef}>
                 <ErrorBoundary>
                   <PortfolioMetrics transactions={normalizedTransactions} />
+                </ErrorBoundary>
+              </div>
+
+              {/* Trading Activity Heatmap */}
+              <div ref={activityRef}>
+                <ErrorBoundary>
+                  <TradingHeatmap transactions={normalizedTransactions} />
                 </ErrorBoundary>
               </div>
 
