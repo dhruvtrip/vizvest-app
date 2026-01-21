@@ -188,7 +188,7 @@ export function StockDetail({
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+          className="gap-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 px-2"
           aria-label="Return to portfolio overview"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
