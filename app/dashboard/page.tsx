@@ -147,20 +147,25 @@ export default function DashboardPage() {
 
   // Helper: Scroll to top of main content
   const scrollToTop = useCallback(() => {
+    // Scroll both main element and window to ensure it works
     const mainElement = document.querySelector('main')
     if (mainElement) {
       mainElement.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
   // Handler: Navigate to different sections
   const handleNavigate = useCallback((view: string) => {
+    // Scroll to top immediately when navigating
+    scrollToTop()
+    
     setCurrentView(view)
     setSelectedTicker(null) // Reset ticker selection when navigating
-    setShowDividendsDashboard(view === 'dividends') // Show dividends dashboard when dividends is clicked
-    setShowTradingActivityDashboard(view === 'activity') // Show trading activity dashboard when activity is clicked
+    
+    // Update view states
+    setShowDividendsDashboard(view === 'dividends')
+    setShowTradingActivityDashboard(view === 'activity')
 
     // Track navigation events
     if (view === 'dividends') {
@@ -169,27 +174,10 @@ export default function DashboardPage() {
       posthog.capture('trading_activity_viewed')
     }
 
-    setTimeout(() => {
-      switch (view) {
-        case 'portfolio':
-          setShowDividendsDashboard(false)
-          setShowTradingActivityDashboard(false)
-          scrollToTop()
-          break
-        case 'activity':
-          setShowDividendsDashboard(false)
-          setShowTradingActivityDashboard(true)
-          setTimeout(() => {
-            scrollToTop()
-          }, 50)
-          break
-        case 'dividends':
-          setShowDividendsDashboard(true)
-          setShowTradingActivityDashboard(false)
-          scrollToTop()
-          break
-      }
-    }, 100)
+    // Ensure scroll happens after state updates
+    requestAnimationFrame(() => {
+      scrollToTop()
+    })
   }, [scrollToTop])
 
   // Handler: Handle upload click from sidebar
