@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
-import { TrendingUp, TrendingDown, ArrowUpDown, Activity, ArrowUp, ArrowDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, ArrowUpDown, Activity, ArrowUp, ArrowDown, Calculator } from 'lucide-react'
 
 /**
  * Currency symbols for common currencies
@@ -414,11 +414,13 @@ export function TradingActivityDashboard({
           value={formatCurrency(metrics.netVolume, metrics.baseCurrency)}
           subValue={metrics.netVolume >= 0 ? 'Net buying' : 'Net selling'}
           valueClassName={metrics.netVolume >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
+          icon={ArrowUpDown}
         />
         <MetricCard
           label="Avg Transaction"
           value={formatCurrency(metrics.averageTransactionSize, metrics.baseCurrency)}
           subValue={metrics.mostTradedStock ? `Most: ${metrics.mostTradedStock.ticker}` : undefined}
+          icon={Calculator}
         />
       </div>
 
