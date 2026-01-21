@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -242,27 +242,149 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
   const heatmapWidth = totalWeeks * weekWidth
   const dayLabelWidth = 20 // Width for day-of-week labels
 
+  // #region agent log
+  // Instrumentation for debugging scroll issue
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const heatmapContentRef = useRef<HTMLDivElement>(null)
+  const parentContainerRef = useRef<HTMLDivElement>(null)
+  const [needsScroll, setNeedsScroll] = useState(false)
+  
+  const logDimensions = () => {
+    if (scrollContainerRef.current && heatmapContentRef.current && parentContainerRef.current) {
+      const containerRect = scrollContainerRef.current.getBoundingClientRect()
+      const contentRect = heatmapContentRef.current.getBoundingClientRect()
+      const parentRect = parentContainerRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const hasOverflow = contentRect.width > containerRect.width
+      const scrollWidth = scrollContainerRef.current.scrollWidth
+      const clientWidth = scrollContainerRef.current.clientWidth
+      const computedStyle = window.getComputedStyle(scrollContainerRef.current)
+      const overflowX = computedStyle.overflowX
+      const contentNeedsSpace = dayLabelWidth + heatmapWidth
+      const shouldShowScroll = scrollWidth > clientWidth && contentNeedsSpace > viewportWidth * 0.9
+      
+      setNeedsScroll(shouldShowScroll)
+      
+      fetch('http://127.0.0.1:7242/ingest/0c5783f2-38ee-4263-aa6c-488395854699', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'trading-heatmap.tsx:245',
+          message: 'Scroll container dimensions',
+          data: {
+            viewportWidth,
+            parentContainerWidth: parentRect.width,
+            containerWidth: containerRect.width,
+            contentWidth: contentRect.width,
+            calculatedHeatmapWidth: heatmapWidth,
+            calculatedTotalWidth: dayLabelWidth + heatmapWidth,
+            scrollWidth,
+            clientWidth,
+            hasOverflow,
+            overflowX,
+            totalWeeks,
+            weekWidth,
+            gap: 16,
+            shouldShowScroll,
+            contentNeedsSpace
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'post-fix',
+          hypothesisId: 'A'
+        })
+      }).catch(() => {})
+    }
+  }
+  
+  useEffect(() => {
+    logDimensions()
+    const resizeObserver = new ResizeObserver(() => {
+      logDimensions()
+    })
+    
+    if (scrollContainerRef.current) {
+      resizeObserver.observe(scrollContainerRef.current)
+    }
+    if (parentContainerRef.current) {
+      resizeObserver.observe(parentContainerRef.current)
+    }
+    
+    window.addEventListener('resize', logDimensions)
+    
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', logDimensions)
+    }
+  }, [heatmapWidth, dayLabelWidth, totalWeeks, weekWidth, cells])
+  // #endregion
+
   return (
     <Card className={cn('border-border/50 bg-card/50 backdrop-blur-sm', className)}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Trading Activity
-            </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-1">
-              {totalContributions} {totalContributions === 1 ? 'trade' : 'trades'} in {selectedYear}
-            </CardDescription>
+      <CardContent className="pt-6">
+        {/* Header aligned with heatmap */}
+        <div className="flex items-start gap-4 min-w-0 mb-4">
+          <div className="flex-1 min-w-0">
+            <div className="mx-auto" style={{ width: `${dayLabelWidth + heatmapWidth}px` }}>
+              <CardTitle className="text-sm font-semibold text-foreground">
+                Trading Activity
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-1">
+                {totalContributions} {totalContributions === 1 ? 'trade' : 'trades'} in {selectedYear}
+              </CardDescription>
+            </div>
           </div>
+          {/* Year selector spacer to match layout */}
+          <div className="flex-shrink-0" style={{ width: '0px' }} aria-hidden="true" />
         </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex items-start gap-4 min-w-0">
-          {/* Scrollable heatmap container */}
-          <div className="overflow-x-auto max-w-full min-w-0">
+        
+        {/* Centered container for heatmap and year selector */}
+        <div className="flex justify-center">
+          <div ref={parentContainerRef} className="flex items-start gap-2 min-w-0">
+            {/* Scrollable heatmap container */}
+            <div 
+              ref={scrollContainerRef}
+              className={cn(
+                "min-w-0",
+                needsScroll ? "overflow-x-auto" : "overflow-x-visible"
+              )}
+            onScroll={() => {
+              // #region agent log
+              if (scrollContainerRef.current) {
+                const scrollLeft = scrollContainerRef.current.scrollLeft
+                const scrollWidth = scrollContainerRef.current.scrollWidth
+                const clientWidth = scrollContainerRef.current.clientWidth
+                const maxScroll = scrollWidth - clientWidth
+                const isScrollable = scrollWidth > clientWidth
+                
+                fetch('http://127.0.0.1:7242/ingest/0c5783f2-38ee-4263-aa6c-488395854699', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    location: 'trading-heatmap.tsx:268',
+                    message: 'Scroll event detected',
+                    data: {
+                      scrollLeft,
+                      scrollWidth,
+                      clientWidth,
+                      maxScroll,
+                      isScrollable,
+                      hasScrollbar: isScrollable
+                    },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    runId: 'run1',
+                    hypothesisId: 'B'
+                  })
+                }).catch(() => {})
+              }
+              // #endregion
+            }}
+          >
             {/* Main heatmap grid */}
             <div 
-              className="relative flex-shrink-0 min-w-0" 
+              ref={heatmapContentRef}
+              className="relative flex-shrink-0 mx-auto" 
               id="heatmap-container"
               style={{ width: `${dayLabelWidth + heatmapWidth}px` }}
             >
@@ -433,8 +555,8 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
             </div>
           </div>
 
-          {/* Year selector - always visible */}
-          <div className="flex flex-col gap-1 flex-shrink-0" role="group" aria-label="Select year">
+            {/* Year selector - always visible */}
+            <div className="flex flex-col gap-1 flex-shrink-0" role="group" aria-label="Select year">
             {availableYears.map((year) => (
               <button
                 key={year}
@@ -452,6 +574,7 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
                 {year}
               </button>
             ))}
+          </div>
           </div>
         </div>
       </CardContent>
