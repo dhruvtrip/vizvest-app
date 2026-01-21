@@ -15,7 +15,7 @@ export function CTA() {
   return (
     <section className="py-24 lg:py-32 relative" ref={ref}>
       <div className="container mx-auto px-6">
-        <motion.div 
+        <motion.div
           className="relative overflow-hidden rounded-2xl"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -23,29 +23,29 @@ export function CTA() {
         >
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent" />
-          
+
           {/* Grid pattern overlay */}
-          <div 
+          <div
             className="absolute inset-0 opacity-10"
             style={{
               backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
               backgroundSize: '32px 32px'
             }}
           />
-          
+
           {/* Animated glow */}
           <div className="absolute inset-0 overflow-hidden">
-            <motion.div 
+            <motion.div
               className="absolute -top-1/2 -right-1/4 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl"
-              animate={{ 
+              animate={{
                 x: [0, 50, 0],
                 y: [0, -30, 0],
               }}
               transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <motion.div 
+            <motion.div
               className="absolute -bottom-1/2 -left-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl"
-              animate={{ 
+              animate={{
                 x: [0, -30, 0],
                 y: [0, 50, 0],
               }}
@@ -66,7 +66,7 @@ export function CTA() {
                 Easy to use
               </motion.div>
 
-              <motion.h2 
+              <motion.h2
                 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight"
                 initial={{ opacity: 0, y: 15 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -74,8 +74,8 @@ export function CTA() {
               >
                 Ready to understand your portfolio?
               </motion.h2>
-              
-              <motion.p 
+
+              <motion.p
                 className="text-base text-white/80 mb-8 max-w-lg mx-auto"
                 initial={{ opacity: 0, y: 15 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -83,13 +83,13 @@ export function CTA() {
               >
                 Start analyzing your investments in seconds. No sign-up, no hassle, completely free.
               </motion.p>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.2 }}
               >
-                <Magnetic intensity={0.3}>
+                <Magnetic intensity={0.5}>
                   <Button
                     asChild
                     size="lg"

@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
-import { Magnetic } from '@/components/ui/magnetic'
 import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern'
 import { RotatingText } from '@/components/ui/rotating-text'
 import { ArrowRight, Shield, Zap, Lock, HandCoins } from 'lucide-react'
@@ -40,12 +39,12 @@ export function Hero() {
       <div className="absolute inset-0 -z-10">
         {/* Base gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
-        
+
         {/* Radial gradient spotlight */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),transparent)]" />
-        
+
         {/* Grid pattern overlay */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
           style={{
             backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
@@ -80,7 +79,7 @@ export function Hero() {
         )}
       />
 
-      <div className="container mx-auto px-6 relative z-10 py-20 lg:py-32">
+      <div className="container mx-auto px-6 relative z-10 py-14 lg:py-32">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
@@ -123,19 +122,17 @@ export function Hero() {
 
           {/* CTAs */}
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Magnetic intensity={0.3}>
-              <Button
-                asChild
-                size="lg"
-                className="text-sm h-11 px-8 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2"
-                onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
-              >
-                <Link href="/dashboard" aria-label="Open dashboard to analyze your portfolio">
-                  Open Dashboard
-                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </Link>
-              </Button>
-            </Magnetic>
+            <Button
+              asChild
+              size="lg"
+              className="text-sm h-11 px-8 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2"
+              onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
+            >
+              <Link href="/dashboard" aria-label="Open dashboard to analyze your portfolio">
+                Open Dashboard
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
+            </Button>
             <Button asChild variant="outline" size="lg" className="text-sm h-11 px-8 hover:bg-muted/50 transition-colors border-border/50 backdrop-blur-sm">
               <Link href="#how-it-works" aria-label="Learn how Vizvest works">
                 Learn how it works
