@@ -5,6 +5,7 @@ import posthog from 'posthog-js'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
+import { sanitizeError } from '@/lib/posthog-privacy'
 
 interface Props {
   children: ReactNode
@@ -29,14 +30,15 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: any) {
     console.error('Error caught by boundary:', error, errorInfo)
 
-    // Track error with PostHog
-    posthog.capture('error_boundary_triggered', {
-      error_message: error.message,
-      error_name: error.name,
-    })
+    // Sanitize error data to prevent sensitive information from being captured
+    const sanitized = sanitizeError(error)
 
-    // Also capture as exception for error tracking
-    posthog.captureException(error)
+    // Track error with PostHog (only error type/name, not full message)
+    posthog.capture('error_boundary_triggered', {
+      error_type: sanitized.error_type,
+      error_name: sanitized.error_name,
+      // Explicitly do NOT include error.message to avoid capturing sensitive data
+    })
   }
 
   render() {

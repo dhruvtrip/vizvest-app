@@ -4,6 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { PostHogProvider } from '@/app/providers/ph-provider'
+import { PostHogConsentBanner } from '@/components/posthog-consent-banner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -32,6 +33,7 @@ export default function RootLayout({
             <div className="fixed bottom-6 right-6 z-50">
               <ThemeToggle />
             </div>
+            <PostHogConsentBanner />
           </ThemeProvider>
         </PostHogProvider>
       </body>
