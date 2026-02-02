@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils'
 import { Menu, X, ChevronRight } from 'lucide-react'
 
 const navLinks = [
-  { label: 'Features', href: '#features' },
-  { label: 'How it works', href: '#how-it-works' },
+  { label: 'Features', href: '/#features' },
+  { label: 'How it works', href: '/#how-it-works' },
   { label: 'Articles', href: '/articles' },
 ]
 
