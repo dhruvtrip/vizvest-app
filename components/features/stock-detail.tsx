@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 import { DividendSection } from './dividend-section'
 
 /**
@@ -72,9 +73,9 @@ function formatDate(dateString: string): string {
 }
 
 interface StockDetailProps {
-  ticker: string
-  transactions: NormalizedTransaction[]
-  onBack: () => void
+  ticker?: string
+  transactions?: NormalizedTransaction[]
+  onBack?: () => void
   className?: string
 }
 
@@ -160,19 +161,26 @@ function MetricCard({
  * Stock Detail Component
  * Displays comprehensive analytics for a single stock position
  */
-export function StockDetail({
-  ticker,
-  transactions,
-  onBack,
+export function StockDetail ({
+  ticker: tickerProp,
+  transactions: transactionsProp,
+  onBack: onBackProp,
   className
 }: StockDetailProps) {
-  // Calculate metrics for this ticker
+  const storeSelectedTicker = useDashboardStore((state) => state.selectedTicker)
+  const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
+  const storeBackToOverview = useDashboardStore((state) => state.backToOverview)
+  const ticker = tickerProp ?? storeSelectedTicker
+  const transactions = transactionsProp ?? storeTransactions
+  const onBack = onBackProp ?? storeBackToOverview
+
+  if (!ticker) return null
+
   const metrics = useMemo(
     () => calculateMetrics(transactions, ticker),
     [transactions, ticker]
   )
 
-  // Filter and sort transactions for the table (exclude dividends)
   const tableTransactions = useMemo(() => {
     return transactions
       .filter(t => t.Ticker === ticker)

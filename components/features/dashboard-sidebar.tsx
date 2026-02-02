@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import posthog from 'posthog-js'
 import {
   Upload,
   LayoutDashboard,
@@ -12,6 +13,7 @@ import {
   X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 
 // Hook to detect if we're on desktop
 function useIsDesktop() {
@@ -30,6 +32,14 @@ function useIsDesktop() {
   return isDesktop
 }
 
+function scrollToTop () {
+  const mainElement = document.querySelector('main')
+  if (mainElement) {
+    mainElement.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 interface SidebarOption {
   id: string
   label: string
@@ -39,31 +49,38 @@ interface SidebarOption {
 }
 
 interface DashboardSidebarProps {
-  onNavigate: (view: string) => void
-  currentView?: string
-  onUploadClick: () => void
-  isMobileOpen?: boolean
-  onMobileClose?: () => void
   className?: string
 }
 
-export function DashboardSidebar({
-  onNavigate,
-  currentView = 'portfolio',
-  onUploadClick,
-  isMobileOpen = false,
-  onMobileClose,
-  className
-}: DashboardSidebarProps) {
+export function DashboardSidebar (props: DashboardSidebarProps = {}) {
+  const { className } = props
   const [isOpen, setIsOpen] = useState(true)
   const isDesktop = useIsDesktop()
+  const currentView = useDashboardStore((state) => state.currentView)
+  const isMobileOpen = useDashboardStore((state) => state.isMobileSidebarOpen)
+  const navigate = useDashboardStore((state) => state.navigate)
+  const uploadAnother = useDashboardStore((state) => state.uploadAnother)
+  const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
 
-  // Close mobile sidebar when navigating
   const handleOptionClick = (onClick: () => void) => {
     onClick()
-    if (onMobileClose) {
-      onMobileClose()
+    setMobileSidebarOpen(false)
+  }
+
+  const handleNavigate = (view: string) => {
+    scrollToTop()
+    navigate(view)
+    if (view === 'dividends') {
+      posthog.capture('dividends_dashboard_viewed')
+    } else if (view === 'activity') {
+      posthog.capture('trading_activity_viewed')
     }
+    requestAnimationFrame(() => scrollToTop())
+  }
+
+  const handleUploadClick = () => {
+    posthog.capture('upload_another_file_clicked')
+    uploadAnother()
   }
 
   const options: SidebarOption[] = [
@@ -71,27 +88,27 @@ export function DashboardSidebar({
       id: 'upload',
       label: 'Upload',
       icon: Upload,
-      onClick: () => handleOptionClick(onUploadClick)
+      onClick: () => handleOptionClick(handleUploadClick)
     },
     {
       id: 'portfolio',
       label: 'Portfolio',
       icon: LayoutDashboard,
-      onClick: () => handleOptionClick(() => onNavigate('portfolio')),
+      onClick: () => handleOptionClick(() => handleNavigate('portfolio')),
       isActive: currentView === 'portfolio'
     },
     {
       id: 'dividends',
       label: 'Dividends',
       icon: DollarSign,
-      onClick: () => handleOptionClick(() => onNavigate('dividends')),
+      onClick: () => handleOptionClick(() => handleNavigate('dividends')),
       isActive: currentView === 'dividends'
     },
     {
       id: 'activity',
       label: 'Trading Activity',
       icon: Activity,
-      onClick: () => handleOptionClick(() => onNavigate('activity')),
+      onClick: () => handleOptionClick(() => handleNavigate('activity')),
       isActive: currentView === 'activity'
     }
   ]
@@ -107,7 +124,7 @@ export function DashboardSidebar({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={onMobileClose}
+            onClick={() => setMobileSidebarOpen(false)}
             aria-hidden="true"
           />
         )}
@@ -144,7 +161,7 @@ export function DashboardSidebar({
         <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
           <span className="text-sm font-semibold text-foreground">Menu</span>
           <button
-            onClick={onMobileClose}
+            onClick={() => setMobileSidebarOpen(false)}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             aria-label="Close menu"
           >

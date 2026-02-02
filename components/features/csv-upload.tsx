@@ -8,6 +8,7 @@ import { Upload, FileUp, AlertCircle, Lock, FileSpreadsheet } from 'lucide-react
 import { cn } from '@/lib/utils'
 import { validateCSVColumns, validateTransactions } from '@/lib/csv-validator'
 import type { Trading212Transaction } from '@/types/trading212'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 
 interface UploadResult {
   fileName: string
@@ -150,11 +151,11 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     // Track successful upload
     posthog.capture('csv_upload_completed')
 
+    const result = { fileName: name, rowCount: validData.length }
     if (onDataParsed) {
-      onDataParsed(validData, {
-        fileName: name,
-        rowCount: validData.length
-      })
+      onDataParsed(validData, result)
+    } else {
+      useDashboardStore.getState().handleDataParsed(validData, result)
     }
 
     // Reset state after successful upload (component will be hidden by parent)

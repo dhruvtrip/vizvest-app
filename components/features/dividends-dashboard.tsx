@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 import {
   BarChart,
   Bar,
@@ -448,7 +449,7 @@ function MetricCard({
 }
 
 interface DividendsDashboardProps {
-  transactions: NormalizedTransaction[]
+  transactions?: NormalizedTransaction[]
   className?: string
 }
 
@@ -456,10 +457,12 @@ interface DividendsDashboardProps {
  * Dividends Dashboard Component
  * Shows aggregated dividend data across all stocks
  */
-export function DividendsDashboard({
-  transactions,
+export function DividendsDashboard ({
+  transactions: transactionsProp,
   className
 }: DividendsDashboardProps) {
+  const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
+  const transactions = transactionsProp ?? storeTransactions
   const [viewMode, setViewMode] = useState<'month' | 'quarter'>('month')
   const [sortField, setSortField] = useState<'yield' | 'dividends' | 'invested'>('yield')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')

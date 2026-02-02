@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 
 /**
  * Currency symbols for common currencies
@@ -52,8 +53,8 @@ function formatShares(shares: number): string {
 }
 
 interface PortfolioOverviewProps {
-  transactions: NormalizedTransaction[]
-  onSelectTicker: (ticker: string) => void
+  transactions?: NormalizedTransaction[]
+  onSelectTicker?: (ticker: string) => void
   className?: string
 }
 
@@ -299,12 +300,16 @@ function EmptyState() {
  * Displays aggregated stock positions as a responsive grid of clickable tiles
  * Shows both current holdings and sold positions in separate sections
  */
-export function PortfolioOverview({
-  transactions,
-  onSelectTicker,
+export function PortfolioOverview ({
+  transactions: transactionsProp,
+  onSelectTicker: onSelectTickerProp,
   className
 }: PortfolioOverviewProps) {
-  // Memoize position calculations to avoid recalculating on every render
+  const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
+  const storeSetSelectedTicker = useDashboardStore((state) => state.setSelectedTicker)
+  const transactions = transactionsProp ?? storeTransactions
+  const onSelectTicker = onSelectTickerProp ?? storeSetSelectedTicker
+
   const positions = useMemo(
     () => aggregatePositions(transactions),
     [transactions]
