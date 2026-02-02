@@ -7,6 +7,7 @@ A modern portfolio analysis tool for Trading 212 data. Upload CSV exports to vis
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **UI**: shadcn/ui + Radix UI
+- **State**: Zustand
 - **Styling**: Tailwind CSS
 - **Data**: PapaParse (CSV), Recharts (visualization)
 - **Animations**: Framer Motion
