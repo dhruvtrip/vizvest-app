@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
@@ -25,7 +26,7 @@ import {
   Area,
   AreaChart
 } from 'recharts'
-import { TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, ArrowUpDown, DollarSign, Receipt, Hash, Calculator } from 'lucide-react'
 import * as _ from 'lodash'
 
 /**
@@ -425,26 +426,42 @@ function MetricCard({
   value,
   subValue,
   className,
-  valueClassName
+  valueClassName,
+  icon: Icon
 }: {
   label: string
   value: string
   subValue?: string
   className?: string
   valueClassName?: string
+  icon?: React.ElementType
 }) {
   return (
-    <Card className={className}>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn('text-sm font-semibold text-foreground mt-0.5', valueClassName)}>
-          {value}
-        </p>
-        {subValue && (
-          <p className="text-xs text-muted-foreground mt-0.5">{subValue}</p>
-        )}
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="h-full"
+    >
+      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:shadow-primary/5 group h-full flex flex-col', className)}>
+        <CardContent className="p-3 flex flex-col h-full">
+          {Icon && (
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
+              <Icon className="w-4 h-4 text-primary" />
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground flex-shrink-0">{label}</p>
+          <p className={cn('text-sm font-semibold text-foreground mt-0.5 flex-shrink-0', valueClassName)}>
+            {value}
+          </p>
+          {subValue ? (
+            <p className="text-xs text-muted-foreground mt-0.5 flex-shrink-0">{subValue}</p>
+          ) : (
+            <div className="text-xs text-muted-foreground mt-0.5 flex-shrink-0 h-[14px]">&nbsp;</div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
 
@@ -622,29 +639,34 @@ export function DividendsDashboard ({
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 auto-rows-fr">
         <MetricCard
           label="Total Dividends"
           value={formatCurrency(globalData.totalGross, baseCurrency)}
+          icon={DollarSign}
         />
         <MetricCard
           label="Withholding Tax"
           value={formatCurrency(globalData.totalTax, baseCurrency)}
           valueClassName="text-muted-foreground"
+          icon={Receipt}
         />
         <MetricCard
           label="Net Dividends"
           value={formatCurrency(globalData.totalNet, baseCurrency)}
           valueClassName="text-emerald-600 dark:text-emerald-400"
+          icon={TrendingUp}
         />
         <MetricCard
           label="Total Payments"
           value={globalData.paymentCount.toString()}
+          icon={Hash}
         />
         <MetricCard
           label="Avg per Payment"
           value={formatCurrency(averagePerPayment, baseCurrency)}
           subValue={`${globalData.paymentCount} payments`}
+          icon={Calculator}
         />
       </div>
 
