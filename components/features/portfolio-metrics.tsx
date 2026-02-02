@@ -275,16 +275,11 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
 
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Portfolio Overview</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Your portfolio overview in the above timeframe
-          </p>
-        </div>
-        <span className="text-xs text-muted-foreground shrink-0">
-          Base currency: {metrics.baseCurrency}
-        </span>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Portfolio Overview</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Your portfolio overview in the above timeframe
+        </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
