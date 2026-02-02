@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
 import { TrendingUp, TrendingDown, ArrowUpDown, Activity, ArrowUp, ArrowDown, Calculator } from 'lucide-react'
 
@@ -235,7 +236,7 @@ function MetricCard({
 }
 
 interface TradingActivityDashboardProps {
-  transactions: NormalizedTransaction[]
+  transactions?: NormalizedTransaction[]
   className?: string
 }
 
@@ -243,11 +244,12 @@ interface TradingActivityDashboardProps {
  * Trading Activity Dashboard Component
  * Shows trading metrics, heatmap, and transaction table
  */
-export function TradingActivityDashboard({
-  transactions,
+export function TradingActivityDashboard ({
+  transactions: transactionsProp,
   className
 }: TradingActivityDashboardProps) {
-  // Filter to only buy/sell trades
+  const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
+  const transactions = transactionsProp ?? storeTransactions
   const allTrades = useMemo(() => {
     return transactions.filter((t) => {
       const action = t.Action.toLowerCase()

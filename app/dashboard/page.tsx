@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Loader2, CheckCircle2, Upload, X, Menu } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
@@ -14,188 +15,70 @@ import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { normalizeAllTransactions } from '@/lib/currency-normalizer'
-import type { Trading212Transaction, NormalizedTransaction } from '@/types/trading212'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 
-interface UploadInfo {
-  fileName: string
-  rowCount: number
-}
+export default function DashboardPage () {
+  const {
+    normalizedTransactions,
+    uploadInfo,
+    isAlertDismissed,
+    isNormalizing,
+    error,
+    showUpload,
+    showDividendsDashboard,
+    showTradingActivityDashboard,
+    selectedTicker,
+    isMobileSidebarOpen,
+    uploadAnother,
+    dismissAlert,
+    setMobileSidebarOpen
+  } = useDashboardStore(
+    useShallow((state) => ({
+      normalizedTransactions: state.normalizedTransactions,
+      uploadInfo: state.uploadInfo,
+      isAlertDismissed: state.isAlertDismissed,
+      isNormalizing: state.isNormalizing,
+      error: state.error,
+      showUpload: state.showUpload,
+      showDividendsDashboard: state.showDividendsDashboard,
+      showTradingActivityDashboard: state.showTradingActivityDashboard,
+      selectedTicker: state.selectedTicker,
+      isMobileSidebarOpen: state.isMobileSidebarOpen,
+      uploadAnother: state.uploadAnother,
+      dismissAlert: state.dismissAlert,
+      setMobileSidebarOpen: state.setMobileSidebarOpen
+    }))
+  )
 
-export default function DashboardPage() {
-  // Core state
-  const [rawTransactions, setRawTransactions] = useState<Trading212Transaction[]>([])
-  const [normalizedTransactions, setNormalizedTransactions] = useState<NormalizedTransaction[]>([])
-  const [baseCurrency, setBaseCurrency] = useState<string>('USD')
-  const [selectedTicker, setSelectedTicker] = useState<string | null>(null)
-
-  // Upload state
-  const [uploadInfo, setUploadInfo] = useState<UploadInfo | null>(null)
-  const [showUpload, setShowUpload] = useState(true)
-  const [isAlertDismissed, setIsAlertDismissed] = useState(false)
-
-  // Loading and error states
-  const [isNormalizing, setIsNormalizing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Normalize transactions when rawTransactions changes
-  useEffect(() => {
-    if (rawTransactions.length === 0) {
-      setNormalizedTransactions([])
-      setBaseCurrency('USD')
-      return
-    }
-
-    setIsNormalizing(true)
-    setError(null)
-
-    try {
-      const normalized = normalizeAllTransactions(rawTransactions)
-      const detected = normalized[0]?.detectedBaseCurrency || 'USD'
-
-      setNormalizedTransactions(normalized)
-      setBaseCurrency(detected)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to normalize transactions')
-      setNormalizedTransactions([])
-    } finally {
-      setIsNormalizing(false)
-    }
-  }, [rawTransactions])
-
-  // Auto-dismiss success alert after 3 seconds
-  useEffect(() => {
-    if (uploadInfo && normalizedTransactions.length > 0 && !isAlertDismissed) {
-      const timer = setTimeout(() => {
-        setIsAlertDismissed(true)
-      }, 3000)
-
-      return () => {
-        clearTimeout(timer)
-      }
-    }
-  }, [uploadInfo, normalizedTransactions.length, isAlertDismissed])
-
-  // Handler: CSV data parsed
-  const handleDataParsed = useCallback((data: Trading212Transaction[], result: UploadInfo) => {
-    setRawTransactions(data)
-    setSelectedTicker(null)
-    setError(null)
-    setUploadInfo(result)
-    setShowUpload(false)
-    setIsAlertDismissed(false) // Reset dismissed state on new upload
-  }, [])
-
-  // Handler: Select a stock ticker
-  const handleSelectTicker = useCallback((ticker: string) => {
-    setSelectedTicker(ticker)
-  }, [])
-
-  // Handler: Back to portfolio overview
-  const handleBackToOverview = useCallback(() => {
-    setSelectedTicker(null)
-    setShowDividendsDashboard(false)
-    setShowTradingActivityDashboard(false)
-    setCurrentView('portfolio')
-  }, [])
-
-  // Handler: Upload different file
-  const handleUploadAnother = useCallback(() => {
-    posthog.capture('upload_another_file_clicked')
-    setShowUpload(true)
-    setRawTransactions([])
-    setNormalizedTransactions([])
-    setUploadInfo(null)
-    setSelectedTicker(null)
-    setIsAlertDismissed(false)
-  }, [])
-
-  // Handler: Dismiss success alert
-  const handleDismissAlert = useCallback(() => {
-    setIsAlertDismissed(true)
-  }, [])
-
-  // Navigation state
-  const [currentView, setCurrentView] = useState<string>('portfolio')
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
-  const [showDividendsDashboard, setShowDividendsDashboard] = useState(false)
-  const [showTradingActivityDashboard, setShowTradingActivityDashboard] = useState(false)
   const portfolioRef = useRef<HTMLDivElement>(null)
   const analyticsRef = useRef<HTMLDivElement>(null)
   const activityRef = useRef<HTMLDivElement>(null)
   const dividendsRef = useRef<HTMLDivElement>(null)
 
-  // Derived view states
   const hasData = normalizedTransactions.length > 0
   const showOverview = hasData && !selectedTicker && !showDividendsDashboard && !showTradingActivityDashboard
   const showDetail = hasData && selectedTicker !== null && !showDividendsDashboard && !showTradingActivityDashboard
   const showWelcome = !hasData && !isNormalizing && showUpload
 
-  // Update current view based on state
   useEffect(() => {
-    if (showDividendsDashboard) {
-      setCurrentView('dividends')
-    } else if (showTradingActivityDashboard) {
-      setCurrentView('activity')
-    } else if (selectedTicker) {
-      // Don't change view when viewing stock detail - keep current view
-      // This allows user to see stock detail while maintaining their navigation context
-    } else if (hasData) {
-      setCurrentView('portfolio')
+    if (uploadInfo && normalizedTransactions.length > 0 && !isAlertDismissed) {
+      const timer = setTimeout(() => {
+        dismissAlert()
+      }, 3000)
+      return () => clearTimeout(timer)
     }
-  }, [showDividendsDashboard, showTradingActivityDashboard, hasData])
+  }, [uploadInfo, normalizedTransactions.length, isAlertDismissed, dismissAlert])
 
-  // Helper: Scroll to top of main content
-  const scrollToTop = useCallback(() => {
-    // Scroll both main element and window to ensure it works
-    const mainElement = document.querySelector('main')
-    if (mainElement) {
-      mainElement.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [])
-
-  // Handler: Navigate to different sections
-  const handleNavigate = useCallback((view: string) => {
-    // Scroll to top immediately when navigating
-    scrollToTop()
-    
-    setCurrentView(view)
-    setSelectedTicker(null) // Reset ticker selection when navigating
-    
-    // Update view states
-    setShowDividendsDashboard(view === 'dividends')
-    setShowTradingActivityDashboard(view === 'activity')
-
-    // Track navigation events
-    if (view === 'dividends') {
-      posthog.capture('dividends_dashboard_viewed')
-    } else if (view === 'activity') {
-      posthog.capture('trading_activity_viewed')
-    }
-
-    // Ensure scroll happens after state updates
-    requestAnimationFrame(() => {
-      scrollToTop()
-    })
-  }, [scrollToTop])
-
-  // Handler: Handle upload click from sidebar
-  const handleUploadClick = useCallback(() => {
-    handleUploadAnother()
-  }, [handleUploadAnother])
-
-  // Handler: Close mobile sidebar
-  const handleMobileSidebarClose = useCallback(() => {
-    setIsMobileSidebarOpen(false)
-  }, [])
+  const handleUploadAnother = useCallback(() => {
+    posthog.capture('upload_another_file_clicked')
+    uploadAnother()
+  }, [uploadAnother])
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] relative">
-      {/* Mobile Menu Button - only show when data is loaded */}
       {hasData && (
         <button
-          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          onClick={() => setMobileSidebarOpen(!isMobileSidebarOpen)}
           className="lg:hidden fixed top-[4.5rem] right-4 z-[60] p-2.5 bg-background border border-border rounded-lg shadow-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={isMobileSidebarOpen}
@@ -204,19 +87,9 @@ export default function DashboardPage() {
         </button>
       )}
 
-      {/* Sidebar - only show when data is loaded */}
-      {hasData && (
-        <DashboardSidebar
-          onNavigate={handleNavigate}
-          currentView={currentView}
-          onUploadClick={handleUploadClick}
-          isMobileOpen={isMobileSidebarOpen}
-          onMobileClose={handleMobileSidebarClose}
-        />
-      )}
+      {hasData && <DashboardSidebar />}
 
       <main className="flex-1 min-w-0 w-full lg:w-auto">
-        {/* Success Alert - shows after upload */}
         <AnimatePresence>
           {uploadInfo && hasData && !isAlertDismissed && (
             <motion.div
@@ -259,7 +132,7 @@ export default function DashboardPage() {
                         <span className="hidden sm:inline">Upload Different File</span>
                       </Button>
                       <button
-                        onClick={handleDismissAlert}
+                        onClick={dismissAlert}
                         className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
                         aria-label="Dismiss success message"
                       >
@@ -273,7 +146,6 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
 
-        {/* Loading State */}
         <AnimatePresence>
           {isNormalizing && (
             <motion.div
@@ -300,7 +172,6 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
 
-        {/* Error State */}
         <AnimatePresence>
           {error && (
             <motion.div
@@ -319,14 +190,12 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
 
-        {/* Welcome State - Upload Section */}
         {showWelcome && (
           <ErrorBoundary>
-            <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
+            <CSVUpload isHidden={false} />
           </ErrorBoundary>
         )}
 
-        {/* Dividends Dashboard View */}
         <AnimatePresence mode="wait">
           {showDividendsDashboard && (
             <motion.div
@@ -338,13 +207,12 @@ export default function DashboardPage() {
               ref={dividendsRef}
             >
               <ErrorBoundary>
-                <DividendsDashboard transactions={normalizedTransactions} />
+                <DividendsDashboard />
               </ErrorBoundary>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Trading Activity Dashboard View */}
         <AnimatePresence mode="wait">
           {showTradingActivityDashboard && (
             <motion.div
@@ -356,13 +224,12 @@ export default function DashboardPage() {
               ref={activityRef}
             >
               <ErrorBoundary>
-                <TradingActivityDashboard transactions={normalizedTransactions} />
+                <TradingActivityDashboard />
               </ErrorBoundary>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Stock Detail View */}
         <AnimatePresence mode="wait">
           {showDetail && selectedTicker && (
             <motion.div
@@ -373,17 +240,12 @@ export default function DashboardPage() {
               className="container mx-auto px-6 py-6 min-w-0"
             >
               <ErrorBoundary>
-                <StockDetail
-                  ticker={selectedTicker}
-                  transactions={normalizedTransactions}
-                  onBack={handleBackToOverview}
-                />
+                <StockDetail />
               </ErrorBoundary>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Portfolio Overview with Metrics */}
         <AnimatePresence mode="wait">
           {showOverview && (
             <motion.div
@@ -393,30 +255,23 @@ export default function DashboardPage() {
               exit={{ opacity: 0 }}
               className="container mx-auto px-6 py-6 space-y-8 min-w-0"
             >
-              {/* Global Portfolio Metrics */}
               <div ref={analyticsRef}>
                 <ErrorBoundary>
-                  <PortfolioMetrics transactions={normalizedTransactions} />
+                  <PortfolioMetrics />
                 </ErrorBoundary>
               </div>
-
-              {/* Stock Positions Grid */}
               <div ref={portfolioRef}>
                 <ErrorBoundary>
-                  <PortfolioOverview
-                    transactions={normalizedTransactions}
-                    onSelectTicker={handleSelectTicker}
-                  />
+                  <PortfolioOverview />
                 </ErrorBoundary>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Hidden Upload Component (for re-upload) */}
         {!showWelcome && !hasData && showUpload && (
           <ErrorBoundary>
-            <CSVUpload onDataParsed={handleDataParsed} isHidden={false} />
+            <CSVUpload isHidden={false} />
           </ErrorBoundary>
         )}
       </main>

@@ -13,6 +13,7 @@ import {
   Receipt
 } from 'lucide-react'
 import type { NormalizedTransaction } from '@/types/trading212'
+import { useDashboardStore } from '@/stores/useDashboardStore'
 
 /**
  * Currency symbols for common currencies
@@ -20,10 +21,12 @@ import type { NormalizedTransaction } from '@/types/trading212'
 const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$',
   GBX: 'p',
-  GBP: '£',
   EUR: '€',
+  GBP: '£',
+  JPY: '¥',
   CHF: 'CHF',
-  CAD: 'C$'
+  CAD: 'C$',
+  AUD: 'A$'
 }
 
 function getCurrencySymbol(currency: string): string {
@@ -42,7 +45,7 @@ function formatCurrency(amount: number, currency: string): string {
 }
 
 interface PortfolioMetricsProps {
-  transactions: NormalizedTransaction[]
+  transactions?: NormalizedTransaction[]
   className?: string
 }
 
@@ -198,7 +201,9 @@ function MetricCard({
   )
 }
 
-export function PortfolioMetrics({ transactions, className }: PortfolioMetricsProps) {
+export function PortfolioMetrics ({ transactions: transactionsProp, className }: PortfolioMetricsProps) {
+  const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
+  const transactions = transactionsProp ?? storeTransactions
   const metrics = useMemo(
     () => calculateGlobalMetrics(transactions),
     [transactions]
