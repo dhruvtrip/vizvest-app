@@ -12,6 +12,7 @@ import { StockDetail } from '@/components/features/stock-detail'
 import { DividendsDashboard } from '@/components/features/dividends-dashboard'
 import { TradingActivityDashboard } from '@/components/features/trading-activity-dashboard'
 import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
+import { DashboardDateRangePill } from '@/components/features/dashboard-date-range-pill'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -90,6 +91,7 @@ export default function DashboardPage () {
       {hasData && <DashboardSidebar />}
 
       <main className="flex-1 min-w-0 w-full lg:w-auto">
+        {hasData && <DashboardDateRangePill />}
         <AnimatePresence>
           {uploadInfo && hasData && !isAlertDismissed && (
             <motion.div

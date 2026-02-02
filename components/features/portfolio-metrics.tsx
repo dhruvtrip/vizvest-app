@@ -8,9 +8,10 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Wallet,
+  ArrowUpCircle,
+  ArrowDownCircle,
   ArrowRightLeft,
-  Receipt
+  ArrowDownToLine
 } from 'lucide-react'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
@@ -71,7 +72,8 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
   let realizedPnL = 0
   let totalDividends = 0
   let totalFees = 0
-  let totalTaxes = 0
+  let totalDeposit = 0
+  let depositCount = 0
   let holdingsCount = 0
   let soldCount = 0
 
@@ -102,14 +104,13 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
         current.shares -= t['No. of shares'] || 0
         tickerStatus.set(t.Ticker, current)
       }
+    } else if (t.Action === 'Deposit') {
+      totalDeposit += Math.abs(t.totalInBaseCurrency ?? 0)
+      depositCount++
     } else if (t.Action.toLowerCase().includes('dividend')) {
       // Dividends: use Total field converted to base currency
       const exchangeRate = t['Exchange rate'] || 1
       totalDividends += (t.Total || 0) * exchangeRate
-      
-      // Calculate withholding tax (converted to base currency)
-      const tax = t['Withholding tax'] || 0
-      totalTaxes += Math.abs(tax * exchangeRate)
     }
   }
 
@@ -127,11 +128,13 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
 
   return {
     totalInvested,
+    totalSold,
     netInvested,
     realizedPnL,
     totalDividends,
     totalFees,
-    totalTaxes,
+    totalDeposit,
+    depositCount,
     holdingsCount,
     soldCount,
     baseCurrency
@@ -213,13 +216,22 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
 
   const metricCards: MetricData[] = [
     {
-      label: 'Total Invested',
-      value: formatCurrency(metrics.netInvested, metrics.baseCurrency),
-      subValue: `${formatCurrency(metrics.totalInvested, metrics.baseCurrency)} bought`,
-      icon: Wallet,
+      label: 'Buy Volume',
+      value: formatCurrency(metrics.totalInvested, metrics.baseCurrency),
+      subValue: 'Total bought',
+      icon: ArrowUpCircle,
       iconBg: 'bg-blue-500/10',
       iconColor: 'text-blue-500',
       gradient: 'from-blue-500/5 to-cyan-500/5'
+    },
+    {
+      label: 'Sell Volume',
+      value: formatCurrency(metrics.totalSold, metrics.baseCurrency),
+      subValue: 'Total sold',
+      icon: ArrowDownCircle,
+      iconBg: 'bg-rose-500/10',
+      iconColor: 'text-rose-500',
+      gradient: 'from-rose-500/5 to-red-500/5'
     },
     {
       label: 'Realized P&L',
@@ -251,26 +263,31 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       gradient: 'from-violet-500/5 to-purple-500/5'
     },
     {
-      label: 'Withholding Tax',
-      value: formatCurrency(metrics.totalTaxes, metrics.baseCurrency),
-      subValue: 'Tax deducted',
-      icon: Receipt,
-      iconBg: 'bg-orange-500/10',
-      iconColor: 'text-orange-500',
-      gradient: 'from-orange-500/5 to-amber-500/5'
+      label: 'Total Deposit',
+      value: formatCurrency(metrics.totalDeposit, metrics.baseCurrency),
+      subValue: `${metrics.depositCount} deposit${metrics.depositCount !== 1 ? 's' : ''} made`,
+      icon: ArrowDownToLine,
+      iconBg: 'bg-slate-500/10',
+      iconColor: 'text-slate-500',
+      gradient: 'from-slate-500/5 to-slate-600/5'
     }
   ]
 
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Portfolio Overview</h2>
-        <span className="text-xs text-muted-foreground">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Portfolio Overview</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your portfolio overview in the above timeframe
+          </p>
+        </div>
+        <span className="text-xs text-muted-foreground shrink-0">
           Base currency: {metrics.baseCurrency}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {metricCards.map((metric, index) => (
           <MetricCard key={metric.label} metric={metric} index={index} />
         ))}

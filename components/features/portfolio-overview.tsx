@@ -347,7 +347,7 @@ export function PortfolioOverview ({
           <div className="flex items-center justify-between">
             <div>
               <h2 id="portfolio-heading" className="text-sm font-semibold text-foreground">
-                Your Portfolio
+                Current Holdings
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Click any tile to view detailed analytics
@@ -380,7 +380,7 @@ export function PortfolioOverview ({
           <div className="flex items-center justify-between">
             <div>
               <h2 id="sold-positions-heading" className="text-sm font-medium text-muted-foreground">
-                Sold Positions
+                Closed Positions
               </h2>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
                 Click any tile to view transaction history
