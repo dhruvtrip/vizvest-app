@@ -174,19 +174,32 @@ export function StockDetail ({
   const transactions = transactionsProp ?? storeTransactions
   const onBack = onBackProp ?? storeBackToOverview
 
-  if (!ticker) return null
-
   const metrics = useMemo(
-    () => calculateMetrics(transactions, ticker),
+    () =>
+      ticker
+        ? calculateMetrics(transactions, ticker)
+        : {
+            companyName: '',
+            isin: '',
+            totalShares: 0,
+            totalInvested: 0,
+            avgBuyPrice: 0,
+            buyCount: 0,
+            sellCount: 0,
+            baseCurrency: 'USD'
+          },
     [transactions, ticker]
   )
 
   const tableTransactions = useMemo(() => {
+    if (!ticker) return []
     return transactions
       .filter(t => t.Ticker === ticker)
       .filter(t => t.Action === 'Market buy' || t.Action === 'Market sell')
       .sort((a, b) => new Date(b.Time).getTime() - new Date(a.Time).getTime())
   }, [transactions, ticker])
+
+  if (!ticker) return null
 
   return (
     <div className={cn('space-y-5', className)}>
