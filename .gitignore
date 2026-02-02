@@ -8,6 +8,9 @@
 # Cursor IDE
 .cursor/
 
+#Claude
+.claude
+
 # Documentation
 .docs/
 
