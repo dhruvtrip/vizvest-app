@@ -1,6 +1,6 @@
 'use client'
 
-import { Navbar, Hero, FeaturesBento, HowItWorks, CTA, Footer } from '@/components/landing'
+import { Navbar, Hero, FeaturesBento, HowItWorks, FAQs, CTA, Footer } from '@/components/landing'
 
 export default function HomePage() {
   return (
@@ -10,6 +10,7 @@ export default function HomePage() {
         <Hero />
         <FeaturesBento />
         <HowItWorks />
+        <FAQs />
         <CTA />
         <Footer />
       </main>
