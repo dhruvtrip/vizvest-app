@@ -3,11 +3,12 @@
 import { useMemo } from 'react'
 import groupBy from 'lodash/groupBy'
 import posthog from 'posthog-js'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
+import { isTickerPartialData } from '@/lib/partial-data-detector'
 
 /**
  * Currency symbols for common currencies
@@ -100,11 +101,13 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
 
       if (transaction.Action === 'Market buy') {
         totalShares += shares
+        // Net cash flow: money going out (positive for buys)
         totalInvested += Math.abs(amount)
       } else if (transaction.Action === 'Market sell') {
         totalShares -= shares
+        // Net cash flow: money coming in (subtract from deployed cash)
         totalInvested -= Math.abs(amount)
-        // Track realized gains/losses from sell transactions
+        // Track realized gains/losses from CSV Result column (no manual calculation)
         realizedResult += transaction.Result || 0
       }
     }
@@ -116,7 +119,7 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
       ticker,
       name: name || ticker,
       totalShares,
-      totalInvested,
+      totalInvested, // Net cash flow: can be negative if you took out more than you put in
       baseCurrency,
       status,
       realizedResult
@@ -138,11 +141,16 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
  */
 function StockPositionTile({
   position,
-  onClick
+  onClick,
+  isPartialData
 }: {
   position: StockPosition
   onClick: () => void
+  isPartialData: boolean
 }) {
+  const isNetSelling = position.totalShares < 0
+  const hasNegativeInvested = position.totalInvested < 0
+
   return (
     <Card
       className={cn(
@@ -151,7 +159,8 @@ function StockPositionTile({
         'hover:border-primary/50 hover:bg-primary/5',
         'active:scale-[0.99]',
         'h-full flex flex-col',
-        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2'
+        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2',
+        isPartialData && 'border-amber-500/20'
       )}
       onClick={onClick}
       onKeyDown={(e) => {
@@ -167,10 +176,15 @@ function StockPositionTile({
       <CardContent className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-              {position.ticker}
-            </h3>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {position.ticker}
+              </h3>
+              {isPartialData && (
+                <AlertCircle className="w-3 h-3 text-amber-500 flex-shrink-0" aria-label="Partial data" />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground truncate">
               {position.name}
             </p>
           </div>
@@ -179,17 +193,33 @@ function StockPositionTile({
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Shares</span>
-            <span className="text-xs font-medium text-foreground">
-              {formatShares(position.totalShares)}
+            <span className="text-xs text-muted-foreground">
+              {isNetSelling ? 'Net Flow' : 'Shares'}
             </span>
+            <div className="flex items-center gap-1">
+              <span className={cn(
+                'text-xs font-medium',
+                isNetSelling ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
+              )}>
+                {isNetSelling ? '' : ''}{formatShares(position.totalShares)}
+              </span>
+              {isNetSelling && (
+                <span className="px-1 py-0.5 text-[9px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
+                  Selling
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Invested</span>
+            <span className="text-xs text-muted-foreground">
+              {hasNegativeInvested ? 'Net Cash' : 'Invested'}
+            </span>
             <span className={cn(
               'text-xs font-medium',
-              position.totalInvested >= 0 ? 'text-foreground' : 'text-destructive'
+              hasNegativeInvested 
+                ? 'text-emerald-600 dark:text-emerald-400' 
+                : 'text-foreground'
             )}>
               {formatCurrency(position.totalInvested, position.baseCurrency)}
             </span>
@@ -307,6 +337,7 @@ export function PortfolioOverview ({
 }: PortfolioOverviewProps) {
   const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
   const storeSetSelectedTicker = useDashboardStore((state) => state.setSelectedTicker)
+  const partialDataWarning = useDashboardStore((state) => state.partialDataWarning)
   const transactions = transactionsProp ?? storeTransactions
   const onSelectTicker = onSelectTickerProp ?? storeSetSelectedTicker
 
@@ -359,17 +390,24 @@ export function PortfolioOverview ({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="Current stock holdings">
-            {currentHoldings.map(position => (
-              <div key={position.ticker} role="listitem">
-                <StockPositionTile
-                  position={position}
-                  onClick={() => {
-                    posthog.capture('stock_selected_holding')
-                    onSelectTicker(position.ticker)
-                  }}
-                />
-              </div>
-            ))}
+            {currentHoldings.map(position => {
+              const isPartialData = partialDataWarning 
+                ? isTickerPartialData(position.ticker, partialDataWarning)
+                : false
+              
+              return (
+                <div key={position.ticker} role="listitem">
+                  <StockPositionTile
+                    position={position}
+                    isPartialData={isPartialData}
+                    onClick={() => {
+                      posthog.capture('stock_selected_holding')
+                      onSelectTicker(position.ticker)
+                    }}
+                  />
+                </div>
+              )
+            })}
           </div>
         </section>
       )}

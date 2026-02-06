@@ -519,10 +519,13 @@ export function DividendsDashboard ({
 
         if (transaction.Action === 'Market buy') {
           totalShares += shares
+          // Net cash flow: money going out (positive for buys)
           totalInvested += Math.abs(amount)
         } else if (transaction.Action === 'Market sell') {
           totalShares -= shares
+          // Net cash flow: money coming in (subtract from deployed cash)
           totalInvested -= Math.abs(amount)
+          // Track realized gains/losses from CSV Result column (no manual calculation)
           realizedResult += transaction.Result || 0
         }
       }
@@ -531,7 +534,7 @@ export function DividendsDashboard ({
         ticker,
         name: name || ticker,
         totalShares,
-        totalInvested,
+        totalInvested, // Net cash flow: can be negative if you took out more than you put in
         baseCurrency,
         status: (totalShares > 0 ? 'holding' : 'sold') as 'holding' | 'sold',
         realizedResult

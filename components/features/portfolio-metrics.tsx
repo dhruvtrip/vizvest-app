@@ -80,12 +80,20 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
   // Track unique tickers for holdings vs sold
   const tickerStatus = new Map<string, { shares: number }>()
 
+  // Track date range
+  let minDate = ''
+  let maxDate = ''
+
   for (const t of transactions) {
+    // Track date range
+    if (!minDate || t.Time < minDate) minDate = t.Time
+    if (!maxDate || t.Time > maxDate) maxDate = t.Time
+
     // Calculate fees (currency conversion fees)
     const fee = t['Currency conversion fee'] || 0
     totalFees += Math.abs(fee)
 
-    if (t.Action === 'Market buy') {
+    if (t.Action === 'Market buy' || t.Action === 'Limit buy') {
       totalInvested += Math.abs(t.totalInBaseCurrency || 0)
 
       // Track shares per ticker
@@ -123,8 +131,13 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
     }
   }
 
-  // Net invested = total bought - total sold
+  // Net invested = total bought - total sold (can be negative)
   const netInvested = totalInvested - totalSold
+
+  // Calculate days covered
+  const daysCovered = minDate && maxDate
+    ? Math.ceil((new Date(maxDate).getTime() - new Date(minDate).getTime()) / (1000 * 60 * 60 * 24))
+    : 0
 
   return {
     totalInvested,
@@ -137,8 +150,28 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
     depositCount,
     holdingsCount,
     soldCount,
-    baseCurrency
+    baseCurrency,
+    dateRange: { start: minDate, end: maxDate },
+    daysCovered
   }
+}
+
+/**
+ * Formats date range as human-readable string
+ */
+function formatDateRange(start: string, end: string): string {
+  if (!start || !end) return 'N/A'
+  
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+
+  return `${formatter.format(startDate)} - ${formatter.format(endDate)}`
 }
 
 const fadeInUp = {
@@ -263,7 +296,7 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       gradient: 'from-violet-500/5 to-purple-500/5'
     },
     {
-      label: 'Total Deposit',
+      label: 'Total Deposits',
       value: formatCurrency(metrics.totalDeposit, metrics.baseCurrency),
       subValue: `${metrics.depositCount} deposit${metrics.depositCount !== 1 ? 's' : ''} made`,
       icon: ArrowDownToLine,

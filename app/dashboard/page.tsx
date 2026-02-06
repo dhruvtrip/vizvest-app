@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
-import { Loader2, CheckCircle2, Upload, X, Menu } from 'lucide-react'
+import { Loader2, CheckCircle2, Upload, X, Menu, AlertCircle } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
@@ -15,8 +15,9 @@ import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { DashboardPills } from '@/components/features/dashboard-pills'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useDashboardStore } from '@/stores/useDashboardStore'
+import { getPartialDataExplanation } from '@/lib/partial-data-detector'
 
 export default function DashboardPage () {
   const {
@@ -30,8 +31,11 @@ export default function DashboardPage () {
     showTradingActivityDashboard,
     selectedTicker,
     isMobileSidebarOpen,
+    partialDataWarning,
+    isPartialDataDismissed,
     uploadAnother,
     dismissAlert,
+    dismissPartialDataAlert,
     setMobileSidebarOpen
   } = useDashboardStore(
     useShallow((state) => ({
@@ -45,8 +49,11 @@ export default function DashboardPage () {
       showTradingActivityDashboard: state.showTradingActivityDashboard,
       selectedTicker: state.selectedTicker,
       isMobileSidebarOpen: state.isMobileSidebarOpen,
+      partialDataWarning: state.partialDataWarning,
+      isPartialDataDismissed: state.isPartialDataDismissed,
       uploadAnother: state.uploadAnother,
       dismissAlert: state.dismissAlert,
+      dismissPartialDataAlert: state.dismissPartialDataAlert,
       setMobileSidebarOpen: state.setMobileSidebarOpen
     }))
   )
@@ -169,6 +176,48 @@ export default function DashboardPage () {
                     Normalizing currencies and calculating positions...
                   </p>
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {partialDataWarning?.isPartialData && !isPartialDataDismissed && showOverview && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="border-b border-border bg-amber-500/5 relative z-40"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <div className="container mx-auto px-4 sm:px-6 py-3">
+                <Alert className="border-amber-500/20 bg-transparent">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between w-full gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0" aria-hidden="true">
+                        <AlertCircle className="w-4 h-4 text-amber-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <AlertTitle className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
+                          Partial Transaction Data Detected
+                        </AlertTitle>
+                        <AlertDescription className="text-xs text-muted-foreground">
+                          {getPartialDataExplanation(partialDataWarning)}
+                        </AlertDescription>
+                      </div>
+                    </div>
+                    <button
+                      onClick={dismissPartialDataAlert}
+                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
+                      aria-label="Dismiss partial data warning"
+                    >
+                      <X className="w-4 h-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                </Alert>
               </div>
             </motion.div>
           )}

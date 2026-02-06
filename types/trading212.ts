@@ -46,10 +46,69 @@ export interface StockPosition {
   ticker: string
   name: string
   totalShares: number
+  /**
+   * Net cash flow for this position: (buy volume) - (sell volume)
+   * Represents the net amount of cash deployed in this stock.
+   * - Positive: More money put in than taken out (net buyer)
+   * - Negative: More money taken out than put in (net seller, common with partial data)
+   * - Zero: Equal amounts bought and sold
+   * Note: This is NOT the same as current value or unrealized P&L
+   */
   totalInvested: number
   baseCurrency: string
   status: 'holding' | 'sold'
+  /**
+   * Realized profit/loss from all sell transactions
+   * Sourced directly from CSV 'Result' column (no manual calculation)
+   */
   realizedResult: number
+}
+
+/**
+ * Enhanced stock metrics with separate buy/sell volumes
+ * Used for detailed stock analysis with support for partial data
+ */
+export interface StockMetrics {
+  // Company info
+  companyName: string
+  isin: string
+  baseCurrency: string
+  
+  // Buy metrics
+  buyVolume: number
+  buyShares: number
+  buyTransactionCount: number
+  avgBuyPrice: number
+  
+  // Sell metrics
+  sellVolume: number
+  sellShares: number
+  sellTransactionCount: number
+  avgSellPrice: number
+  
+  // Net metrics (can be negative for partial data)
+  netCashFlow: number
+  netShareFlow: number
+  
+  // Realized profit/loss
+  realizedResult: number
+  
+  // Metadata
+  isPartialData: boolean
+  positionStatus: 'net-buying' | 'net-selling' | 'flat'
+  dateRange: { start: string; end: string }
+}
+
+/**
+ * Partial data warning information
+ * Indicates when uploaded CSV contains incomplete transaction history
+ */
+export interface PartialDataWarning {
+  isPartialData: boolean
+  affectedTickers: string[]
+  reasons: string[]
+  confidence: 'high' | 'medium' | 'low'
+  dateRange: { start: string; end: string }
 }
 
 /**

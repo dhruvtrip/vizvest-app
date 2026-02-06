@@ -13,9 +13,10 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { NormalizedTransaction } from '@/types/trading212'
+import type { NormalizedTransaction, StockMetrics } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { DividendSection } from './dividend-section'
+import { isTickerPartialData, getTickerPartialDataExplanation } from '@/lib/partial-data-detector'
 
 /**
  * Currency symbols for common currencies
@@ -79,19 +80,9 @@ interface StockDetailProps {
   className?: string
 }
 
-interface StockMetrics {
-  companyName: string
-  isin: string
-  totalShares: number
-  totalInvested: number
-  avgBuyPrice: number
-  buyCount: number
-  sellCount: number
-  baseCurrency: string
-}
-
 /**
- * Calculates metrics for a specific ticker from transactions
+ * Calculates enhanced metrics for a specific ticker from transactions
+ * Separates buy and sell volumes to handle partial data scenarios
  */
 function calculateMetrics(
   transactions: NormalizedTransaction[],
@@ -107,31 +98,63 @@ function calculateMetrics(
   const baseCurrency = firstTransaction?.detectedBaseCurrency || 'USD'
 
   // Separate buys and sells (excluding dividends)
-  const buys = tickerTransactions.filter(t => t.Action === 'Market buy')
+  const buys = tickerTransactions.filter(t => t.Action === 'Market buy' || t.Action === 'Limit buy')
   const sells = tickerTransactions.filter(t => t.Action === 'Market sell')
 
-  // Calculate totals for buys
-  const totalBuyShares = buys.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
-  const totalBuyAmount = buys.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
+  // Calculate buy metrics
+  const buyShares = buys.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
+  const buyVolume = buys.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
+  const avgBuyPrice = buyShares > 0 ? buyVolume / buyShares : 0
 
-  // Calculate totals for sells
-  const totalSellShares = sells.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
-  const totalSellAmount = sells.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
+  // Calculate sell metrics
+  const sellShares = sells.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
+  const sellVolume = sells.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
+  const avgSellPrice = sellShares > 0 ? sellVolume / sellShares : 0
 
-  // Calculate final metrics
-  const totalShares = totalBuyShares - totalSellShares
-  const totalInvested = totalBuyAmount - totalSellAmount
-  const avgBuyPrice = totalBuyShares > 0 ? totalBuyAmount / totalBuyShares : 0
+  // Calculate realized profit/loss from CSV Result column
+  const realizedResult = sells.reduce((sum, t) => sum + (t.Result || 0), 0)
+
+  // Calculate net flows (can be negative for partial data)
+  const netShareFlow = buyShares - sellShares
+  const netCashFlow = buyVolume - sellVolume
+
+  // Determine position status
+  let positionStatus: 'net-buying' | 'net-selling' | 'flat' = 'flat'
+  if (netShareFlow > 0.0001) {
+    positionStatus = 'net-buying'
+  } else if (netShareFlow < -0.0001) {
+    positionStatus = 'net-selling'
+  }
+
+  // Detect if this is partial data (selling more than buying suggests prior holdings)
+  const isPartialData = netShareFlow < -0.0001 || 
+    (sells.length > 0 && buys.length === 0)
+
+  // Get date range
+  const dates = tickerTransactions.map(t => t.Time).sort()
+  const dateRange = {
+    start: dates[0] || '',
+    end: dates[dates.length - 1] || ''
+  }
 
   return {
     companyName,
     isin,
-    totalShares,
-    totalInvested,
+    baseCurrency,
+    buyVolume,
+    buyShares,
+    buyTransactionCount: buys.length,
     avgBuyPrice,
-    buyCount: buys.length,
-    sellCount: sells.length,
-    baseCurrency
+    sellVolume,
+    sellShares,
+    sellTransactionCount: sells.length,
+    avgSellPrice,
+    netCashFlow,
+    netShareFlow,
+    realizedResult,
+    isPartialData,
+    positionStatus,
+    dateRange
   }
 }
 
@@ -170,6 +193,7 @@ export function StockDetail ({
   const storeSelectedTicker = useDashboardStore((state) => state.selectedTicker)
   const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
   const storeBackToOverview = useDashboardStore((state) => state.backToOverview)
+  const partialDataWarning = useDashboardStore((state) => state.partialDataWarning)
   const ticker = tickerProp ?? storeSelectedTicker
   const transactions = transactionsProp ?? storeTransactions
   const onBack = onBackProp ?? storeBackToOverview
@@ -181,15 +205,32 @@ export function StockDetail ({
         : {
             companyName: '',
             isin: '',
-            totalShares: 0,
-            totalInvested: 0,
+            baseCurrency: 'USD',
+            buyVolume: 0,
+            buyShares: 0,
+            buyTransactionCount: 0,
             avgBuyPrice: 0,
-            buyCount: 0,
-            sellCount: 0,
-            baseCurrency: 'USD'
+            sellVolume: 0,
+            sellShares: 0,
+            sellTransactionCount: 0,
+            avgSellPrice: 0,
+            netCashFlow: 0,
+            netShareFlow: 0,
+            realizedResult: 0,
+            isPartialData: false,
+            positionStatus: 'flat' as const,
+            dateRange: { start: '', end: '' }
           },
     [transactions, ticker]
   )
+
+  const isPartialDataForTicker = ticker && partialDataWarning
+    ? isTickerPartialData(ticker, partialDataWarning)
+    : false
+
+  const partialDataExplanation = ticker && isPartialDataForTicker
+    ? getTickerPartialDataExplanation(ticker, transactions)
+    : ''
 
   const tableTransactions = useMemo(() => {
     if (!ticker) return []
@@ -233,28 +274,100 @@ export function StockDetail ({
         </div>
       </div>
 
+      {/* Partial Data Warning */}
+      {isPartialDataForTicker && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-3 flex items-start gap-2">
+            <div className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-amber-500 text-xs font-bold">!</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">
+                Partial Transaction Data
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {partialDataExplanation}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <MetricCard
-          label="Total Shares"
-          value={formatShares(metrics.totalShares)}
+          label="Buy Volume"
+          value={formatCurrency(metrics.buyVolume, metrics.baseCurrency)}
+          className="border-blue-500/20"
         />
         <MetricCard
-          label="Total Invested"
-          value={formatCurrency(metrics.totalInvested, metrics.baseCurrency)}
+          label="Sell Volume"
+          value={formatCurrency(metrics.sellVolume, metrics.baseCurrency)}
+          className="border-rose-500/20"
         />
         <MetricCard
-          label="Avg Buy Price"
-          value={formatCurrency(metrics.avgBuyPrice, metrics.baseCurrency)}
+          label="Realized P&L"
+          value={`${metrics.realizedResult >= 0 ? '+' : ''}${formatCurrency(metrics.realizedResult, metrics.baseCurrency)}`}
+          className={cn(
+            metrics.realizedResult >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'
+          )}
         />
-        <MetricCard
-          label="Buy Transactions"
-          value={metrics.buyCount.toString()}
-        />
-        <MetricCard
-          label="Sell Transactions"
-          value={metrics.sellCount.toString()}
-        />
+        <Card className={cn(
+          metrics.positionStatus === 'net-buying' 
+            ? 'border-blue-500/20' 
+            : metrics.positionStatus === 'net-selling'
+            ? 'border-rose-500/20'
+            : 'border-muted'
+        )}>
+          <CardContent className="p-3">
+            <p className="text-xs text-muted-foreground">Net Share Flow</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <p className="text-sm font-semibold text-foreground">
+                {metrics.netShareFlow >= 0 ? '+' : ''}{formatShares(metrics.netShareFlow)}
+              </p>
+              {metrics.positionStatus === 'net-buying' && (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
+                  Buying
+                </span>
+              )}
+              {metrics.positionStatus === 'net-selling' && (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
+                  Selling
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Transaction Counts */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card>
+          <CardContent className="p-3">
+            <p className="text-xs text-muted-foreground">Buy Transactions</p>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <p className="text-sm font-semibold text-foreground">
+                {metrics.buyTransactionCount}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                ({formatShares(metrics.buyShares)} shares)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3">
+            <p className="text-xs text-muted-foreground">Sell Transactions</p>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <p className="text-sm font-semibold text-foreground">
+                {metrics.sellTransactionCount}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                ({formatShares(metrics.sellShares)} shares)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Transaction History */}

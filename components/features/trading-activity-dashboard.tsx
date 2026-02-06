@@ -86,7 +86,11 @@ interface TradingMetrics {
   sellCount: number
   totalBuyVolume: number
   totalSellVolume: number
-  netVolume: number
+  netCashFlow: number
+  realizedPnL: number
+  profitableTrades: number
+  losingTrades: number
+  winRate: number
   averageTransactionSize: number
   mostTradedStock: {
     ticker: string
@@ -117,7 +121,11 @@ function calculateTradingMetrics(
       sellCount: 0,
       totalBuyVolume: 0,
       totalSellVolume: 0,
-      netVolume: 0,
+      netCashFlow: 0,
+      realizedPnL: 0,
+      profitableTrades: 0,
+      losingTrades: 0,
+      winRate: 0,
       averageTransactionSize: 0,
       mostTradedStock: null,
       baseCurrency
@@ -128,6 +136,9 @@ function calculateTradingMetrics(
   let sellCount = 0
   let totalBuyVolume = 0
   let totalSellVolume = 0
+  let realizedPnL = 0
+  let profitableTrades = 0
+  let losingTrades = 0
   const stockCounts = new Map<string, { name: string; count: number }>()
 
   for (const trade of trades) {
@@ -141,6 +152,17 @@ function calculateTradingMetrics(
     } else {
       sellCount++
       totalSellVolume += volume
+      
+      // Track realized P&L from CSV Result column
+      const result = trade.Result || 0
+      realizedPnL += result
+      
+      // Track win/loss statistics
+      if (result > 0) {
+        profitableTrades++
+      } else if (result < 0) {
+        losingTrades++
+      }
     }
 
     // Track most traded stock
@@ -158,7 +180,8 @@ function calculateTradingMetrics(
   }
 
   const totalTransactions = buyCount + sellCount
-  const netVolume = totalBuyVolume - totalSellVolume
+  const netCashFlow = totalBuyVolume - totalSellVolume
+  const winRate = sellCount > 0 ? (profitableTrades / sellCount) * 100 : 0
   const averageTransactionSize = totalTransactions > 0
     ? (totalBuyVolume + totalSellVolume) / totalTransactions
     : 0
@@ -181,7 +204,11 @@ function calculateTradingMetrics(
     sellCount,
     totalBuyVolume,
     totalSellVolume,
-    netVolume,
+    netCashFlow,
+    realizedPnL,
+    profitableTrades,
+    losingTrades,
+    winRate,
     averageTransactionSize,
     mostTradedStock,
     baseCurrency
@@ -378,7 +405,7 @@ export function TradingActivityDashboard ({
       )}
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 auto-rows-fr">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 auto-rows-fr">
         <MetricCard
           label="Total Transactions"
           value={metrics.totalTransactions.toString()}
@@ -400,6 +427,20 @@ export function TradingActivityDashboard ({
           valueClassName="text-red-600 dark:text-red-400"
         />
         <MetricCard
+          label="Realized P&L"
+          value={`${metrics.realizedPnL >= 0 ? '+' : ''}${formatCurrency(metrics.realizedPnL, metrics.baseCurrency)}`}
+          subValue={`${metrics.profitableTrades}W / ${metrics.losingTrades}L`}
+          valueClassName={metrics.realizedPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
+          icon={metrics.realizedPnL >= 0 ? TrendingUp : TrendingDown}
+        />
+        <MetricCard
+          label="Win Rate"
+          value={`${metrics.winRate.toFixed(1)}%`}
+          subValue={metrics.sellCount > 0 ? `${metrics.profitableTrades} profitable` : 'No sells yet'}
+          valueClassName={metrics.winRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
+          icon={Calculator}
+        />
+        <MetricCard
           label="Total Buy Volume"
           value={formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency)}
           icon={TrendingUp}
@@ -412,17 +453,11 @@ export function TradingActivityDashboard ({
           valueClassName="text-red-600 dark:text-red-400"
         />
         <MetricCard
-          label="Net Volume"
-          value={formatCurrency(metrics.netVolume, metrics.baseCurrency)}
-          subValue={metrics.netVolume >= 0 ? 'Net buying' : 'Net selling'}
-          valueClassName={metrics.netVolume >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
-          icon={ArrowUpDown}
-        />
-        <MetricCard
-          label="Avg Transaction"
-          value={formatCurrency(metrics.averageTransactionSize, metrics.baseCurrency)}
+          label="Net Cash Flow"
+          value={formatCurrency(metrics.netCashFlow, metrics.baseCurrency)}
           subValue={metrics.mostTradedStock ? `Most: ${metrics.mostTradedStock.ticker}` : undefined}
-          icon={Calculator}
+          valueClassName={metrics.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
+          icon={ArrowUpDown}
         />
       </div>
 
@@ -450,12 +485,13 @@ export function TradingActivityDashboard ({
                   <TableHead className="text-xs text-right">Shares</TableHead>
                   <TableHead className="text-xs text-right">Price</TableHead>
                   <TableHead className="text-xs text-right">Total</TableHead>
+                  <TableHead className="text-xs text-right">Result</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTrades.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="text-center text-xs text-muted-foreground py-8">
                       No transactions found for selected year(s)
                     </TableCell>
                   </TableRow>
@@ -478,6 +514,13 @@ export function TradingActivityDashboard ({
                         transaction.totalInBaseCurrency || 0,
                         metrics.baseCurrency
                       )
+                      
+                      // Show result only for sell transactions
+                      const result = transaction.Result
+                      const hasResult = !isBuy && result !== null && result !== undefined
+                      const resultColor = hasResult && result >= 0
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-red-600 dark:text-red-400'
 
                       return (
                         <motion.tr
@@ -499,6 +542,9 @@ export function TradingActivityDashboard ({
                           <TableCell className="text-xs text-right">{shares}</TableCell>
                           <TableCell className="text-xs text-right">{price}</TableCell>
                           <TableCell className="text-xs text-right font-medium">{total}</TableCell>
+                          <TableCell className={cn('text-xs text-right font-medium', hasResult && resultColor)}>
+                            {hasResult ? `${result >= 0 ? '+' : ''}${formatCurrency(result, metrics.baseCurrency)}` : '-'}
+                          </TableCell>
                         </motion.tr>
                       )
                     })

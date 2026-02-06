@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { normalizeAllTransactions } from '@/lib/currency-normalizer'
-import type { Trading212Transaction, NormalizedTransaction } from '@/types/trading212'
+import { detectPartialData } from '@/lib/partial-data-detector'
+import type { Trading212Transaction, NormalizedTransaction, PartialDataWarning } from '@/types/trading212'
 
 export interface UploadInfo {
   fileName: string
@@ -22,11 +23,14 @@ interface DashboardState {
   isMobileSidebarOpen: boolean
   showDividendsDashboard: boolean
   showTradingActivityDashboard: boolean
+  partialDataWarning: PartialDataWarning | null
+  isPartialDataDismissed: boolean
 
   handleDataParsed: (data: Trading212Transaction[], uploadInfo: UploadInfo) => void
   normalizeTransactions: () => void
   uploadAnother: () => void
   dismissAlert: () => void
+  dismissPartialDataAlert: () => void
   setSelectedTicker: (ticker: string | null) => void
   navigate: (view: string) => void
   setMobileSidebarOpen: (open: boolean) => void
@@ -47,7 +51,9 @@ const initialState = {
   currentView: 'portfolio',
   isMobileSidebarOpen: false,
   showDividendsDashboard: false,
-  showTradingActivityDashboard: false
+  showTradingActivityDashboard: false,
+  partialDataWarning: null as PartialDataWarning | null,
+  isPartialDataDismissed: false
 }
 
 export const useDashboardStore = create<DashboardState>()(
@@ -72,7 +78,8 @@ export const useDashboardStore = create<DashboardState>()(
         if (raw.length === 0) {
           set({
             normalizedTransactions: [],
-            baseCurrency: 'USD'
+            baseCurrency: 'USD',
+            partialDataWarning: null
           })
           return
         }
@@ -82,16 +89,23 @@ export const useDashboardStore = create<DashboardState>()(
         try {
           const normalized = normalizeAllTransactions(raw)
           const detected = normalized[0]?.detectedBaseCurrency || 'USD'
+          
+          // Detect partial data after normalization
+          const partialDataWarning = detectPartialData(normalized)
+          
           set({
             normalizedTransactions: normalized,
             baseCurrency: detected,
-            isNormalizing: false
+            isNormalizing: false,
+            partialDataWarning,
+            isPartialDataDismissed: false
           })
         } catch (err) {
           set({
             error: err instanceof Error ? err.message : 'Failed to normalize transactions',
             normalizedTransactions: [],
-            isNormalizing: false
+            isNormalizing: false,
+            partialDataWarning: null
           })
         }
       },
@@ -103,11 +117,15 @@ export const useDashboardStore = create<DashboardState>()(
           normalizedTransactions: [],
           uploadInfo: null,
           selectedTicker: null,
-          isAlertDismissed: false
+          isAlertDismissed: false,
+          partialDataWarning: null,
+          isPartialDataDismissed: false
         })
       },
 
       dismissAlert: () => set({ isAlertDismissed: true }),
+
+      dismissPartialDataAlert: () => set({ isPartialDataDismissed: true }),
 
       setSelectedTicker: (ticker) => set({ selectedTicker: ticker }),
 
