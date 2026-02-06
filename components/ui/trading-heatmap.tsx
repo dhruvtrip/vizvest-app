@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import type { NormalizedTransaction } from '@/types/trading212'
+import { isTradeAction } from '@/lib/transaction-utils'
 
 interface TradingHeatmapProps {
   transactions: NormalizedTransaction[]
@@ -73,12 +74,7 @@ function processTransactions(
   const activityMap = new Map<string, DayData>()
 
   // Filter to only buy/sell trades (Market and Limit orders)
-  const trades = transactions.filter(
-    (t) => {
-      const action = t.Action.toLowerCase()
-      return action.includes('buy') || action.includes('sell')
-    }
-  )
+  const trades = transactions.filter((t) => isTradeAction(t.Action))
 
   // Group by date
   for (const trade of trades) {
@@ -178,12 +174,7 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
   // Extract unique years from transactions
   const availableYears = useMemo(() => {
     const years = new Set<number>()
-    const trades = transactions.filter(
-      (t) => {
-        const action = t.Action.toLowerCase()
-        return action.includes('buy') || action.includes('sell')
-      }
-    )
+    const trades = transactions.filter((t) => isTradeAction(t.Action))
     for (const trade of trades) {
       const date = new Date(trade.Time)
       if (!isNaN(date.getTime())) {
@@ -209,12 +200,7 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
 
   // Calculate total contributions for selected year
   const totalContributions = useMemo(() => {
-    const trades = transactions.filter(
-      (t) => {
-        const action = t.Action.toLowerCase()
-        return action.includes('buy') || action.includes('sell')
-      }
-    )
+    const trades = transactions.filter((t) => isTradeAction(t.Action))
     return trades.filter((t) => {
       const date = new Date(t.Time)
       return date.getFullYear() === selectedYear

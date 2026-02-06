@@ -28,6 +28,7 @@ import {
 } from 'recharts'
 import { TrendingUp, TrendingDown, ArrowUpDown, DollarSign, Receipt, Hash, Calculator } from 'lucide-react'
 import * as _ from 'lodash'
+import { isBuyAction, isSellAction, isDividendAction } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -157,7 +158,7 @@ function calculateGlobalDividendMetrics(
   
   // Filter all dividend transactions
   const dividendTransactions = transactions.filter(t => 
-    t.Ticker && t.Action.toLowerCase().includes('dividend')
+    t.Ticker && isDividendAction(t.Action)
   )
 
   // Process dividends
@@ -512,16 +513,16 @@ export function DividendsDashboard ({
 
       for (const transaction of tickerTransactions) {
         if (transaction.Name) name = transaction.Name
-        if (transaction.Action.toLowerCase().includes('dividend')) continue
+        if (isDividendAction(transaction.Action)) continue
 
         const shares = transaction['No. of shares'] || 0
         const amount = transaction.totalInBaseCurrency || 0
 
-        if (transaction.Action === 'Market buy') {
+        if (isBuyAction(transaction.Action)) {
           totalShares += shares
           // Net cash flow: money going out (positive for buys)
           totalInvested += Math.abs(amount)
-        } else if (transaction.Action === 'Market sell') {
+        } else if (isSellAction(transaction.Action)) {
           totalShares -= shares
           // Net cash flow: money coming in (subtract from deployed cash)
           totalInvested -= Math.abs(amount)

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
+import { isDividendAction } from '@/lib/transaction-utils'
 import {
   BarChart,
   Bar,
@@ -124,7 +125,7 @@ function calculateDividendMetrics(
 ): { metrics: DividendMetrics; dividends: DividendTransaction[] } {
   // Filter dividend transactions for this ticker (Action contains 'Dividend')
   const dividendTransactions = transactions.filter(
-    t => t.Ticker === ticker && t.Action.toLowerCase().includes('dividend')
+    t => t.Ticker === ticker && isDividendAction(t.Action)
   )
 
   // Process each dividend (use Total for gross amount, not Result)

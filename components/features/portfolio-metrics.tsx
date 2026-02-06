@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
+import { isBuyAction, isSellAction, isDividendAction, isDepositAction } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -93,7 +94,7 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
     const fee = t['Currency conversion fee'] || 0
     totalFees += Math.abs(fee)
 
-    if (t.Action === 'Market buy' || t.Action === 'Limit buy') {
+    if (isBuyAction(t.Action)) {
       totalInvested += Math.abs(t.totalInBaseCurrency || 0)
 
       // Track shares per ticker
@@ -102,7 +103,7 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
         current.shares += t['No. of shares'] || 0
         tickerStatus.set(t.Ticker, current)
       }
-    } else if (t.Action === 'Market sell') {
+    } else if (isSellAction(t.Action)) {
       totalSold += Math.abs(t.totalInBaseCurrency || 0)
       realizedPnL += t.Result || 0
 
@@ -112,10 +113,10 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
         current.shares -= t['No. of shares'] || 0
         tickerStatus.set(t.Ticker, current)
       }
-    } else if (t.Action === 'Deposit') {
+    } else if (isDepositAction(t.Action)) {
       totalDeposit += Math.abs(t.totalInBaseCurrency ?? 0)
       depositCount++
-    } else if (t.Action.toLowerCase().includes('dividend')) {
+    } else if (isDividendAction(t.Action)) {
       // Dividends: use Total field converted to base currency
       const exchangeRate = t['Exchange rate'] || 1
       totalDividends += (t.Total || 0) * exchangeRate

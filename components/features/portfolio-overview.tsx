@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { isTickerPartialData } from '@/lib/partial-data-detector'
+import { isBuyAction, isSellAction, isDividendAction } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -92,18 +93,18 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
       }
 
       // Skip dividend actions for share and investment calculations
-      if (transaction.Action.toLowerCase().includes('dividend')) {
+      if (isDividendAction(transaction.Action)) {
         continue
       }
 
       const shares = transaction['No. of shares'] || 0
       const amount = transaction.totalInBaseCurrency || 0
 
-      if (transaction.Action === 'Market buy') {
+      if (isBuyAction(transaction.Action)) {
         totalShares += shares
         // Net cash flow: money going out (positive for buys)
         totalInvested += Math.abs(amount)
-      } else if (transaction.Action === 'Market sell') {
+      } else if (isSellAction(transaction.Action)) {
         totalShares -= shares
         // Net cash flow: money coming in (subtract from deployed cash)
         totalInvested -= Math.abs(amount)

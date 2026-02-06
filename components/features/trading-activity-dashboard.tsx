@@ -17,6 +17,7 @@ import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
 import { TrendingUp, TrendingDown, ArrowUpDown, Activity, ArrowUp, ArrowDown, Calculator } from 'lucide-react'
+import { isTradeAction, isBuyAction } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -109,10 +110,7 @@ function calculateTradingMetrics(
   const baseCurrency = transactions[0]?.detectedBaseCurrency || 'USD'
 
   // Filter to only buy/sell trades (Market and Limit orders)
-  const trades = transactions.filter((t) => {
-    const action = t.Action.toLowerCase()
-    return action.includes('buy') || action.includes('sell')
-  })
+  const trades = transactions.filter((t) => isTradeAction(t.Action))
 
   if (trades.length === 0) {
     return {
@@ -142,8 +140,7 @@ function calculateTradingMetrics(
   const stockCounts = new Map<string, { name: string; count: number }>()
 
   for (const trade of trades) {
-    const action = trade.Action.toLowerCase()
-    const isBuy = action.includes('buy')
+    const isBuy = isBuyAction(trade.Action)
     const volume = Math.abs(trade.totalInBaseCurrency || 0)
 
     if (isBuy) {
@@ -278,10 +275,7 @@ export function TradingActivityDashboard ({
   const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
   const transactions = transactionsProp ?? storeTransactions
   const allTrades = useMemo(() => {
-    return transactions.filter((t) => {
-      const action = t.Action.toLowerCase()
-      return action.includes('buy') || action.includes('sell')
-    })
+    return transactions.filter((t) => isTradeAction(t.Action))
   }, [transactions])
 
   // Extract available years from trades
@@ -499,8 +493,7 @@ export function TradingActivityDashboard ({
                   filteredTrades
                     .sort((a, b) => new Date(b.Time).getTime() - new Date(a.Time).getTime())
                     .map((transaction, index) => {
-                      const action = transaction.Action.toLowerCase()
-                      const isBuy = action.includes('buy')
+                      const isBuy = isBuyAction(transaction.Action)
                       const actionColor = isBuy
                         ? 'text-emerald-600 dark:text-emerald-400'
                         : 'text-red-600 dark:text-red-400'

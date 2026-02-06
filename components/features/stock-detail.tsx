@@ -17,6 +17,7 @@ import type { NormalizedTransaction, StockMetrics } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { DividendSection } from './dividend-section'
 import { isTickerPartialData, getTickerPartialDataExplanation } from '@/lib/partial-data-detector'
+import { isBuyAction, isSellAction, isTradeAction } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -98,8 +99,8 @@ function calculateMetrics(
   const baseCurrency = firstTransaction?.detectedBaseCurrency || 'USD'
 
   // Separate buys and sells (excluding dividends)
-  const buys = tickerTransactions.filter(t => t.Action === 'Market buy' || t.Action === 'Limit buy')
-  const sells = tickerTransactions.filter(t => t.Action === 'Market sell')
+  const buys = tickerTransactions.filter(t => isBuyAction(t.Action))
+  const sells = tickerTransactions.filter(t => isSellAction(t.Action))
 
   // Calculate buy metrics
   const buyShares = buys.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
@@ -236,7 +237,7 @@ export function StockDetail ({
     if (!ticker) return []
     return transactions
       .filter(t => t.Ticker === ticker)
-      .filter(t => t.Action === 'Market buy' || t.Action === 'Market sell')
+      .filter(t => isTradeAction(t.Action))
       .sort((a, b) => new Date(b.Time).getTime() - new Date(a.Time).getTime())
   }, [transactions, ticker])
 
@@ -395,7 +396,7 @@ export function StockDetail ({
                 </TableHeader>
                 <TableBody>
                   {tableTransactions.map((transaction, index) => {
-                    const isBuy = transaction.Action === 'Market buy'
+                    const isBuy = isBuyAction(transaction.Action)
                     const actionColor = isBuy
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-red-600 dark:text-red-400'

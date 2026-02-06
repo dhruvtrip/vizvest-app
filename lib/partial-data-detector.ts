@@ -1,4 +1,5 @@
 import type { NormalizedTransaction, PartialDataWarning } from '@/types/trading212'
+import { isTradeAction, isBuyAction, isSellAction } from './transaction-utils'
 
 /**
  * Detects if the uploaded CSV contains partial transaction data
@@ -21,7 +22,7 @@ interface TickerAnalysis {
 function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string): TickerAnalysis {
   const tickerTransactions = transactions
     .filter(t => t.Ticker === ticker)
-    .filter(t => t.Action === 'Market buy' || t.Action === 'Market sell' || t.Action === 'Limit buy')
+    .filter(t => isTradeAction(t.Action))
     .sort((a, b) => new Date(a.Time).getTime() - new Date(b.Time).getTime())
 
   if (tickerTransactions.length === 0) {
@@ -49,10 +50,10 @@ function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string
   for (const t of tickerTransactions) {
     const shares = t['No. of shares'] || 0
     
-    if (t.Action === 'Market buy' || t.Action === 'Limit buy') {
+    if (isBuyAction(t.Action)) {
       netShares += shares
       hasSeenBuy = true
-    } else if (t.Action === 'Market sell') {
+    } else if (isSellAction(t.Action)) {
       if (!hasSeenBuy) {
         hasSellBeforeBuy = true
       }
@@ -67,7 +68,7 @@ function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string
 
   const earlySellingActivity = tickerTransactions.some(t => {
     const tDate = new Date(t.Time)
-    return t.Action === 'Market sell' && tDate <= sevenDaysLater
+    return isSellAction(t.Action) && tDate <= sevenDaysLater
   })
 
   return {
@@ -148,7 +149,7 @@ export function detectPartialData(transactions: NormalizedTransaction[]): Partia
   const tickers = [...new Set(
     transactions
       .filter(t => t.Ticker)
-      .filter(t => t.Action === 'Market buy' || t.Action === 'Market sell' || t.Action === 'Limit buy')
+      .filter(t => isTradeAction(t.Action))
       .map(t => t.Ticker!)
   )]
 

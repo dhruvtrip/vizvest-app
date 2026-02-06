@@ -1,4 +1,5 @@
 import type { Trading212Transaction, CSVValidationResult } from '@/types/trading212'
+import { isBuyAction, isSellAction } from './transaction-utils'
 
 /**
  * Required columns in Trading 212 CSV export
@@ -96,8 +97,7 @@ export function validateTransaction(
   }
 
   // Determine if this is a stock transaction
-  const isStockTransaction = transaction.Action === 'Market buy' || 
-                             transaction.Action === 'Market sell'
+  const isStockTransaction = isBuyAction(transaction.Action) || isSellAction(transaction.Action)
 
   // Only validate stock-specific fields for stock transactions
   if (isStockTransaction) {
