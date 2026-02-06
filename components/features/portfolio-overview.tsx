@@ -202,7 +202,7 @@ function StockPositionTile({
                 'text-xs font-medium',
                 isNetSelling ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
               )}>
-                {isNetSelling ? '' : ''}{formatShares(position.totalShares)}
+               {formatShares(position.totalShares)}
               </span>
               {isNetSelling && (
                 <span className="px-1 py-0.5 text-[9px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">

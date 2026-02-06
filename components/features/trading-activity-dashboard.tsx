@@ -403,7 +403,6 @@ export function TradingActivityDashboard ({
         <MetricCard
           label="Total Transactions"
           value={metrics.totalTransactions.toString()}
-          subValue={`${metrics.buyCount} buys, ${metrics.sellCount} sells`}
           icon={Activity}
         />
         <MetricCard
@@ -447,10 +446,8 @@ export function TradingActivityDashboard ({
           valueClassName="text-red-600 dark:text-red-400"
         />
         <MetricCard
-          label="Net Cash Flow"
-          value={formatCurrency(metrics.netCashFlow, metrics.baseCurrency)}
-          subValue={metrics.mostTradedStock ? `Most: ${metrics.mostTradedStock.ticker}` : undefined}
-          valueClassName={metrics.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
+          label="Most Traded Stock"
+          value={metrics.mostTradedStock ? `${metrics.mostTradedStock.ticker}` : 'N/A'}
           icon={ArrowUpDown}
         />
       </div>
