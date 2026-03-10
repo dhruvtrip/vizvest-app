@@ -12,9 +12,9 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-muted/30">
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-6 h-14 flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <nav className="sticky top-0 z-50 border-b border-border bg-background">
+        <div className="container mx-auto px-8 h-16 flex items-center justify-between">
           <Link 
             href="/" 
             className="flex items-center gap-2 text-sm font-bold hover:opacity-80 transition-opacity"
@@ -25,7 +25,7 @@ export default function DashboardLayout({
             Vizvest
           </Link>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded-md">
+            <span className="text-sm text-muted-foreground">
               Dashboard
             </span>
           </div>

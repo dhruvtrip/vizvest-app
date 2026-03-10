@@ -4,7 +4,6 @@ import { useRef, useState } from 'react'
 import Papa from 'papaparse'
 import posthog from 'posthog-js'
 import { motion } from 'framer-motion'
-import { Upload, FileUp, AlertCircle, Lock, FileSpreadsheet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { validateCSVColumns, validateTransactions } from '@/lib/csv-validator'
 import type { Trading212Transaction } from '@/types/trading212'
@@ -192,8 +191,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
       >
         {/* Header */}
         <motion.div variants={fadeInUp} className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-4">
-            <FileSpreadsheet className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/12 border border-primary/20 text-sm font-medium text-primary mb-4">
             Trading 212 CSV Import
           </div>
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
@@ -245,7 +243,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
               aria-label="Click to upload CSV file or drag and drop"
               aria-describedby="file-upload-description"
             >
-              {/* Animated icon container */}
+              {/* Typographic upload symbol */}
               <motion.div
                 className={cn(
                   'w-16 h-16 rounded-2xl flex items-center justify-center mb-5',
@@ -255,10 +253,10 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
                 animate={isDragging ? { scale: 1.1, y: -5 } : { scale: 1, y: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               >
-                <Upload className={cn(
-                  'w-7 h-7 transition-colors',
+                <span className={cn(
+                  'text-3xl font-light transition-colors',
                   isDragging ? 'text-primary' : 'text-muted-foreground'
-                )} />
+                )}>+</span>
               </motion.div>
 
               <p className="text-sm font-medium mb-1">
@@ -287,12 +285,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
               aria-label="Processing file"
             >
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                  <FileUp className="w-7 h-7 text-primary" />
-                </motion.div>
+                <span className="text-2xl font-bold text-primary animate-pulse">...</span>
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium mb-1">Processing your file</p>
@@ -303,11 +296,8 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
 
           {/* Error State */}
           {uploadState === 'error' && (
-            <div className="p-6 bg-card/50 backdrop-blur-sm rounded-2xl border border-destructive/30">
+            <div className="p-6 bg-card/50 rounded-2xl border-l-4 border-destructive border border-destructive/30">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-6 h-6 text-destructive" />
-                </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-destructive mb-1">Upload Failed</p>
                   {fileName && <p className="text-xs text-muted-foreground mb-2">{fileName}</p>}
@@ -331,9 +321,8 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
         </motion.div>
 
         {/* Privacy Notice */}
-        <motion.div variants={fadeInUp} className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <Lock className="w-3.5 h-3.5" />
-          <span>Your data stays private. Processed locally in your browser.</span>
+        <motion.div variants={fadeInUp} className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <span><strong className="text-foreground">Private.</strong> Your data is processed locally in your browser.</span>
         </motion.div>
       </motion.div>
     </section>

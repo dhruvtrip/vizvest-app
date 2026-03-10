@@ -4,19 +4,19 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 40 20% 99%;
+    --foreground: 220 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 20% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --popover-foreground: 220 20% 10%;
+    --primary: 221.2 83.2% 50%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 221.2 83.2% 53.3%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 221.2 83.2% 50%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -24,32 +24,32 @@
     --success-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --ring: 221.2 83.2% 50%;
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 220 20% 7%;
     --foreground: 210 40% 98%;
-    --card: 222.2 47% 8%;
+    --card: 220 20% 10%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 47% 8%;
+    --popover: 220 20% 10%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 220 80% 62%;
     --primary-foreground: 210 40% 98%;
     --secondary: 217.2 32.6% 12%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 12%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 221.2 83.2% 53.3%;
+    --accent: 220 80% 62%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
-    --success: 160 84.1% 39.4%;
+    --success: 160 84.1% 45%;
     --success-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --ring: 220 80% 62%;
   }
 }
 
@@ -163,4 +163,20 @@ html.dark {
 
 .dark::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.3);
+}
+
+/* Editorial typography utilities */
+.metric-value {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }

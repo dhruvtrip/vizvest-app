@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
-import { TrendingUp, TrendingDown, ArrowUpDown, Activity, ArrowUp, ArrowDown, Calculator } from 'lucide-react'
 import { isTradeAction, isBuyAction } from '@/lib/transaction-utils'
 
 /**
@@ -221,14 +220,14 @@ function MetricCard({
   subValue,
   className,
   valueClassName,
-  icon: Icon
+  borderColor
 }: {
   label: string
   value: string
   subValue?: string
   className?: string
   valueClassName?: string
-  icon?: React.ElementType
+  borderColor?: string
 }) {
   return (
     <motion.div
@@ -237,21 +236,16 @@ function MetricCard({
       transition={{ duration: 0.3 }}
       className="h-full"
     >
-      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:shadow-primary/5 group h-full flex flex-col', className)}>
-        <CardContent className="p-3 flex flex-col h-full">
-          {Icon && (
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
-              <Icon className="w-4 h-4 text-primary" />
-            </div>
-          )}
-          <p className="text-xs text-muted-foreground flex-shrink-0">{label}</p>
-          <p className={cn('text-sm font-semibold text-foreground mt-0.5 flex-shrink-0', valueClassName)}>
+      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col', borderColor && `border-l-[3px] ${borderColor}`, className)}>
+        <CardContent className="p-5 flex flex-col h-full">
+          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex-shrink-0">{label}</p>
+          <p className={cn('text-2xl font-bold tracking-tight text-foreground mt-1 flex-shrink-0', valueClassName)}>
             {value}
           </p>
           {subValue ? (
-            <p className="text-xs text-muted-foreground mt-0.5 flex-shrink-0">{subValue}</p>
+            <p className="text-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
           ) : (
-            <div className="text-xs text-muted-foreground mt-0.5 flex-shrink-0 h-[14px]">&nbsp;</div>
+            <div className="text-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
           )}
         </CardContent>
       </Card>
@@ -399,56 +393,56 @@ export function TradingActivityDashboard ({
       )}
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 auto-rows-fr">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
         <MetricCard
           label="Total Transactions"
           value={metrics.totalTransactions.toString()}
-          icon={Activity}
+          borderColor="border-l-blue-500"
         />
         <MetricCard
           label="Buy Transactions"
           value={metrics.buyCount.toString()}
           subValue={formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency)}
-          icon={ArrowUp}
           valueClassName="text-emerald-600 dark:text-emerald-400"
+          borderColor="border-l-emerald-500"
         />
         <MetricCard
           label="Sell Transactions"
           value={metrics.sellCount.toString()}
           subValue={formatCurrency(metrics.totalSellVolume, metrics.baseCurrency)}
-          icon={ArrowDown}
           valueClassName="text-red-600 dark:text-red-400"
+          borderColor="border-l-red-500"
         />
         <MetricCard
           label="Realized P&L"
           value={`${metrics.realizedPnL >= 0 ? '+' : ''}${formatCurrency(metrics.realizedPnL, metrics.baseCurrency)}`}
           subValue={`${metrics.profitableTrades}W / ${metrics.losingTrades}L`}
           valueClassName={metrics.realizedPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
-          icon={metrics.realizedPnL >= 0 ? TrendingUp : TrendingDown}
+          borderColor={metrics.realizedPnL >= 0 ? 'border-l-emerald-500' : 'border-l-red-500'}
         />
         <MetricCard
           label="Win Rate"
           value={`${metrics.winRate.toFixed(1)}%`}
           subValue={metrics.sellCount > 0 ? `${metrics.profitableTrades} profitable` : 'No sells yet'}
           valueClassName={metrics.winRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
-          icon={Calculator}
+          borderColor="border-l-amber-500"
         />
         <MetricCard
           label="Total Buy Volume"
           value={formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency)}
-          icon={TrendingUp}
           valueClassName="text-emerald-600 dark:text-emerald-400"
+          borderColor="border-l-emerald-500"
         />
         <MetricCard
           label="Total Sell Volume"
           value={formatCurrency(metrics.totalSellVolume, metrics.baseCurrency)}
-          icon={TrendingDown}
           valueClassName="text-red-600 dark:text-red-400"
+          borderColor="border-l-rose-500"
         />
         <MetricCard
           label="Most Traded Stock"
           value={metrics.mostTradedStock ? `${metrics.mostTradedStock.ticker}` : 'N/A'}
-          icon={ArrowUpDown}
+          borderColor="border-l-violet-500"
         />
       </div>
 
@@ -458,8 +452,8 @@ export function TradingActivityDashboard ({
       {/* Transactions Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">All Transactions</CardTitle>
-          <CardDescription className="text-xs">
+          <CardTitle className="text-base font-semibold">All Transactions</CardTitle>
+          <CardDescription className="text-sm">
             {filteredTrades.length} {filteredTrades.length === 1 ? 'transaction' : 'transactions'}
             {selectedYears.size > 0 && ` in selected ${selectedYears.size === 1 ? 'year' : 'years'}`}
           </CardDescription>

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
-import { Loader2, CheckCircle2, Upload, X, Menu, AlertCircle } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
@@ -83,15 +82,15 @@ export default function DashboardPage () {
   }, [uploadAnother])
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] relative">
+    <div className="flex min-h-[calc(100vh-4rem)] relative">
       {hasData && (
         <button
           onClick={() => setMobileSidebarOpen(!isMobileSidebarOpen)}
-          className="lg:hidden fixed top-[4.5rem] right-4 z-[60] p-2.5 bg-background border border-border rounded-lg shadow-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          className="lg:hidden fixed top-[5rem] right-4 z-[60] px-3 py-2 bg-background border border-border rounded-lg shadow-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-sm font-medium text-foreground"
           aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={isMobileSidebarOpen}
         >
-          <Menu className="w-5 h-5 text-foreground" aria-hidden="true" />
+          Menu
         </button>
       )}
 
@@ -106,29 +105,24 @@ export default function DashboardPage () {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="border-b border-border bg-emerald-500/5 relative z-40"
+              className="border-b border-border border-l-4 border-l-emerald-500 bg-emerald-500/8 relative z-40"
               role="status"
               aria-live="polite"
               aria-atomic="true"
             >
-              <div className="container mx-auto px-4 sm:px-6 py-3">
-                <Alert className="border-emerald-500/20 bg-transparent">
+              <div className="container mx-auto px-4 sm:px-8 py-3">
+                <Alert className="border-0 bg-transparent">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0" aria-hidden="true">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <AlertDescription className="text-sm flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          Successfully loaded {uploadInfo.rowCount} transactions
+                        </span>
+                        <span className="text-muted-foreground text-sm">
+                          from {uploadInfo.fileName}
+                        </span>
                       </div>
-                      <AlertDescription className="text-sm flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
-                          <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                            Successfully loaded {uploadInfo.rowCount} transactions
-                          </span>
-                          <span className="text-muted-foreground text-xs sm:text-sm">
-                            from {uploadInfo.fileName}
-                          </span>
-                        </div>
-                      </AlertDescription>
-                    </div>
+                    </AlertDescription>
                     <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
                       <Button
                         variant="ghost"
@@ -137,15 +131,14 @@ export default function DashboardPage () {
                         className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
                         aria-label="Upload a different CSV file"
                       >
-                        <Upload className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" aria-hidden="true" />
                         <span className="hidden sm:inline">Upload Different File</span>
                       </Button>
                       <button
                         onClick={dismissAlert}
-                        className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
+                        className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
                         aria-label="Dismiss success message"
                       >
-                        <X className="w-4 h-4" aria-hidden="true" />
+                        Dismiss
                       </button>
                     </div>
                   </div>
@@ -161,18 +154,16 @@ export default function DashboardPage () {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="container mx-auto px-6 py-16"
+              className="container mx-auto px-8 py-16"
               role="status"
               aria-live="polite"
               aria-label="Processing transactions"
             >
               <div className="flex flex-col items-center justify-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
-                  <Loader2 className="w-7 h-7 animate-spin text-primary" />
-                </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium">Processing transactions</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-2xl font-bold tracking-tight text-primary animate-pulse">...</p>
+                  <p className="text-sm font-medium mt-2">Processing transactions</p>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Normalizing currencies and calculating positions...
                   </p>
                 </div>
@@ -188,33 +179,28 @@ export default function DashboardPage () {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="border-b border-border bg-amber-500/5 relative z-40"
+              className="border-b border-border border-l-4 border-l-amber-500 bg-amber-500/8 relative z-40"
               role="status"
               aria-live="polite"
               aria-atomic="true"
             >
-              <div className="container mx-auto px-4 sm:px-6 py-3">
-                <Alert className="border-amber-500/20 bg-transparent">
+              <div className="container mx-auto px-4 sm:px-8 py-3">
+                <Alert className="border-0 bg-transparent">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between w-full gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0" aria-hidden="true">
-                        <AlertCircle className="w-4 h-4 text-amber-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <AlertTitle className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
-                          Partial Transaction Data Detected
-                        </AlertTitle>
-                        <AlertDescription className="text-xs text-muted-foreground">
-                          {getPartialDataExplanation(partialDataWarning)}
-                        </AlertDescription>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <AlertTitle className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
+                        Partial Transaction Data Detected
+                      </AlertTitle>
+                      <AlertDescription className="text-sm text-muted-foreground">
+                        {getPartialDataExplanation(partialDataWarning)}
+                      </AlertDescription>
                     </div>
                     <button
                       onClick={dismissPartialDataAlert}
-                      className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
+                      className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
                       aria-label="Dismiss partial data warning"
                     >
-                      <X className="w-4 h-4" aria-hidden="true" />
+                      Dismiss
                     </button>
                   </div>
                 </Alert>
@@ -229,7 +215,7 @@ export default function DashboardPage () {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="container mx-auto px-6 py-6"
+              className="container mx-auto px-8 py-6"
               role="alert"
               aria-live="assertive"
               aria-atomic="true"
@@ -288,7 +274,7 @@ export default function DashboardPage () {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="container mx-auto px-6 py-6 min-w-0"
+              className="container mx-auto px-8 py-6 min-w-0"
             >
               <ErrorBoundary>
                 <StockDetail />
@@ -304,7 +290,7 @@ export default function DashboardPage () {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="container mx-auto px-6 py-6 space-y-8 min-w-0"
+              className="container mx-auto px-8 py-6 space-y-10 min-w-0"
             >
               <div ref={analyticsRef}>
                 <ErrorBoundary>

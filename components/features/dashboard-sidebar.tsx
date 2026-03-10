@@ -3,15 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
-import {
-  Upload,
-  LayoutDashboard,
-  DollarSign,
-  Activity,
-  ChevronsLeft,
-  ChevronsRight,
-  X
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 
@@ -23,7 +14,7 @@ function useIsDesktop() {
     const checkDesktop = () => {
       setIsDesktop(window.innerWidth >= 1024)
     }
-    
+
     checkDesktop()
     window.addEventListener('resize', checkDesktop)
     return () => window.removeEventListener('resize', checkDesktop)
@@ -40,10 +31,16 @@ function scrollToTop () {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+const NAV_DOT_COLORS: Record<string, string> = {
+  upload: 'bg-violet-500',
+  portfolio: 'bg-blue-500',
+  dividends: 'bg-emerald-500',
+  activity: 'bg-amber-500'
+}
+
 interface SidebarOption {
   id: string
   label: string
-  icon: React.ElementType
   onClick: () => void
   isActive?: boolean
 }
@@ -87,27 +84,23 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
     {
       id: 'upload',
       label: 'Upload',
-      icon: Upload,
       onClick: () => handleOptionClick(handleUploadClick)
     },
     {
       id: 'portfolio',
       label: 'Portfolio',
-      icon: LayoutDashboard,
       onClick: () => handleOptionClick(() => handleNavigate('portfolio')),
       isActive: currentView === 'portfolio'
     },
     {
       id: 'dividends',
       label: 'Dividends',
-      icon: DollarSign,
       onClick: () => handleOptionClick(() => handleNavigate('dividends')),
       isActive: currentView === 'dividends'
     },
     {
       id: 'activity',
       label: 'Trading Activity',
-      icon: Activity,
       onClick: () => handleOptionClick(() => handleNavigate('activity')),
       isActive: currentView === 'activity'
     }
@@ -146,14 +139,14 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
           // Disable pointer events when closed on mobile
           isMobileOpen ? 'pointer-events-auto' : 'pointer-events-none lg:pointer-events-auto',
           // Desktop: sticky positioning, always visible, animated width
-          'lg:sticky lg:top-[3.5rem] lg:z-auto lg:translate-x-0 lg:w-auto', // Sticky on desktop
+          'lg:sticky lg:top-[4rem] lg:z-auto lg:translate-x-0 lg:w-auto',
           // Desktop: always visible
           'lg:flex',
           // Common styles
-          'top-[3.5rem] h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)] lg:max-h-[calc(100vh-3.5rem)]',
-          'shrink-0 border-r border-border bg-background/95 lg:bg-background/80 backdrop-blur-sm',
+          'top-[4rem] h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)]',
+          'shrink-0 border-r border-border bg-background',
           'flex flex-col',
-          'lg:self-start', // Align to top for sticky positioning
+          'lg:self-start',
           className
         )}
       >
@@ -162,17 +155,17 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
           <span className="text-sm font-semibold text-foreground">Menu</span>
           <button
             onClick={() => setMobileSidebarOpen(false)}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             aria-label="Close menu"
           >
-            <X className="h-5 w-5" aria-hidden="true" />
+            Close
           </button>
         </div>
       {/* Navigation Options */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {options.map((option) => {
-          const Icon = option.icon
           const isActive = option.isActive || false
+          const dotColor = NAV_DOT_COLORS[option.id] || 'bg-muted-foreground'
 
           return (
             <button
@@ -182,14 +175,14 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
                 'relative flex h-11 w-full items-center rounded-lg transition-all duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 isActive
-                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                  ? 'border-l-[3px] border-primary bg-primary/8 font-semibold text-foreground'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
               )}
               aria-label={option.label}
               aria-current={isActive ? 'page' : undefined}
             >
               <div className="grid h-full w-12 place-content-center flex-shrink-0">
-                <Icon className="h-4 w-4" aria-hidden="true" />
+                <div className={cn('w-2 h-2 rounded-full', dotColor)} aria-hidden="true" />
               </div>
               <AnimatePresence mode="wait">
                 {(isOpen || isMobileOpen) && (
@@ -222,11 +215,7 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
             aria-expanded={isOpen}
           >
             <div className="grid h-full w-12 place-content-center flex-shrink-0">
-              {isOpen ? (
-                <ChevronsLeft className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <ChevronsRight className="h-4 w-4" aria-hidden="true" />
-              )}
+              <span className="text-sm" aria-hidden="true">{isOpen ? '\u2039' : '\u203A'}</span>
             </div>
             <AnimatePresence mode="wait">
               {isOpen && (

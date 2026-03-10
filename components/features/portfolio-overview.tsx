@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import groupBy from 'lodash/groupBy'
 import posthog from 'posthog-js'
-import { ArrowRight, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
@@ -174,32 +173,33 @@ function StockPositionTile({
       tabIndex={0}
       aria-label={`View details for ${position.ticker} - ${position.name}`}
     >
-      <CardContent className="p-4 flex flex-col flex-1">
+      <CardContent className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 mb-0.5">
-              <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+              <h3 className="text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
                 {position.ticker}
               </h3>
               {isPartialData && (
-                <AlertCircle className="w-3 h-3 text-amber-500 flex-shrink-0" aria-label="Partial data" />
+                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded" aria-label="Partial data">
+                  Partial
+                </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="text-sm text-muted-foreground truncate">
               {position.name}
             </p>
           </div>
-          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all duration-200 flex-shrink-0" />
         </div>
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {isNetSelling ? 'Net Flow' : 'Shares'}
             </span>
             <div className="flex items-center gap-1">
               <span className={cn(
-                'text-xs font-medium',
+                'text-sm font-medium',
                 isNetSelling ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
               )}>
                {formatShares(position.totalShares)}
@@ -213,23 +213,17 @@ function StockPositionTile({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {hasNegativeInvested ? 'Net Cash' : 'Invested'}
             </span>
             <span className={cn(
-              'text-xs font-medium',
-              hasNegativeInvested 
-                ? 'text-emerald-600 dark:text-emerald-400' 
+              'text-sm font-medium',
+              hasNegativeInvested
+                ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-foreground'
             )}>
               {formatCurrency(position.totalInvested, position.baseCurrency)}
             </span>
-          </div>
-
-          <div className="mt-2 pt-2 border-t border-border/50">
-            <p className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              Click to view details
-            </p>
           </div>
         </div>
       </CardContent>
@@ -272,13 +266,13 @@ function SoldPositionTile({
       tabIndex={0}
       aria-label={`View transaction history for ${position.ticker} - ${position.name}`}
     >
-      <CardContent className="p-4 flex flex-col flex-1">
+      <CardContent className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-muted-foreground truncate group-hover:text-primary transition-colors">
+            <h3 className="text-base font-bold text-muted-foreground truncate group-hover:text-primary transition-colors">
               {position.ticker}
             </h3>
-            <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
+            <p className="text-sm text-muted-foreground/70 truncate mt-0.5">
               {position.name}
             </p>
           </div>
@@ -286,25 +280,18 @@ function SoldPositionTile({
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
               Sold
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all duration-200" />
           </div>
         </div>
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Result</span>
+            <span className="text-sm text-muted-foreground">Result</span>
             <span className={cn(
-              'text-xs font-medium',
+              'text-sm font-medium',
               isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
             )}>
               {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
             </span>
-          </div>
-
-          <div className="mt-2 pt-2 border-t border-border/50">
-            <p className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              Click to view details
-            </p>
           </div>
         </div>
       </CardContent>
@@ -378,19 +365,16 @@ export function PortfolioOverview ({
         <section className="space-y-3" aria-labelledby="portfolio-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 id="portfolio-heading" className="text-sm font-semibold text-foreground">
+              <h2 id="portfolio-heading" className="text-lg font-semibold text-foreground">
                 Current Holdings
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Click any tile to view detailed analytics
-              </p>
             </div>
-            <span className="text-xs text-muted-foreground" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
+            <span className="text-sm text-muted-foreground" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="Current stock holdings">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" role="list" aria-label="Current stock holdings">
             {currentHoldings.map(position => {
               const isPartialData = partialDataWarning 
                 ? isTickerPartialData(position.ticker, partialDataWarning)
@@ -418,20 +402,17 @@ export function PortfolioOverview ({
         <section className="space-y-3" aria-labelledby="sold-positions-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 id="sold-positions-heading" className="text-sm font-medium text-muted-foreground">
+              <h2 id="sold-positions-heading" className="text-lg font-medium text-muted-foreground">
                 Closed Positions
               </h2>
-              <p className="text-xs text-muted-foreground/70 mt-0.5">
-                Click any tile to view transaction history
-              </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
+              <span className="text-sm text-muted-foreground" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>
               <span
                 className={cn(
-                  'text-xs font-medium',
+                  'text-sm font-medium',
                   totalRealizedResult >= 0
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-red-600 dark:text-red-400'
@@ -443,7 +424,7 @@ export function PortfolioOverview ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="list" aria-label="Sold stock positions">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" role="list" aria-label="Sold stock positions">
             {soldPositions.map(position => (
               <div key={position.ticker} role="listitem">
                 <SoldPositionTile

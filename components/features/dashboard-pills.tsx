@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Calendar, Wallet } from 'lucide-react'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -11,15 +10,14 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 })
 
 const pillBase =
-  'inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm'
+  'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium'
 
 function DateRangePill ({ formattedRange }: { formattedRange: string }) {
   return (
     <span
-      className={`${pillBase} bg-primary/10 dark:bg-primary/5 border border-primary/20 dark:border-primary/10 text-primary`}
+      className={`${pillBase} bg-primary/12 dark:bg-primary/8 border border-primary/20 dark:border-primary/10 text-primary`}
       aria-label={`Data range: ${formattedRange}`}
     >
-      <Calendar className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
       {formattedRange}
     </span>
   )
@@ -28,10 +26,9 @@ function DateRangePill ({ formattedRange }: { formattedRange: string }) {
 function BaseCurrencyPill ({ baseCurrency }: { baseCurrency: string }) {
   return (
     <span
-      className={`${pillBase} bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400`}
+      className={`${pillBase} bg-emerald-500/12 dark:bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400`}
       aria-label={`Base currency: ${baseCurrency}`}
     >
-      <Wallet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
       Base currency: {baseCurrency}
     </span>
   )
@@ -62,7 +59,7 @@ export function DashboardPills () {
 
   return (
     <div className="border-b border-border bg-muted/30 relative z-30" role="region" aria-label="Dashboard context">
-      <div className="container mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-2">
+      <div className="container mx-auto px-4 sm:px-8 py-3 flex flex-wrap items-center gap-2">
         <DateRangePill formattedRange={formattedRange} />
         <BaseCurrencyPill baseCurrency={baseCurrency} />
       </div>

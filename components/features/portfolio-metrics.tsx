@@ -4,15 +4,6 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  ArrowRightLeft,
-  ArrowDownToLine
-} from 'lucide-react'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { isBuyAction, isSellAction, isDividendAction, isDepositAction } from '@/lib/transaction-utils'
@@ -55,11 +46,8 @@ interface MetricData {
   label: string
   value: string
   subValue?: string
-  icon: React.ElementType
-  iconBg: string
-  iconColor: string
+  borderColor: string
   valueColor?: string
-  gradient?: string
 }
 
 /**
@@ -157,24 +145,6 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
   }
 }
 
-/**
- * Formats date range as human-readable string
- */
-function formatDateRange(start: string, end: string): string {
-  if (!start || !end) return 'N/A'
-  
-  const startDate = new Date(start)
-  const endDate = new Date(end)
-  
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
-
-  return `${formatter.format(startDate)} - ${formatter.format(endDate)}`
-}
-
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
@@ -187,8 +157,6 @@ function MetricCard({
   metric: MetricData
   index: number
 }) {
-  const Icon = metric.icon
-
   return (
     <motion.div
       initial="hidden"
@@ -199,38 +167,19 @@ function MetricCard({
       <Card className={cn(
         'relative overflow-hidden transition-all duration-300',
         'border-border/50 hover:border-border',
-        'bg-card/50 backdrop-blur-sm',
         'hover:shadow-lg hover:shadow-primary/5',
-        'group'
+        `border-l-[3px] ${metric.borderColor}`
       )}>
-        {/* Gradient overlay on hover */}
-        {metric.gradient && (
-          <div className={cn(
-            'absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500',
-            metric.gradient
-          )} />
-        )}
-
-        <CardContent className="relative z-10 p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className={cn(
-              'w-9 h-9 rounded-xl flex items-center justify-center',
-              metric.iconBg,
-              'transition-transform duration-300 group-hover:scale-110'
-            )}>
-              <Icon className={cn('w-4 h-4', metric.iconColor)} />
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground mb-1">{metric.label}</p>
+        <CardContent className="relative z-10 p-5">
+          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-2">{metric.label}</p>
           <p className={cn(
-            'text-xl font-semibold tracking-tight',
+            'text-2xl font-bold tracking-tight',
             metric.valueColor || 'text-foreground'
           )}>
             {metric.value}
           </p>
           {metric.subValue && (
-            <p className="text-xs text-muted-foreground mt-0.5">{metric.subValue}</p>
+            <p className="text-sm text-muted-foreground mt-1">{metric.subValue}</p>
           )}
         </CardContent>
       </Card>
@@ -253,57 +202,39 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       label: 'Buy Volume',
       value: formatCurrency(metrics.totalInvested, metrics.baseCurrency),
       subValue: 'Total bought',
-      icon: ArrowUpCircle,
-      iconBg: 'bg-blue-500/10',
-      iconColor: 'text-blue-500',
-      gradient: 'from-blue-500/5 to-cyan-500/5'
+      borderColor: 'border-l-blue-500',
     },
     {
       label: 'Sell Volume',
       value: formatCurrency(metrics.totalSold, metrics.baseCurrency),
       subValue: 'Total sold',
-      icon: ArrowDownCircle,
-      iconBg: 'bg-rose-500/10',
-      iconColor: 'text-rose-500',
-      gradient: 'from-rose-500/5 to-red-500/5'
+      borderColor: 'border-l-rose-500',
     },
     {
       label: 'Realized P&L',
       value: `${isRealizedPositive ? '+' : ''}${formatCurrency(metrics.realizedPnL, metrics.baseCurrency)}`,
       subValue: `${metrics.soldCount} position${metrics.soldCount !== 1 ? 's' : ''} closed`,
-      icon: isRealizedPositive ? TrendingUp : TrendingDown,
-      iconBg: isRealizedPositive ? 'bg-emerald-500/10' : 'bg-red-500/10',
-      iconColor: isRealizedPositive ? 'text-emerald-500' : 'text-red-500',
+      borderColor: isRealizedPositive ? 'border-l-emerald-500' : 'border-l-red-500',
       valueColor: isRealizedPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400',
-      gradient: isRealizedPositive ? 'from-emerald-500/5 to-green-500/5' : 'from-red-500/5 to-rose-500/5'
     },
     {
       label: 'Total Dividends',
       value: formatCurrency(metrics.totalDividends, metrics.baseCurrency),
       subValue: 'Dividend income',
-      icon: DollarSign,
-      iconBg: 'bg-amber-500/10',
-      iconColor: 'text-amber-500',
+      borderColor: 'border-l-amber-500',
       valueColor: metrics.totalDividends > 0 ? 'text-emerald-600 dark:text-emerald-400' : undefined,
-      gradient: 'from-amber-500/5 to-orange-500/5'
     },
     {
       label: 'Currency Fees',
       value: formatCurrency(metrics.totalFees, metrics.baseCurrency),
       subValue: 'Conversion costs',
-      icon: ArrowRightLeft,
-      iconBg: 'bg-violet-500/10',
-      iconColor: 'text-violet-500',
-      gradient: 'from-violet-500/5 to-purple-500/5'
+      borderColor: 'border-l-violet-500',
     },
     {
       label: 'Total Deposits',
       value: formatCurrency(metrics.totalDeposit, metrics.baseCurrency),
       subValue: `${metrics.depositCount} deposit${metrics.depositCount !== 1 ? 's' : ''} made`,
-      icon: ArrowDownToLine,
-      iconBg: 'bg-slate-500/10',
-      iconColor: 'text-slate-500',
-      gradient: 'from-slate-500/5 to-slate-600/5'
+      borderColor: 'border-l-slate-500',
     }
   ]
 
@@ -316,7 +247,7 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {metricCards.map((metric, index) => (
           <MetricCard key={metric.label} metric={metric} index={index} />
         ))}

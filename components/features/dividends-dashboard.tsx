@@ -26,7 +26,6 @@ import {
   Area,
   AreaChart
 } from 'recharts'
-import { TrendingUp, TrendingDown, ArrowUpDown, DollarSign, Receipt, Hash, Calculator } from 'lucide-react'
 import * as _ from 'lodash'
 import { isBuyAction, isSellAction, isDividendAction } from '@/lib/transaction-utils'
 
@@ -408,9 +407,9 @@ function CustomTooltip({
   if (!active || !payload || payload.length === 0) return null
 
   return (
-    <div className="bg-popover border border-border rounded-md shadow-md px-2 py-1.5">
+    <div className="bg-popover border border-border rounded-md shadow-lg px-3 py-2">
       {payload.map((entry, index) => (
-        <p key={index} className="text-xs font-medium text-foreground">
+        <p key={index} className="text-sm font-medium text-foreground">
           {entry.dataKey === 'cumulative' ? 'Cumulative: ' : ''}
           {formatCurrency(entry.value, baseCurrency)}
         </p>
@@ -428,14 +427,14 @@ function MetricCard({
   subValue,
   className,
   valueClassName,
-  icon: Icon
+  borderColor
 }: {
   label: string
   value: string
   subValue?: string
   className?: string
   valueClassName?: string
-  icon?: React.ElementType
+  borderColor?: string
 }) {
   return (
     <motion.div
@@ -444,21 +443,16 @@ function MetricCard({
       transition={{ duration: 0.3 }}
       className="h-full"
     >
-      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:shadow-primary/5 group h-full flex flex-col', className)}>
-        <CardContent className="p-3 flex flex-col h-full">
-          {Icon && (
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
-              <Icon className="w-4 h-4 text-primary" />
-            </div>
-          )}
-          <p className="text-xs text-muted-foreground flex-shrink-0">{label}</p>
-          <p className={cn('text-sm font-semibold text-foreground mt-0.5 flex-shrink-0', valueClassName)}>
+      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col', borderColor && `border-l-[3px] ${borderColor}`, className)}>
+        <CardContent className="p-5 flex flex-col h-full">
+          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex-shrink-0">{label}</p>
+          <p className={cn('text-2xl font-bold tracking-tight text-foreground mt-1 flex-shrink-0', valueClassName)}>
             {value}
           </p>
           {subValue ? (
-            <p className="text-xs text-muted-foreground mt-0.5 flex-shrink-0">{subValue}</p>
+            <p className="text-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
           ) : (
-            <div className="text-xs text-muted-foreground mt-0.5 flex-shrink-0 h-[14px]">&nbsp;</div>
+            <div className="text-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
           )}
         </CardContent>
       </Card>
@@ -643,34 +637,34 @@ export function DividendsDashboard ({
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 auto-rows-fr">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
         <MetricCard
           label="Total Dividends"
           value={formatCurrency(globalData.totalGross, baseCurrency)}
-          icon={DollarSign}
+          borderColor="border-l-amber-500"
         />
         <MetricCard
           label="Withholding Tax"
           value={formatCurrency(globalData.totalTax, baseCurrency)}
           valueClassName="text-muted-foreground"
-          icon={Receipt}
+          borderColor="border-l-rose-500"
         />
         <MetricCard
           label="Net Dividends"
           value={formatCurrency(globalData.totalNet, baseCurrency)}
           valueClassName="text-emerald-600 dark:text-emerald-400"
-          icon={TrendingUp}
+          borderColor="border-l-emerald-500"
         />
         <MetricCard
           label="Total Payments"
           value={globalData.paymentCount.toString()}
-          icon={Hash}
+          borderColor="border-l-blue-500"
         />
         <MetricCard
           label="Avg per Payment"
           value={formatCurrency(averagePerPayment, baseCurrency)}
           subValue={`${globalData.paymentCount} payments`}
-          icon={Calculator}
+          borderColor="border-l-violet-500"
         />
       </div>
 
@@ -678,13 +672,13 @@ export function DividendsDashboard ({
       {incomeOverTimeData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">Total Dividend Income Over Time</CardTitle>
-            <CardDescription className="text-xs">
+            <CardTitle className="text-base font-semibold">Total Dividend Income Over Time</CardTitle>
+            <CardDescription className="text-sm">
               Cumulative dividend income by month
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={incomeOverTimeData}>
                   <defs>
@@ -695,17 +689,17 @@ export function DividendsDashboard ({
                   </defs>
                   <XAxis
                     dataKey="period"
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                     className="text-muted-foreground"
                   />
                   <YAxis
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                    width={60}
+                    width={70}
                     className="text-muted-foreground"
                   />
                   <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
@@ -729,8 +723,8 @@ export function DividendsDashboard ({
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold">Dividend Trends</CardTitle>
-                <CardDescription className="text-xs">
+                <CardTitle className="text-base font-semibold">Dividend Trends</CardTitle>
+                <CardDescription className="text-sm">
                   {viewMode === 'month' ? 'Monthly' : 'Quarterly'} dividend income
                 </CardDescription>
               </div>
@@ -761,22 +755,22 @@ export function DividendsDashboard ({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-48">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={trendData}>
                   <XAxis
                     dataKey="period"
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                     className="text-muted-foreground"
                   />
                   <YAxis
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                    width={60}
+                    width={70}
                     className="text-muted-foreground"
                   />
                   <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
@@ -796,28 +790,28 @@ export function DividendsDashboard ({
       {yearComparisons.length > 1 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">Year-over-Year Growth</CardTitle>
-            <CardDescription className="text-xs">
+            <CardTitle className="text-base font-semibold">Year-over-Year Growth</CardTitle>
+            <CardDescription className="text-sm">
               Annual dividend income comparison
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-48">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={yearComparisons}>
                   <XAxis
                     dataKey="year"
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                     className="text-muted-foreground"
                   />
                   <YAxis
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                    width={60}
+                    width={70}
                     className="text-muted-foreground"
                   />
                   <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
@@ -842,14 +836,9 @@ export function DividendsDashboard ({
                       </span>
                       {comparison.growth !== undefined && (
                         <span className={cn(
-                          'flex items-center gap-1',
+                          'font-medium',
                           isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                         )}>
-                          {isPositive ? (
-                            <TrendingUp className="w-3 h-3" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3" />
-                          )}
                           {isPositive ? '+' : ''}{comparison.growth.toFixed(1)}%
                         </span>
                       )}
@@ -866,8 +855,8 @@ export function DividendsDashboard ({
       {sortedYields.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">Dividend Yield by Stock</CardTitle>
-            <CardDescription className="text-xs">
+            <CardTitle className="text-base font-semibold">Dividend Yield by Stock</CardTitle>
+            <CardDescription className="text-sm">
               Current holdings only - yield based on total invested
             </CardDescription>
           </CardHeader>
@@ -883,19 +872,19 @@ export function DividendsDashboard ({
                     <TableHead className="text-xs text-right">
                       <button
                         onClick={() => handleSort('dividends')}
-                        className="flex items-center gap-1 hover:text-foreground transition-colors"
+                        className="flex items-center gap-1 hover:text-foreground transition-colors underline-offset-2 hover:underline"
                       >
                         Annual Dividends
-                        <ArrowUpDown className="w-3 h-3" />
+                        <span className="text-[10px]">{sortField === 'dividends' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
                       </button>
                     </TableHead>
                     <TableHead className="text-xs text-right">
                       <button
                         onClick={() => handleSort('yield')}
-                        className="flex items-center gap-1 hover:text-foreground transition-colors"
+                        className="flex items-center gap-1 hover:text-foreground transition-colors underline-offset-2 hover:underline"
                       >
                         Yield %
-                        <ArrowUpDown className="w-3 h-3" />
+                        <span className="text-[10px]">{sortField === 'yield' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
                       </button>
                     </TableHead>
                   </TableRow>
@@ -934,17 +923,17 @@ export function DividendsDashboard ({
       {/* Projected Annual Income */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Projected Annual Dividend Income</CardTitle>
-          <CardDescription className="text-xs">
+          <CardTitle className="text-base font-semibold">Projected Annual Dividend Income</CardTitle>
+          <CardDescription className="text-sm">
             {projection.method}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
-            <p className="text-3xl font-bold text-primary">
+            <p className="text-4xl font-bold text-primary tracking-tight">
               {formatCurrency(projection.projected, baseCurrency)}
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               Estimated annual income based on historical patterns
             </p>
           </div>

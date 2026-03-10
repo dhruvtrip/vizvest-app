@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -173,9 +172,9 @@ function MetricCard({
 }) {
   return (
     <Card className={className}>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-semibold text-foreground mt-0.5">{value}</p>
+      <CardContent className="p-4">
+        <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="text-lg font-bold text-foreground mt-0.5">{value}</p>
       </CardContent>
     </Card>
   )
@@ -254,13 +253,13 @@ export function StockDetail ({
           className="gap-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 px-2"
           aria-label="Return to portfolio overview"
         >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          <span aria-hidden="true">&larr;</span>
           Back to Portfolio
         </Button>
 
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground">
               {metrics.companyName}
             </h1>
             <span className="px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
@@ -320,10 +319,10 @@ export function StockDetail ({
             ? 'border-rose-500/20'
             : 'border-muted'
         )}>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Net Share Flow</p>
+          <CardContent className="p-4">
+            <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Net Share Flow</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-lg font-bold text-foreground">
                 {metrics.netShareFlow >= 0 ? '+' : ''}{formatShares(metrics.netShareFlow)}
               </p>
               {metrics.positionStatus === 'net-buying' && (
@@ -344,26 +343,26 @@ export function StockDetail ({
       {/* Transaction Counts */}
       <div className="grid grid-cols-2 gap-3">
         <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Buy Transactions</p>
+          <CardContent className="p-4">
+            <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Buy Transactions</p>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-lg font-bold text-foreground">
                 {metrics.buyTransactionCount}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 ({formatShares(metrics.buyShares)} shares)
               </p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Sell Transactions</p>
+          <CardContent className="p-4">
+            <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Sell Transactions</p>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-lg font-bold text-foreground">
                 {metrics.sellTransactionCount}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 ({formatShares(metrics.sellShares)} shares)
               </p>
             </div>
@@ -373,7 +372,7 @@ export function StockDetail ({
 
       {/* Transaction History */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">
+        <h2 className="text-lg font-semibold text-foreground">
           Transaction History
         </h2>
 
