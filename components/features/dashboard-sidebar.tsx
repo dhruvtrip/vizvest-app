@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
+import {
+  Upload,
+  LayoutDashboard,
+  DollarSign,
+  Activity
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 
@@ -31,11 +37,11 @@ function scrollToTop () {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const NAV_DOT_COLORS: Record<string, string> = {
-  upload: 'bg-violet-500',
-  portfolio: 'bg-blue-500',
-  dividends: 'bg-emerald-500',
-  activity: 'bg-amber-500'
+const NAV_ICONS: Record<string, React.ElementType> = {
+  upload: Upload,
+  portfolio: LayoutDashboard,
+  dividends: DollarSign,
+  activity: Activity
 }
 
 interface SidebarOption {
@@ -165,7 +171,7 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {options.map((option) => {
           const isActive = option.isActive || false
-          const dotColor = NAV_DOT_COLORS[option.id] || 'bg-muted-foreground'
+          const Icon = NAV_ICONS[option.id]
 
           return (
             <button
@@ -182,7 +188,7 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
               aria-current={isActive ? 'page' : undefined}
             >
               <div className="grid h-full w-12 place-content-center flex-shrink-0">
-                <div className={cn('w-2 h-2 rounded-full', dotColor)} aria-hidden="true" />
+                {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
               </div>
               <AnimatePresence mode="wait">
                 {(isOpen || isMobileOpen) && (
