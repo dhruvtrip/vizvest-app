@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
+import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
   TableBody,
@@ -199,19 +200,25 @@ function MetricCard({
   label,
   value,
   className,
-  valueClassName
+  valueClassName,
+  rawValue,
+  currency
 }: {
   label: string
   value: string
   className?: string
   valueClassName?: string
+  rawValue?: number
+  currency?: string
 }) {
   return (
     <Card className={className}>
       <CardContent className="p-3">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className={cn('text-sm font-semibold text-foreground mt-0.5', valueClassName)}>
-          {value}
+          {rawValue !== undefined && currency ? (
+            <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
+          ) : value}
         </p>
       </CardContent>
     </Card>
@@ -286,15 +293,21 @@ export function DividendSection({
             <MetricCard
               label="Total Dividends"
               value={formatCurrency(metrics.totalGross, baseCurrency)}
+              rawValue={metrics.totalGross}
+              currency={baseCurrency}
             />
             <MetricCard
               label="Withholding Tax"
               value={formatCurrency(metrics.totalTax, baseCurrency)}
+              rawValue={metrics.totalTax}
+              currency={baseCurrency}
               valueClassName="text-muted-foreground"
             />
             <MetricCard
               label="Net Dividends"
               value={formatCurrency(metrics.totalNet, baseCurrency)}
+              rawValue={metrics.totalNet}
+              currency={baseCurrency}
               valueClassName="text-emerald-600 dark:text-emerald-400"
             />
             <MetricCard

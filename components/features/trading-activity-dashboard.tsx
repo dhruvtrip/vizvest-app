@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
   TableBody,
@@ -220,7 +221,9 @@ function MetricCard({
   subValue,
   className,
   valueClassName,
-  borderColor
+  borderColor,
+  rawValue,
+  currency
 }: {
   label: string
   value: string
@@ -228,6 +231,8 @@ function MetricCard({
   className?: string
   valueClassName?: string
   borderColor?: string
+  rawValue?: number
+  currency?: string
 }) {
   return (
     <motion.div
@@ -240,7 +245,9 @@ function MetricCard({
         <CardContent className="p-5 flex flex-col h-full">
           <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex-shrink-0">{label}</p>
           <p className={cn('text-2xl font-bold tracking-tight text-foreground mt-1 flex-shrink-0', valueClassName)}>
-            {value}
+            {rawValue !== undefined && currency ? (
+              <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
+            ) : value}
           </p>
           {subValue ? (
             <p className="text-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
@@ -416,6 +423,8 @@ export function TradingActivityDashboard ({
         <MetricCard
           label="Realized P&L"
           value={`${metrics.realizedPnL >= 0 ? '+' : ''}${formatCurrency(metrics.realizedPnL, metrics.baseCurrency)}`}
+          rawValue={metrics.realizedPnL}
+          currency={metrics.baseCurrency}
           subValue={`${metrics.profitableTrades}W / ${metrics.losingTrades}L`}
           valueClassName={metrics.realizedPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
           borderColor={metrics.realizedPnL >= 0 ? 'border-l-emerald-500' : 'border-l-red-500'}
@@ -430,12 +439,16 @@ export function TradingActivityDashboard ({
         <MetricCard
           label="Total Buy Volume"
           value={formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency)}
+          rawValue={metrics.totalBuyVolume}
+          currency={metrics.baseCurrency}
           valueClassName="text-emerald-600 dark:text-emerald-400"
           borderColor="border-l-emerald-500"
         />
         <MetricCard
           label="Total Sell Volume"
           value={formatCurrency(metrics.totalSellVolume, metrics.baseCurrency)}
+          rawValue={metrics.totalSellVolume}
+          currency={metrics.baseCurrency}
           valueClassName="text-red-600 dark:text-red-400"
           borderColor="border-l-rose-500"
         />

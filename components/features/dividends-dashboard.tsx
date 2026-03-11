@@ -4,6 +4,7 @@ import { useMemo, useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
   TableBody,
@@ -479,7 +480,9 @@ function MetricCard({
   subValue,
   className,
   valueClassName,
-  borderColor
+  borderColor,
+  rawValue,
+  currency
 }: {
   label: string
   value: string
@@ -487,6 +490,8 @@ function MetricCard({
   className?: string
   valueClassName?: string
   borderColor?: string
+  rawValue?: number
+  currency?: string
 }) {
   return (
     <motion.div
@@ -499,7 +504,9 @@ function MetricCard({
         <CardContent className="p-5 flex flex-col h-full">
           <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex-shrink-0">{label}</p>
           <p className={cn('text-2xl font-bold tracking-tight text-foreground mt-1 flex-shrink-0', valueClassName)}>
-            {value}
+            {rawValue !== undefined && currency ? (
+              <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
+            ) : value}
           </p>
           {subValue ? (
             <p className="text-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
@@ -693,17 +700,23 @@ export function DividendsDashboard ({
         <MetricCard
           label="Total Dividends"
           value={formatCurrency(globalData.totalGross, baseCurrency)}
+          rawValue={globalData.totalGross}
+          currency={baseCurrency}
           borderColor="border-l-amber-500"
         />
         <MetricCard
           label="Withholding Tax"
           value={formatCurrency(globalData.totalTax, baseCurrency)}
+          rawValue={globalData.totalTax}
+          currency={baseCurrency}
           valueClassName="text-muted-foreground"
           borderColor="border-l-rose-500"
         />
         <MetricCard
           label="Net Dividends"
           value={formatCurrency(globalData.totalNet, baseCurrency)}
+          rawValue={globalData.totalNet}
+          currency={baseCurrency}
           valueClassName="text-emerald-600 dark:text-emerald-400"
           borderColor="border-l-emerald-500"
         />
@@ -715,6 +728,8 @@ export function DividendsDashboard ({
         <MetricCard
           label="Avg per Payment"
           value={formatCurrency(averagePerPayment, baseCurrency)}
+          rawValue={averagePerPayment}
+          currency={baseCurrency}
           subValue={`${globalData.paymentCount} payments`}
           borderColor="border-l-violet-500"
         />
@@ -1018,7 +1033,7 @@ export function DividendsDashboard ({
         <CardContent>
           <div className="text-center py-4">
             <p className="text-4xl font-bold text-primary tracking-tight">
-              {formatCurrency(projection.projected, baseCurrency)}
+              <AnimatedCurrency amount={projection.projected} currency={baseCurrency} formatFn={formatCurrency} />
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Estimated annual income based on historical patterns

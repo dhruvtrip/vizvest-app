@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
+import { AnimatedCurrency } from '@/components/ui/animated-number'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
@@ -45,6 +46,8 @@ interface PortfolioMetricsProps {
 interface MetricData {
   label: string
   value: string
+  rawValue: number
+  currency: string
   subValue?: string
   borderColor: string
   valueColor?: string
@@ -176,7 +179,7 @@ function MetricCard({
             'text-2xl font-bold tracking-tight',
             metric.valueColor || 'text-foreground'
           )}>
-            {metric.value}
+            <AnimatedCurrency amount={metric.rawValue} currency={metric.currency} formatFn={formatCurrency} />
           </p>
           {metric.subValue && (
             <p className="text-sm text-muted-foreground mt-1">{metric.subValue}</p>
@@ -201,18 +204,24 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
     {
       label: 'Buy Volume',
       value: formatCurrency(metrics.totalInvested, metrics.baseCurrency),
+      rawValue: metrics.totalInvested,
+      currency: metrics.baseCurrency,
       subValue: 'Total bought',
       borderColor: 'border-l-blue-500',
     },
     {
       label: 'Sell Volume',
       value: formatCurrency(metrics.totalSold, metrics.baseCurrency),
+      rawValue: metrics.totalSold,
+      currency: metrics.baseCurrency,
       subValue: 'Total sold',
       borderColor: 'border-l-rose-500',
     },
     {
       label: 'Realized P&L',
       value: `${isRealizedPositive ? '+' : ''}${formatCurrency(metrics.realizedPnL, metrics.baseCurrency)}`,
+      rawValue: metrics.realizedPnL,
+      currency: metrics.baseCurrency,
       subValue: `${metrics.soldCount} position${metrics.soldCount !== 1 ? 's' : ''} closed`,
       borderColor: isRealizedPositive ? 'border-l-emerald-500' : 'border-l-red-500',
       valueColor: isRealizedPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400',
@@ -220,6 +229,8 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
     {
       label: 'Total Dividends',
       value: formatCurrency(metrics.totalDividends, metrics.baseCurrency),
+      rawValue: metrics.totalDividends,
+      currency: metrics.baseCurrency,
       subValue: 'Dividend income',
       borderColor: 'border-l-amber-500',
       valueColor: metrics.totalDividends > 0 ? 'text-emerald-600 dark:text-emerald-400' : undefined,
@@ -227,12 +238,16 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
     {
       label: 'Currency Fees',
       value: formatCurrency(metrics.totalFees, metrics.baseCurrency),
+      rawValue: metrics.totalFees,
+      currency: metrics.baseCurrency,
       subValue: 'Conversion costs',
       borderColor: 'border-l-violet-500',
     },
     {
       label: 'Total Deposits',
       value: formatCurrency(metrics.totalDeposit, metrics.baseCurrency),
+      rawValue: metrics.totalDeposit,
+      currency: metrics.baseCurrency,
       subValue: `${metrics.depositCount} deposit${metrics.depositCount !== 1 ? 's' : ''} made`,
       borderColor: 'border-l-slate-500',
     }
