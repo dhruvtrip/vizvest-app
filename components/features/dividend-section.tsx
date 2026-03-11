@@ -19,8 +19,10 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  CartesianGrid
 } from 'recharts'
+import { AnimateOnView } from '@/components/features/dividends-dashboard'
 
 /**
  * Currency symbols for common currencies
@@ -231,10 +233,13 @@ function CustomTooltip({
   if (!active || !payload || payload.length === 0) return null
 
   return (
-    <div className="bg-popover border border-border rounded-md shadow-md px-2 py-1.5">
-      <p className="text-xs font-medium text-foreground">
-        {formatCurrency(payload[0].value, baseCurrency)}
-      </p>
+    <div className="bg-popover/90 backdrop-blur-md border border-border/50 rounded-lg shadow-xl shadow-black/10 px-3 py-2">
+      <div className="flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+        <p className="text-xs font-semibold text-foreground">
+          {formatCurrency(payload[0].value, baseCurrency)}
+        </p>
+      </div>
     </div>
   )
 }
@@ -300,43 +305,54 @@ export function DividendSection({
 
           {/* Bar Chart */}
           {chartData.length > 1 && (
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-xs text-muted-foreground mb-3">
-                  Dividend History
-                </h3>
-                <div className="h-36" role="img" aria-label={`Bar chart showing dividend income by month for ${ticker}. Total net dividends: ${formatCurrency(metrics.totalNet, baseCurrency)}`}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} aria-label={`Dividend income chart for ${ticker}`}>
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fontSize: 10 }}
-                        tickLine={false}
-                        axisLine={false}
-                        className="text-muted-foreground"
-                      />
-                      <YAxis
-                        tick={{ fontSize: 10 }}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                        width={60}
-                        className="text-muted-foreground"
-                      />
-                      <Tooltip
-                        content={<CustomTooltip baseCurrency={baseCurrency} />}
-                        cursor={{ fill: 'hsl(var(--muted))' }}
-                      />
-                      <Bar
-                        dataKey="amount"
-                        fill="hsl(var(--primary))"
-                        radius={[3, 3, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+            <AnimateOnView minHeight={240}>
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="text-xs text-muted-foreground mb-3">
+                    Dividend History
+                  </h3>
+                  <div className="h-44" role="img" aria-label={`Bar chart showing dividend income by month for ${ticker}. Total net dividends: ${formatCurrency(metrics.totalNet, baseCurrency)}`}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} aria-label={`Dividend income chart for ${ticker}`}>
+                        <defs>
+                          <linearGradient id="barGradientSection" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
+                        <XAxis
+                          dataKey="month"
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => formatCurrency(value, baseCurrency)}
+                          width={65}
+                        />
+                        <Tooltip
+                          content={<CustomTooltip baseCurrency={baseCurrency} />}
+                          cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
+                        />
+                        <Bar
+                          dataKey="amount"
+                          fill="url(#barGradientSection)"
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={36}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                          animationBegin={100}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimateOnView>
           )}
 
           {/* Dividend Table */}

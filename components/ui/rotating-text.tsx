@@ -92,7 +92,7 @@ export function RotatingText({
         duration: 1,
         repeat: Infinity,
         repeatDelay: 0,
-        ease: 'linear'
+        ease: 'linear' as const
       }
     }
   }

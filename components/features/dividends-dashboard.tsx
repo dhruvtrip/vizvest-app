@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -24,7 +24,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Area,
-  AreaChart
+  AreaChart,
+  CartesianGrid
 } from 'recharts'
 import * as _ from 'lodash'
 import { isBuyAction, isSellAction, isDividendAction } from '@/lib/transaction-utils'
@@ -393,6 +394,54 @@ function calculateGrowthRate(byYear: Map<string, number>): YearComparison[] {
 }
 
 /**
+ * Renders children only when scrolled into view, triggering Recharts mount animations.
+ * Accepts an optional minHeight so the placeholder matches the eventual content height
+ * and avoids layout shift when the chart mounts.
+ */
+export function AnimateOnView ({
+  children,
+  className,
+  minHeight
+}: {
+  children: React.ReactNode
+  className?: string
+  minHeight?: number
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.15 }
+    )
+
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 12 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className={className}
+    >
+      {isVisible ? children : <div style={minHeight ? { minHeight } : undefined} />}
+    </motion.div>
+  )
+}
+
+/**
  * Custom tooltip for charts
  */
 function CustomTooltip({
@@ -407,12 +456,15 @@ function CustomTooltip({
   if (!active || !payload || payload.length === 0) return null
 
   return (
-    <div className="bg-popover border border-border rounded-md shadow-lg px-3 py-2">
+    <div className="bg-popover/90 backdrop-blur-md border border-border/50 rounded-lg shadow-xl shadow-black/10 px-4 py-2.5">
       {payload.map((entry, index) => (
-        <p key={index} className="text-sm font-medium text-foreground">
-          {entry.dataKey === 'cumulative' ? 'Cumulative: ' : ''}
-          {formatCurrency(entry.value, baseCurrency)}
-        </p>
+        <div key={index} className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+          <p className="text-sm font-semibold text-foreground">
+            {entry.dataKey === 'cumulative' ? 'Cumulative: ' : ''}
+            {formatCurrency(entry.value, baseCurrency)}
+          </p>
+        </div>
       ))}
     </div>
   )
@@ -670,159 +722,193 @@ export function DividendsDashboard ({
 
       {/* Total Income Over Time */}
       {incomeOverTimeData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Total Dividend Income Over Time</CardTitle>
-            <CardDescription className="text-sm">
-              Cumulative dividend income by month
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={incomeOverTimeData}>
-                  <defs>
-                    <linearGradient id="dividendGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="period"
-                    tick={{ fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    className="text-muted-foreground"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                    width={70}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
-                  <Area
-                    type="monotone"
-                    dataKey="cumulative"
-                    stroke="hsl(var(--primary))"
-                    fillOpacity={1}
-                    fill="url(#dividendGradient)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <AnimateOnView minHeight={450}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Total Dividend Income Over Time</CardTitle>
+              <CardDescription className="text-sm">
+                Cumulative dividend income by month
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={incomeOverTimeData}>
+                    <defs>
+                      <linearGradient id="dividendGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
+                    <XAxis
+                      dataKey="period"
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => formatCurrency(value, baseCurrency)}
+                      width={75}
+                    />
+                    <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
+                    <Area
+                      type="natural"
+                      dataKey="cumulative"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#dividendGradient)"
+                      dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+                      animationDuration={1000}
+                      animationEasing="ease-out"
+                      animationBegin={100}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </AnimateOnView>
       )}
 
       {/* Monthly/Quarterly Trends */}
       {trendData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-semibold">Dividend Trends</CardTitle>
-                <CardDescription className="text-sm">
-                  {viewMode === 'month' ? 'Monthly' : 'Quarterly'} dividend income
-                </CardDescription>
+        <AnimateOnView minHeight={400}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold">Dividend Trends</CardTitle>
+                  <CardDescription className="text-sm">
+                    {viewMode === 'month' ? 'Monthly' : 'Quarterly'} dividend income
+                  </CardDescription>
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    variant={viewMode === 'month' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setViewMode('month')
+                      posthog.capture('dividend_view_mode_changed', { view_mode: 'month' })
+                    }}
+                    className="text-xs h-7"
+                  >
+                    Monthly
+                  </Button>
+                  <Button
+                    variant={viewMode === 'quarter' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setViewMode('quarter')
+                      posthog.capture('dividend_view_mode_changed', { view_mode: 'quarter' })
+                    }}
+                    className="text-xs h-7"
+                  >
+                    Quarterly
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-1">
-                <Button
-                  variant={viewMode === 'month' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setViewMode('month')
-                    posthog.capture('dividend_view_mode_changed', { view_mode: 'month' })
-                  }}
-                  className="text-xs h-7"
-                >
-                  Monthly
-                </Button>
-                <Button
-                  variant={viewMode === 'quarter' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setViewMode('quarter')
-                    posthog.capture('dividend_view_mode_changed', { view_mode: 'quarter' })
-                  }}
-                  className="text-xs h-7"
-                >
-                  Quarterly
-                </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={trendData}>
+                    <defs>
+                      <linearGradient id="barGradientTrend" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
+                    <XAxis
+                      dataKey="period"
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => formatCurrency(value, baseCurrency)}
+                      width={75}
+                    />
+                    <Tooltip
+                      content={<CustomTooltip baseCurrency={baseCurrency} />}
+                      cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
+                    />
+                    <Bar
+                      dataKey="amount"
+                      fill="url(#barGradientTrend)"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={40}
+                      animationDuration={800}
+                      animationEasing="ease-out"
+                      animationBegin={100}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={trendData}>
-                  <XAxis
-                    dataKey="period"
-                    tick={{ fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    className="text-muted-foreground"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                    width={70}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
-                  <Bar
-                    dataKey="amount"
-                    fill="hsl(var(--primary))"
-                    radius={[3, 3, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </AnimateOnView>
       )}
 
       {/* Year-over-Year Growth */}
       {yearComparisons.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Year-over-Year Growth</CardTitle>
-            <CardDescription className="text-sm">
-              Annual dividend income comparison
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={yearComparisons}>
-                  <XAxis
-                    dataKey="year"
-                    tick={{ fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    className="text-muted-foreground"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                    width={70}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
-                  <Bar
-                    dataKey="total"
-                    fill="hsl(var(--primary))"
-                    radius={[3, 3, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+        <AnimateOnView minHeight={460}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Year-over-Year Growth</CardTitle>
+              <CardDescription className="text-sm">
+                Annual dividend income comparison
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={yearComparisons}>
+                    <defs>
+                      <linearGradient id="barGradientYoY" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => formatCurrency(value, baseCurrency)}
+                      width={75}
+                    />
+                    <Tooltip
+                      content={<CustomTooltip baseCurrency={baseCurrency} />}
+                      cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
+                    />
+                    <Bar
+                      dataKey="total"
+                      fill="url(#barGradientYoY)"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={50}
+                      animationDuration={800}
+                      animationEasing="ease-out"
+                      animationBegin={100}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             <div className="mt-4 space-y-2">
               {yearComparisons.map((comparison, index) => {
                 if (index === 0) return null
@@ -849,6 +935,7 @@ export function DividendsDashboard ({
             </div>
           </CardContent>
         </Card>
+        </AnimateOnView>
       )}
 
       {/* Dividend Yield by Stock */}
