@@ -722,7 +722,7 @@ export function DividendsDashboard ({
 
       {/* Total Income Over Time */}
       {incomeOverTimeData.length > 0 && (
-        <AnimateOnView minHeight={320}>
+        <AnimateOnView minHeight={450}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-semibold">Total Dividend Income Over Time</CardTitle>
@@ -778,7 +778,7 @@ export function DividendsDashboard ({
 
       {/* Monthly/Quarterly Trends */}
       {trendData.length > 0 && (
-        <AnimateOnView minHeight={256}>
+        <AnimateOnView minHeight={400}>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -861,7 +861,7 @@ export function DividendsDashboard ({
 
       {/* Year-over-Year Growth */}
       {yearComparisons.length > 1 && (
-        <AnimateOnView minHeight={256}>
+        <AnimateOnView minHeight={460}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-semibold">Year-over-Year Growth</CardTitle>
