@@ -305,7 +305,7 @@ export function DividendSection({
 
           {/* Bar Chart */}
           {chartData.length > 1 && (
-            <AnimateOnView>
+            <AnimateOnView minHeight={176}>
               <Card>
                 <CardContent className="p-4">
                   <h3 className="text-xs text-muted-foreground mb-3">

@@ -394,14 +394,18 @@ function calculateGrowthRate(byYear: Map<string, number>): YearComparison[] {
 }
 
 /**
- * Renders children only when scrolled into view, triggering Recharts mount animations
+ * Renders children only when scrolled into view, triggering Recharts mount animations.
+ * Accepts an optional minHeight so the placeholder matches the eventual content height
+ * and avoids layout shift when the chart mounts.
  */
-export function AnimateOnView({
+export function AnimateOnView ({
   children,
-  className
+  className,
+  minHeight
 }: {
   children: React.ReactNode
   className?: string
+  minHeight?: number
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
@@ -432,7 +436,7 @@ export function AnimateOnView({
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className={className}
     >
-      {isVisible ? children : <div style={{ minHeight: 200 }} />}
+      {isVisible ? children : <div style={minHeight ? { minHeight } : undefined} />}
     </motion.div>
   )
 }
@@ -718,7 +722,7 @@ export function DividendsDashboard ({
 
       {/* Total Income Over Time */}
       {incomeOverTimeData.length > 0 && (
-        <AnimateOnView>
+        <AnimateOnView minHeight={320}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-semibold">Total Dividend Income Over Time</CardTitle>
@@ -774,7 +778,7 @@ export function DividendsDashboard ({
 
       {/* Monthly/Quarterly Trends */}
       {trendData.length > 0 && (
-        <AnimateOnView>
+        <AnimateOnView minHeight={256}>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -857,7 +861,7 @@ export function DividendsDashboard ({
 
       {/* Year-over-Year Growth */}
       {yearComparisons.length > 1 && (
-        <AnimateOnView>
+        <AnimateOnView minHeight={256}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-semibold">Year-over-Year Growth</CardTitle>
