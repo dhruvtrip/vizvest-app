@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -65,13 +66,25 @@ export function Navbar() {
             {/* Logo */}
             <Link 
               href="/" 
-              className="flex items-center gap-2 text-sm font-bold hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
+              className="flex items-center hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
               aria-label="Vizvest home"
             >
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-accent flex items-center justify-center" aria-hidden="true">
-                <span className="text-white text-xs font-bold">V</span>
-              </div>
-              <span>Vizvest</span>
+              <Image
+                src="/assets/logo-full-light-nobg.png"
+                alt="Vizvest"
+                width={150}
+                height={34}
+                className="h-20 w-auto dark:hidden"
+                priority
+              />
+              <Image
+                src="/assets/logo-full-dark-nobg.png"
+                alt="Vizvest"
+                width={150}
+                height={34}
+                className="hidden h-20 w-auto dark:block"
+                priority
+              />
             </Link>
 
             {/* Center: Desktop Navigation */}

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Github, Twitter } from 'lucide-react'
 
@@ -38,13 +39,23 @@ export function Footer() {
           <div className="col-span-2">
             <Link 
               href="/" 
-              className="inline-flex items-center gap-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
+              className="inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
               aria-label="Vizvest home"
             >
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-accent flex items-center justify-center" aria-hidden="true">
-                <span className="text-white text-xs font-bold">V</span>
-              </div>
-              Vizvest
+              <Image
+                src="/assets/logo-full-light-nobg.png"
+                alt="Vizvest"
+                width={150}
+                height={34}
+                className="h-20 w-auto dark:hidden"
+              />
+              <Image
+                src="/assets/logo-full-dark-nobg.png"
+                alt="Vizvest"
+                width={150}
+                height={34}
+                className="hidden h-20 w-auto dark:block"
+              />
             </Link>
             <p className="mt-4 text-xs text-muted-foreground max-w-xs leading-relaxed">
               Visualize and analyze your Trading 212 portfolio with powerful insights and beautiful charts.
