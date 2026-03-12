@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -80,8 +80,101 @@ const features = [
 ]
 
 function FeatureCard({ feature, index }: { feature: typeof features[0], index: number }) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const isCardInView = useInView(cardRef, { margin: '-50px' })
+
+  // Performance tile: animate -2 → +25 → pause → -2 → pause → loop
+  const [perfValue, setPerfValue] = useState(-2)
+  const perfPhaseRef = useRef<'up' | 'pause-high' | 'down' | 'pause-low'>('up')
+  const perfPauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!feature.showPercentage || !isCardInView) return
+
+    const interval = setInterval(() => {
+      const phase = perfPhaseRef.current
+
+      if (phase === 'pause-high' || phase === 'pause-low') return
+
+      setPerfValue(prev => {
+        const step = 0.3
+        if (phase === 'up') {
+          const next = +(prev + step).toFixed(1)
+          if (next >= 25) {
+            perfPhaseRef.current = 'pause-high'
+            perfPauseTimerRef.current = setTimeout(() => {
+              perfPhaseRef.current = 'down'
+            }, 1200)
+            return 25
+          }
+          return next
+        } else {
+          const next = +(prev - step).toFixed(1)
+          if (next <= -2) {
+            perfPhaseRef.current = 'pause-low'
+            perfPauseTimerRef.current = setTimeout(() => {
+              perfPhaseRef.current = 'up'
+            }, 1200)
+            return -2
+          }
+          return next
+        }
+      })
+    }, 70)
+
+    return () => {
+      clearInterval(interval)
+      if (perfPauseTimerRef.current) clearTimeout(perfPauseTimerRef.current)
+    }
+  }, [feature.showPercentage, isCardInView])
+
+  // Dividend tile: animate yield 0% → 5% → 0%
+  const [yieldValue, setYieldValue] = useState(0)
+  const yieldDirectionRef = useRef<'up' | 'down'>('up')
+
+  useEffect(() => {
+    if (!feature.showYield || !isCardInView) return
+    const interval = setInterval(() => {
+      setYieldValue(prev => {
+        const step = 0.1
+        if (yieldDirectionRef.current === 'up') {
+          const next = +(prev + step).toFixed(1)
+          if (next >= 5) { yieldDirectionRef.current = 'down'; return 5 }
+          return next
+        } else {
+          const next = +(prev - step).toFixed(1)
+          if (next <= 0) { yieldDirectionRef.current = 'up'; return 0 }
+          return next
+        }
+      })
+    }, 120)
+    return () => clearInterval(interval)
+  }, [feature.showYield, isCardInView])
+
+  // Stock analysis: sequential badge press
+  const [pressedBadgeIndex, setPressedBadgeIndex] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!feature.showTransactions || !isCardInView) return
+    const badgeCount = feature.transactions?.length ?? 0
+    let current = 0
+    let timeoutId: ReturnType<typeof setTimeout>
+
+    const interval = setInterval(() => {
+      setPressedBadgeIndex(current)
+      timeoutId = setTimeout(() => setPressedBadgeIndex(null), 600)
+      current = (current + 1) % badgeCount
+    }, 1800)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeoutId)
+    }
+  }, [feature.showTransactions, feature.transactions, isCardInView])
+
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-50px' }}
@@ -158,31 +251,36 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
 
           {feature.showPercentage && (
             <div className="mt-4 flex items-center gap-2">
-              <span className="text-2xl font-bold text-emerald-500">{feature.percentage}</span>
+              <span
+                className={cn(
+                  'text-2xl font-bold transition-colors duration-300 tabular-nums',
+                  perfValue >= 0 ? 'text-emerald-500' : 'text-rose-500'
+                )}
+              >
+                {perfValue >= 0 ? '+' : ''}{perfValue.toFixed(1)}%
+              </span>
             </div>
           )}
 
           {feature.showYield && (
             <div className="mt-4 flex items-center justify-center">
-              <div className="relative w-16 h-16" role="img" aria-label={`Yield: ${feature.yieldValue}`}>
+              <div className="relative w-16 h-16" role="img" aria-label={`Yield: ${yieldValue.toFixed(1)}%`}>
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-                  <circle 
-                    cx="50" cy="50" r="40" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="10" 
-                    className="text-muted/30" 
+                  <circle
+                    cx="50" cy="50" r="40"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="10"
+                    className="text-muted/30"
                   />
-                  <motion.circle 
-                    cx="50" cy="50" r="40" 
-                    fill="none" 
-                    stroke="url(#yieldGradient)" 
-                    strokeWidth="10" 
+                  <motion.circle
+                    cx="50" cy="50" r="40"
+                    fill="none"
+                    stroke="url(#yieldGradient)"
+                    strokeWidth="10"
                     strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    whileInView={{ pathLength: 0.38 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: 0.3 }}
+                    animate={{ pathLength: yieldValue / 10 }}
+                    transition={{ duration: 0.08, ease: 'linear' }}
                   />
                   <defs>
                     <linearGradient id="yieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -191,8 +289,8 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-500">
-                  {feature.yieldValue}
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-500 tabular-nums">
+                  {yieldValue.toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -201,17 +299,25 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
           {feature.showTransactions && feature.transactions && (
             <div className="mt-4 flex flex-wrap gap-2">
               {feature.transactions.map((tx, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   initial={{ opacity: 0, scale: 0.8 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ delay: 0.2 + i * 0.08, duration: 0.3 }}
+                  animate={pressedBadgeIndex === i
+                    ? { scale: 0.82, y: 2 }
+                    : { scale: 1, y: 0 }
+                  }
+                  transition={pressedBadgeIndex === i
+                    ? { type: 'spring', stiffness: 400, damping: 15 }
+                    : { type: 'spring', stiffness: 300, damping: 20 }
+                  }
                   className={cn(
-                    'px-2 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1',
-                    tx.type === 'BUY' 
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
-                      : 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                    'px-2 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 transition-shadow duration-200',
+                    tx.type === 'BUY'
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-rose-500/20 text-rose-600 dark:text-rose-400',
+                    pressedBadgeIndex === i && 'shadow-inner brightness-110'
                   )}
                 >
                   <span>{tx.type}</span>
