@@ -1,5 +1,6 @@
 export { Navbar } from './navbar'
 export { Hero } from './hero'
+export { ProductShot } from './product-shot'
 export { FeaturesBento } from './features-bento'
 export { HowItWorks } from './how-it-works'
 export { FAQs } from './faqs'
