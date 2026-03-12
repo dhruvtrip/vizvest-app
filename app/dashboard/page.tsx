@@ -29,13 +29,11 @@ export default function DashboardPage () {
     showDividendsDashboard,
     showTradingActivityDashboard,
     selectedTicker,
-    isMobileSidebarOpen,
     partialDataWarning,
     isPartialDataDismissed,
     uploadAnother,
     dismissAlert,
-    dismissPartialDataAlert,
-    setMobileSidebarOpen
+    dismissPartialDataAlert
   } = useDashboardStore(
     useShallow((state) => ({
       normalizedTransactions: state.normalizedTransactions,
@@ -47,13 +45,11 @@ export default function DashboardPage () {
       showDividendsDashboard: state.showDividendsDashboard,
       showTradingActivityDashboard: state.showTradingActivityDashboard,
       selectedTicker: state.selectedTicker,
-      isMobileSidebarOpen: state.isMobileSidebarOpen,
       partialDataWarning: state.partialDataWarning,
       isPartialDataDismissed: state.isPartialDataDismissed,
       uploadAnother: state.uploadAnother,
       dismissAlert: state.dismissAlert,
-      dismissPartialDataAlert: state.dismissPartialDataAlert,
-      setMobileSidebarOpen: state.setMobileSidebarOpen
+      dismissPartialDataAlert: state.dismissPartialDataAlert
     }))
   )
 
@@ -83,16 +79,6 @@ export default function DashboardPage () {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] relative">
-      {hasData && (
-        <button
-          onClick={() => setMobileSidebarOpen(!isMobileSidebarOpen)}
-          className="lg:hidden fixed top-[5rem] right-4 z-[60] px-3 py-2 bg-background border border-border rounded-lg shadow-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-sm font-medium text-foreground"
-          aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={isMobileSidebarOpen}
-        >
-          Menu
-        </button>
-      )}
 
       {hasData && <DashboardSidebar />}
 
