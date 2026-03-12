@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Github, Twitter } from 'lucide-react'
 
 const footerLinks = {
   product: [
@@ -21,11 +20,6 @@ const footerLinks = {
     { label: 'Terms', href: '#' },
   ],
 }
-
-const socialLinks = [
-  { icon: Twitter, label: 'Twitter', href: '#' },
-  { icon: Github, label: 'GitHub', href: '#' },
-]
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -58,23 +52,8 @@ export function Footer() {
               />
             </Link>
             <p className="mt-4 text-xs text-muted-foreground max-w-xs leading-relaxed">
-              Visualize and analyze your Trading 212 portfolio with powerful insights and beautiful charts.
+              Visualize and analyze your Trading 212 portfolio with powerful insights and interactive charts.
             </p>
-            {/* Social Links */}
-            <nav aria-label="Social media links" className="flex items-center gap-2 mt-4">
-              {socialLinks.map((social) => (
-                <motion.a
-                  key={social.label}
-                  href={social.href}
-                  className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  aria-label={`Visit our ${social.label} page`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <social.icon className="w-4 h-4" aria-hidden="true" />
-                </motion.a>
-              ))}
-            </nav>
           </div>
 
           {/* Product */}
@@ -82,23 +61,6 @@ export function Footer() {
             <h3 className="font-medium text-xs uppercase tracking-wider text-muted-foreground mb-4">Product</h3>
             <ul className="space-y-3" role="list">
               {footerLinks.product.map((link) => (
-                <li key={link.label}>
-                  <Link 
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Resources */}
-          <nav aria-label="Resources links">
-            <h3 className="font-medium text-xs uppercase tracking-wider text-muted-foreground mb-4">Resources</h3>
-            <ul className="space-y-3" role="list">
-              {footerLinks.resources.map((link) => (
                 <li key={link.label}>
                   <Link 
                     href={link.href}

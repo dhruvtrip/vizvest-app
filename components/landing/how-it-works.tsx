@@ -25,7 +25,7 @@ const steps = [
     number: '02',
     icon: BarChart2,
     title: 'Explore insights',
-    description: 'Get an instant overview with beautiful visualizations.',
+    description: 'Get an instant overview with interactive visualizations.',
     points: [
       'Allocation breakdown',
       'Performance charts',
