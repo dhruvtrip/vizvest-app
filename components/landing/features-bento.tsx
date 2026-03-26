@@ -5,27 +5,26 @@ import { motion, useInView } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { 
-  FileSpreadsheet, 
-  TrendingUp, 
-  DollarSign, 
-  Globe, 
+import {
+  TrendingUp,
+  DollarSign,
+  Globe,
   BarChart3,
-  Zap
+  Zap,
+  Activity
 } from 'lucide-react'
 
 const features = [
   {
-    icon: FileSpreadsheet,
-    title: 'CSV Import',
-    description: 'Drag and drop your Trading 212 export. Automatic parsing handles the rest with instant validation.',
-    className: 'md:col-span-2',
-    gradient: 'from-blue-500/10 to-cyan-500/10',
-    iconBg: 'bg-blue-500/10',
-    iconColor: 'text-blue-500',
-    badge: 'One-click',
-    showStats: true,
-    stats: { value: '247', label: 'transactions parsed' }
+    icon: Activity,
+    title: 'Trading Activity',
+    description: 'Visualize your trading patterns with an interactive activity heatmap.',
+    className: 'md:col-span-1',
+    gradient: 'from-violet-500/10 to-purple-500/10',
+    iconBg: 'bg-violet-500/10',
+    iconColor: 'text-violet-500',
+    badge: 'New',
+    showHeatmap: true,
   },
   {
     icon: TrendingUp,
@@ -64,7 +63,7 @@ const features = [
     icon: BarChart3,
     title: 'Stock Analysis',
     description: 'View individual stocks with full transaction history.',
-    className: 'md:col-span-2',
+    className: 'md:col-span-1',
     gradient: 'from-pink-500/10 to-rose-500/10',
     iconBg: 'bg-pink-500/10',
     iconColor: 'text-pink-500',
@@ -151,6 +150,89 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
     return () => clearInterval(interval)
   }, [feature.showYield, isCardInView])
 
+  // Trading Activity heatmap: cascading fill animation
+  const HEATMAP_ROWS = 7
+  const HEATMAP_COLS = 14
+  const HEATMAP_TOTAL = HEATMAP_ROWS * HEATMAP_COLS
+  const [heatmapCells, setHeatmapCells] = useState<number[]>(() => new Array(HEATMAP_TOTAL).fill(0))
+  const [heatmapPoppedCell, setHeatmapPoppedCell] = useState<number | null>(null)
+  const heatmapPhaseRef = useRef<'filling' | 'holding' | 'resetting'>('filling')
+  const heatmapActivatedRef = useRef(0)
+  const heatmapOrderRef = useRef<number[]>([])
+  const isHoveredRef = useRef(false)
+
+  // Generate a left-to-right biased random order for cell activation
+  const generateFillOrder = () => {
+    const indices = Array.from({ length: HEATMAP_TOTAL }, (_, i) => i)
+    // Sort by column (left to right) with randomness within each column band
+    indices.sort((a, b) => {
+      const colA = a % HEATMAP_COLS
+      const colB = b % HEATMAP_COLS
+      // Add randomness: band of ~3 columns can intermix
+      const bandA = Math.floor(colA / 3) + Math.random() * 0.8
+      const bandB = Math.floor(colB / 3) + Math.random() * 0.8
+      return bandA - bandB
+    })
+    return indices
+  }
+
+  useEffect(() => {
+    if (!feature.showHeatmap || !isCardInView) return
+
+    heatmapOrderRef.current = generateFillOrder()
+    heatmapActivatedRef.current = 0
+    heatmapPhaseRef.current = 'filling'
+    setHeatmapCells(new Array(HEATMAP_TOTAL).fill(0))
+
+    const getInterval = () => isHoveredRef.current ? 60 : 150
+
+    let timeoutId: ReturnType<typeof setTimeout>
+    let holdTimeoutId: ReturnType<typeof setTimeout>
+
+    const tick = () => {
+      const phase = heatmapPhaseRef.current
+
+      if (phase === 'filling') {
+        const idx = heatmapActivatedRef.current
+        if (idx < HEATMAP_TOTAL) {
+          const cellIndex = heatmapOrderRef.current[idx]
+          // Assign random intensity level 1-4
+          const level = Math.random() < 0.15 ? 4 : Math.random() < 0.35 ? 3 : Math.random() < 0.6 ? 2 : 1
+          setHeatmapCells(prev => {
+            const next = [...prev]
+            next[cellIndex] = level
+            return next
+          })
+          setHeatmapPoppedCell(cellIndex)
+          setTimeout(() => setHeatmapPoppedCell(null), 200)
+          heatmapActivatedRef.current++
+        } else {
+          // All cells filled, hold
+          heatmapPhaseRef.current = 'holding'
+          holdTimeoutId = setTimeout(() => {
+            heatmapPhaseRef.current = 'resetting'
+          }, 1500)
+        }
+      } else if (phase === 'resetting') {
+        // Reset all at once, then restart
+        setHeatmapCells(new Array(HEATMAP_TOTAL).fill(0))
+        setHeatmapPoppedCell(null)
+        heatmapOrderRef.current = generateFillOrder()
+        heatmapActivatedRef.current = 0
+        heatmapPhaseRef.current = 'filling'
+      }
+
+      timeoutId = setTimeout(tick, getInterval())
+    }
+
+    timeoutId = setTimeout(tick, getInterval())
+
+    return () => {
+      clearTimeout(timeoutId)
+      clearTimeout(holdTimeoutId)
+    }
+  }, [feature.showHeatmap, isCardInView])
+
   // Stock analysis: sequential badge press
   const [pressedBadgeIndex, setPressedBadgeIndex] = useState<number | null>(null)
 
@@ -231,24 +313,6 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
           </div>
 
           {/* Feature-specific content */}
-          {feature.showStats && (
-            <div className="mt-4 pt-4 border-t border-border/50">
-              <div className="flex items-end gap-2">
-                <span className="text-3xl font-bold text-primary">{feature.stats?.value}</span>
-                <span className="text-xs text-muted-foreground mb-1">{feature.stats?.label}</span>
-              </div>
-              <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
-                  initial={{ width: 0 }}
-                  whileInView={{ width: '75%' }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5, duration: 1 }}
-                />
-              </div>
-            </div>
-          )}
-
           {feature.showPercentage && (
             <div className="mt-4 flex items-center gap-2">
               <span
@@ -337,6 +401,43 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
             </div>
           )}
 
+          {feature.showHeatmap && (
+            <div
+              className="mt-4 pt-4 border-t border-border/50"
+              onMouseEnter={() => { isHoveredRef.current = true }}
+              onMouseLeave={() => { isHoveredRef.current = false }}
+            >
+              <div className="grid gap-[2px] justify-center" style={{ gridTemplateColumns: `repeat(${HEATMAP_COLS}, 8px)` }}>
+                {heatmapCells.map((level, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'w-[8px] h-[8px] rounded-[2px] transition-colors duration-200',
+                      level === 0 && 'bg-neutral-200 dark:bg-neutral-800',
+                      level === 1 && 'bg-green-400/40',
+                      level === 2 && 'bg-green-500/60',
+                      level === 3 && 'bg-green-600/80',
+                      level === 4 && 'bg-green-700',
+                    )}
+                    style={{
+                      transform: heatmapPoppedCell === i ? 'scale(1.3)' : 'scale(1)',
+                      transition: 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 200ms ease',
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center justify-center gap-1.5 mt-2 text-[9px] text-muted-foreground">
+                <span>Less</span>
+                <div className="flex gap-[2px]">
+                  {['bg-neutral-200 dark:bg-neutral-800', 'bg-green-400/40', 'bg-green-500/60', 'bg-green-600/80', 'bg-green-700'].map((color, i) => (
+                    <div key={i} className={cn('w-[8px] h-[8px] rounded-[1px]', color)} />
+                  ))}
+                </div>
+                <span>More</span>
+              </div>
+            </div>
+          )}
+
         </CardContent>
       </Card>
     </motion.div>
@@ -381,7 +482,7 @@ export function FeaturesBento() {
         </motion.div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6 auto-rows-[minmax(180px,auto)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 auto-rows-[280px]">
           {features.map((feature, index) => (
             <FeatureCard key={feature.title} feature={feature} index={index} />
           ))}
