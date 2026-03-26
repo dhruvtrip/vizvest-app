@@ -15,8 +15,8 @@ if (typeof window !== 'undefined') {
 
       // Privacy & GDPR Compliance Settings
       autocapture: false,
-      capture_pageview: false,
-      capture_pageleave: false,
+      capture_pageview: true,
+      capture_pageleave: true,
 
       // Disable session recording to protect sensitive portfolio data
       disable_session_recording: true,

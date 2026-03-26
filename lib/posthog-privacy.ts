@@ -131,18 +131,14 @@ export function validateEvent(event: any): boolean {
       return false
     }
 
-    const hasSensitiveValue = Object.values(event.properties).some(value => {
-      if (typeof value === 'number') {
-        return true
+    const hasSensitiveValue = Object.entries(event.properties).some(([key, value]) => {
+      // Allow PostHog's own numeric properties (screen size, viewport, timestamps, etc.)
+      if (key.startsWith('$')) {
+        return false
       }
       if (typeof value === 'string') {
-        // Check for currency symbols: $ £ € ¥ ₹ ₽ ₩ ₪ ₨ ₦ ₫ ₱ ₴ ₵ ₺ ₼ ₾ ₿
-        const currencySymbolPattern = /[\$£€¥₹₽₩₪₨₦₫₱₴₵₺₼₾₿]|C\$|\d+p|p\d+/
-
-        // Check for common currency codes as whole words
+        const currencySymbolPattern = /[\$£€¥₹₽₩₪₨₦₫₱₴₵₺₼₾₿]|C\$/
         const currencyCodePattern = /\b(USD|EUR|GBP|CHF|CAD|JPY|CNY|INR|RUB|KRW|ILS|AUD|NZD|SGD|HKD|SEK|NOK|DKK|PLN|CZK|HUF|RON|BGN|HRK|TRY|MXN|BRL|ZAR|AED|SAR|QAR|KWD|BHD|OMR|JOD|EGP|MAD|TND|DZD|LYD|GBX)\b/i
-
-        // Check for amounts with decimal places (e.g., "1234.56", "1,234.56")
         const amountPattern = /^\d+[.,]\d{2}$/
 
         if (currencySymbolPattern.test(value) ||
