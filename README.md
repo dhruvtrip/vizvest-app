@@ -1,6 +1,6 @@
 # Vizvest
 
-A modern portfolio analysis tool for Trading 212 data. Upload CSV exports to visualize holdings, track performance, and analyze dividends.
+Portfolio analysis for Trading 212 data. Upload CSV exports to visualize holdings, track performance, and analyze dividends.
 
 ## Tech Stack
 

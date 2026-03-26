@@ -77,8 +77,7 @@ export default function ArticlesPage() {
               variants={fadeInUp}
               className="text-base text-muted-foreground/80 max-w-md mx-auto leading-relaxed"
             >
-              We're working on insightful articles about portfolio management, 
-              dividend investing strategies, and market analysis. Stay tuned!
+              We're working on articles about portfolio tracking and dividend investing.
             </motion.p>
 
             {/* CTA */}

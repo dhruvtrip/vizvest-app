@@ -107,7 +107,7 @@ export function Hero() {
                     'Complete Portfolio',
                     'Dividend Income',
                     'Trading Performance',
-                    'Investment Journey',
+                    'Stock Positions',
                     'Market Winners'
                   ]}
                   gradientColors={['#3b82f6', '#8b5cf6']}

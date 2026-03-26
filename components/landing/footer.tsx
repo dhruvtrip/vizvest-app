@@ -52,7 +52,7 @@ export function Footer() {
               />
             </Link>
             <p className="mt-4 text-xs text-muted-foreground max-w-xs leading-relaxed">
-              Visualize and analyze your Trading 212 portfolio with powerful insights and interactive charts.
+              Visualize and analyze your Trading 212 portfolio with powerful insights and interactive charts
             </p>
           </div>
 

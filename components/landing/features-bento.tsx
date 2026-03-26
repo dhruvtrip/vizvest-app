@@ -63,7 +63,7 @@ const features = [
   {
     icon: BarChart3,
     title: 'Stock Analysis',
-    description: 'Deep dive into individual stocks with transaction history.',
+    description: 'View individual stocks with full transaction history.',
     className: 'md:col-span-2',
     gradient: 'from-pink-500/10 to-rose-500/10',
     iconBg: 'bg-pink-500/10',
@@ -376,7 +376,7 @@ export function FeaturesBento() {
             <span className="block text-primary">about your investments</span>
           </h2>
           <p className="text-muted-foreground">
-            Powerful features designed to give you clarity and control over your portfolio.
+            Features that help you see what's actually happening with your portfolio.
           </p>
         </motion.div>
 

@@ -3,7 +3,7 @@ import { DashboardHeader } from '@/components/features/dashboard-header'
 
 export const metadata: Metadata = {
   title: 'Dashboard | Vizvest',
-  description: 'Analyze your Trading 212 portfolio with advanced visualizations',
+  description: 'View your Trading 212 portfolio with interactive charts and breakdowns',
 }
 
 export default function DashboardLayout({

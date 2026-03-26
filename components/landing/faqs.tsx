@@ -27,13 +27,13 @@ const FAQS = [
     id: 'privacy',
     question: 'Is my data stored on your servers?',
     answer:
-      'No. Your data never leaves your device. We process your CSV file in the browser and do not upload, store, or transmit your trading history to any server. Your privacy is our priority.'
+      'No. Your CSV file is processed entirely in your browser. Nothing gets uploaded or stored anywhere.'
   },
   {
     id: 'csv',
     question: 'What format does my data need to be in?',
     answer:
-      'We only support CSV exports from Trading 212. The app will validate the format and show you a clear overview of your portfolio, dividends, and performance.'
+      'We only support CSV exports from Trading 212. The app validates the format and shows you charts for your data.'
   },
   {
     id: 'data',

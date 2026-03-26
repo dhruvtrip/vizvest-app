@@ -92,7 +92,7 @@ export function HowItWorks() {
             Get started in seconds
           </h2>
           <p className="text-muted-foreground">
-            No account required, no data stored on servers. Your privacy is our priority.
+            No account required. Everything processes in your browser.
           </p>
         </motion.div>
 

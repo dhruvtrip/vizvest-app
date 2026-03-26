@@ -81,7 +81,7 @@ export function CTA() {
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.4 }}
               >
-                Start analyzing your investments in seconds. No sign-up, no hassle, completely free.
+                Upload your CSV and see the charts. Free, no account needed.
               </motion.p>
 
               <motion.div
