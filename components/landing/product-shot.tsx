@@ -10,7 +10,7 @@ export function ProductShot() {
   return (
     <section
       ref={ref}
-      className="relative -mt-20 pb-24 lg:pb-32"
+      className="relative -mt-20 pb-24 lg:pb-32 hidden sm:block"
       aria-label="Product preview"
     >
       <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-6xl relative">
