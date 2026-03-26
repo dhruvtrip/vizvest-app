@@ -2,6 +2,9 @@
 
 Portfolio analysis for Trading 212 data. Upload CSV exports to visualize holdings, track performance, and analyze dividends.
 
+<img width="2864" height="1570" alt="Overview" src="https://github.com/user-attachments/assets/ba20f262-d96a-4ae0-82e0-45434d89c5ff" />
+
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
