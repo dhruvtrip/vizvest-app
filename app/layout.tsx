@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { PostHogProvider } from '@/app/providers/ph-provider'
 import { PostHogConsentBanner } from '@/components/posthog-consent-banner'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,6 +36,7 @@ export default function RootLayout({
             </div>
             <PostHogConsentBanner />
           </ThemeProvider>
+          <SpeedInsights />
         </PostHogProvider>
       </body>
     </html>
