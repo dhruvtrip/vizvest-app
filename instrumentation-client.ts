@@ -1,18 +1,16 @@
 import posthog from 'posthog-js'
 import { filterSensitiveProperties, validateEvent, getConsentStatus } from '@/lib/posthog-privacy'
 
-// Only initialize PostHog in production and not on localhost
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   const isLocalhost = window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
     window.location.hostname === 'localhost:3000'
 
-  if (!isLocalhost && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-    const savedConsent = getConsentStatus()
+  const savedConsent = getConsentStatus()
 
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-      api_host: '/ingest',
-      ui_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+    api_host: isLocalhost ? process.env.NEXT_PUBLIC_POSTHOG_HOST! : '/ingest',
+    ui_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
       defaults: '2025-11-30',
 
       // Privacy & GDPR Compliance Settings
@@ -54,10 +52,14 @@ if (typeof window !== 'undefined') {
 
       // After PostHog is loaded, apply saved consent decision
       loaded: (posthog) => {
+        // Tag every event with environment so traffic can be distinguished
+        posthog.register({
+          environment: isLocalhost ? 'localhost' : 'production',
+        })
+
         if (savedConsent === 'rejected') {
           posthog.opt_out_capturing()
         }
       },
     })
-  }
 }
