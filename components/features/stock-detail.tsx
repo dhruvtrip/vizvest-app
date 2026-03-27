@@ -173,8 +173,8 @@ function MetricCard({
   return (
     <Card className={className}>
       <CardContent className="p-4">
-        <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-        <p className="text-lg font-bold text-foreground mt-0.5">{value}</p>
+        <p className="metric-label text-muted-foreground">{label}</p>
+        <p className="text-h3 text-foreground mt-0.5">{value}</p>
       </CardContent>
     </Card>
   )
@@ -259,15 +259,15 @@ export function StockDetail ({
 
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-h2 text-foreground">
               {metrics.companyName}
             </h1>
-            <span className="px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
+            <span className="ticker px-1.5 py-0.5 text-label-sm bg-primary/10 text-primary rounded">
               {ticker}
             </span>
           </div>
           {metrics.isin && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-label-sm text-muted-foreground font-mono">
               ISIN: {metrics.isin}
             </p>
           )}
@@ -320,18 +320,18 @@ export function StockDetail ({
             : 'border-muted'
         )}>
           <CardContent className="p-4">
-            <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Net Share Flow</p>
+            <p className="metric-label text-muted-foreground">Net Share Flow</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-lg font-bold text-foreground">
+              <p className="text-h3 text-foreground font-tabular">
                 {metrics.netShareFlow >= 0 ? '+' : ''}{formatShares(metrics.netShareFlow)}
               </p>
               {metrics.positionStatus === 'net-buying' && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
+                <span className="px-1.5 py-0.5 text-label-sm bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
                   Buying
                 </span>
               )}
               {metrics.positionStatus === 'net-selling' && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
+                <span className="px-1.5 py-0.5 text-label-sm bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
                   Selling
                 </span>
               )}
@@ -344,12 +344,12 @@ export function StockDetail ({
       <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Buy Transactions</p>
+            <p className="metric-label text-muted-foreground">Buy Transactions</p>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-lg font-bold text-foreground">
+              <p className="text-h3 text-foreground font-tabular">
                 {metrics.buyTransactionCount}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body-sm text-muted-foreground font-tabular">
                 ({formatShares(metrics.buyShares)} shares)
               </p>
             </div>
@@ -357,12 +357,12 @@ export function StockDetail ({
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Sell Transactions</p>
+            <p className="metric-label text-muted-foreground">Sell Transactions</p>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-lg font-bold text-foreground">
+              <p className="text-h3 text-foreground font-tabular">
                 {metrics.sellTransactionCount}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body-sm text-muted-foreground font-tabular">
                 ({formatShares(metrics.sellShares)} shares)
               </p>
             </div>
@@ -372,7 +372,7 @@ export function StockDetail ({
 
       {/* Transaction History */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-h3 text-foreground">
           Transaction History
         </h2>
 

@@ -177,16 +177,16 @@ function StockPositionTile({
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 mb-0.5">
-              <h3 className="text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
+              <h3 className="ticker text-base text-foreground truncate group-hover:text-primary transition-colors">
                 {position.ticker}
               </h3>
               {isPartialData && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded" aria-label="Partial data">
+                <span className="px-1.5 py-0.5 text-label-sm font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded" aria-label="Partial data">
                   Partial
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-body-sm text-muted-foreground truncate">
               {position.name}
             </p>
           </div>
@@ -194,18 +194,18 @@ function StockPositionTile({
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-body-sm text-muted-foreground">
               {isNetSelling ? 'Net Flow' : 'Shares'}
             </span>
             <div className="flex items-center gap-1">
               <span className={cn(
-                'text-sm font-medium',
+                'text-body-sm font-medium font-tabular',
                 isNetSelling ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
               )}>
                {formatShares(position.totalShares)}
               </span>
               {isNetSelling && (
-                <span className="px-1 py-0.5 text-[9px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
+                <span className="px-1 py-0.5 text-label-sm font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
                   Selling
                 </span>
               )}
@@ -213,13 +213,13 @@ function StockPositionTile({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-body-sm text-muted-foreground">
               {hasNegativeInvested ? 'Net Cash' : 'Invested'}
             </span>
             <span className={cn(
-              'text-sm font-medium',
+              'text-body-sm font-medium currency',
               hasNegativeInvested
-                ? 'text-emerald-600 dark:text-emerald-400'
+                ? 'change-positive'
                 : 'text-foreground'
             )}>
               {formatCurrency(position.totalInvested, position.baseCurrency)}
@@ -269,15 +269,15 @@ function SoldPositionTile({
       <CardContent className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-muted-foreground truncate group-hover:text-primary transition-colors">
+            <h3 className="ticker text-base text-muted-foreground truncate group-hover:text-primary transition-colors">
               {position.ticker}
             </h3>
-            <p className="text-sm text-muted-foreground/70 truncate mt-0.5">
+            <p className="text-body-sm text-muted-foreground/70 truncate mt-0.5">
               {position.name}
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+            <span className="text-label-sm px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
               Sold
             </span>
           </div>
@@ -285,10 +285,10 @@ function SoldPositionTile({
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Result</span>
+            <span className="text-body-sm text-muted-foreground">Result</span>
             <span className={cn(
-              'text-sm font-medium',
-              isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+              'text-body-sm font-medium currency',
+              isProfit ? 'change-positive' : 'change-negative'
             )}>
               {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
             </span>
@@ -365,11 +365,11 @@ export function PortfolioOverview ({
         <section className="space-y-3" aria-labelledby="portfolio-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 id="portfolio-heading" className="text-lg font-semibold text-foreground">
+              <h2 id="portfolio-heading" className="text-h3 text-foreground">
                 Current Holdings
               </h2>
             </div>
-            <span className="text-sm text-muted-foreground" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
+            <span className="text-body-sm text-muted-foreground font-tabular" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
           </div>
@@ -402,20 +402,20 @@ export function PortfolioOverview ({
         <section className="space-y-3" aria-labelledby="sold-positions-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 id="sold-positions-heading" className="text-lg font-medium text-muted-foreground">
+              <h2 id="sold-positions-heading" className="text-h3 font-medium text-muted-foreground">
                 Closed Positions
               </h2>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
+              <span className="text-body-sm text-muted-foreground font-tabular" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>
               <span
                 className={cn(
-                  'text-sm font-medium',
+                  'text-body-sm font-medium currency',
                   totalRealizedResult >= 0
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-red-600 dark:text-red-400'
+                    ? 'change-positive'
+                    : 'change-negative'
                 )}
                 aria-label={`Total realized ${totalRealizedResult >= 0 ? 'profit' : 'loss'}: ${totalRealizedResult >= 0 ? '+' : ''}${formatCurrency(totalRealizedResult, baseCurrency)}`}
               >

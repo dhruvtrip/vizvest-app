@@ -174,15 +174,15 @@ function MetricCard({
         `border-l-[3px] ${metric.borderColor}`
       )}>
         <CardContent className="relative z-10 p-5">
-          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-2">{metric.label}</p>
+          <p className="metric-label text-muted-foreground mb-2">{metric.label}</p>
           <p className={cn(
-            'text-2xl font-bold tracking-tight',
+            'metric-value',
             metric.valueColor || 'text-foreground'
           )}>
             <AnimatedCurrency amount={metric.rawValue} currency={metric.currency} formatFn={formatCurrency} />
           </p>
           {metric.subValue && (
-            <p className="text-sm text-muted-foreground mt-1">{metric.subValue}</p>
+            <p className="text-body-sm text-muted-foreground mt-1">{metric.subValue}</p>
           )}
         </CardContent>
       </Card>
@@ -256,8 +256,8 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
   return (
     <div className={cn('space-y-4', className)}>
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Portfolio Overview</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-h2 text-foreground">Portfolio Overview</h1>
+        <p className="text-body-sm text-muted-foreground mt-1">
           Your portfolio overview in the above timeframe
         </p>
       </div>
