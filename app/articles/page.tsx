@@ -1,95 +1,68 @@
-'use client'
-
-import Link from 'next/link'
+import type { Metadata } from 'next'
 import { motion } from 'framer-motion'
 import { Navbar, Footer } from '@/components/landing'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, FileText } from 'lucide-react'
+import { ArticleCard } from '@/components/articles/article-card'
+import { getArticles } from '@/lib/articles'
+import { FileText } from 'lucide-react'
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-}
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1
-    }
-  }
+export const metadata: Metadata = {
+  title: 'Articles | Vizvest',
+  description:
+    'Insights on portfolio tracking, dividend investing, and making the most of your Trading 212 data.',
+  openGraph: {
+    title: 'Articles | Vizvest',
+    description:
+      'Insights on portfolio tracking, dividend investing, and making the most of your Trading 212 data.',
+    url: `${process.env.NEXT_PUBLIC_SITE_URL}/articles`,
+    type: 'website',
+  },
 }
 
 export default function ArticlesPage() {
+  const articles = getArticles()
+
   return (
     <main className="min-h-screen">
       <Navbar />
-      
-      <section className="relative min-h-[80vh] flex items-center overflow-hidden pt-16">
+
+      <section className="relative pt-32 pb-20 overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),transparent)]" />
-          
-          {/* Glow orbs */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2 }}
-            className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-primary/20 dark:bg-primary/10 rounded-full blur-[120px]"
-          />
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2, delay: 0.5 }}
-            className="absolute bottom-1/3 right-1/3 w-[300px] h-[300px] bg-accent/20 dark:bg-accent/10 rounded-full blur-[100px]"
-          />
+          <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-primary/20 dark:bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-1/3 right-1/3 w-[300px] h-[300px] bg-accent/20 dark:bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="max-w-2xl mx-auto text-center space-y-8"
-          >
-            {/* Icon */}
-            <motion.div variants={fadeInUp} className="flex justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/5 border border-primary/20 dark:border-primary/10 flex items-center justify-center">
-                <FileText className="w-8 h-8 text-primary" />
+        <div className="container mx-auto px-6">
+          {/* Header */}
+          <div className="max-w-2xl mx-auto text-center mb-16">
+            <div className="flex justify-center mb-6">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/5 border border-primary/20 dark:border-primary/10 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-primary" />
               </div>
-            </motion.div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-4">Articles</h1>
+            <p className="text-base text-muted-foreground/80 leading-relaxed">
+              Insights on portfolio tracking, dividend investing, and making the most of your
+              Trading 212 data.
+            </p>
+          </div>
 
-            {/* Heading */}
-            <motion.div variants={fadeInUp} className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
-                Articles
-              </h1>
-              <p className="text-xl text-primary font-medium">
-                Coming Soon
+          {/* Grid */}
+          {articles.length > 0 ? (
+            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {articles.map((article, i) => (
+                <ArticleCard key={article.slug} article={article} index={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="max-w-md mx-auto text-center py-20">
+              <p className="text-muted-foreground/60 text-sm">
+                No articles yet — check back soon.
               </p>
-            </motion.div>
-
-            {/* Description */}
-            <motion.p 
-              variants={fadeInUp}
-              className="text-base text-muted-foreground/80 max-w-md mx-auto leading-relaxed"
-            >
-              We're working on articles about portfolio tracking and dividend investing.
-            </motion.p>
-
-            {/* CTA */}
-            <motion.div variants={fadeInUp} className="pt-4">
-              <Button asChild variant="outline" size="lg" className="text-sm h-11 px-8 gap-2 hover:bg-primary/10 hover:text-primary hover:border-primary/50 dark:hover:bg-primary/10 dark:hover:text-primary">
-                <Link href="/">
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Home
-                </Link>
-              </Button>
-            </motion.div>
-          </motion.div>
+            </div>
+          )}
         </div>
       </section>
 
