@@ -194,10 +194,10 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/12 border border-primary/20 text-sm font-medium text-primary mb-4">
             Trading 212 CSV Import
           </div>
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
+          <h2 className="text-h1 mb-3">
             Upload your transaction history
           </h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+          <p className="text-body-sm text-muted-foreground max-w-md mx-auto">
             Export your data from Trading 212 and drop it here to visualize your portfolio performance
           </p>
         </motion.div>

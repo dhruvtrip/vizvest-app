@@ -243,16 +243,16 @@ function MetricCard({
     >
       <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col', borderColor && `border-l-[3px] ${borderColor}`, className)}>
         <CardContent className="p-5 flex flex-col h-full">
-          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex-shrink-0">{label}</p>
-          <p className={cn('text-2xl font-bold tracking-tight text-foreground mt-1 flex-shrink-0', valueClassName)}>
+          <p className="metric-label text-muted-foreground flex-shrink-0">{label}</p>
+          <p className={cn('metric-value text-foreground mt-1 flex-shrink-0', valueClassName)}>
             {rawValue !== undefined && currency ? (
               <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
             ) : value}
           </p>
           {subValue ? (
-            <p className="text-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
+            <p className="text-body-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
           ) : (
-            <div className="text-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
+            <div className="text-body-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
           )}
         </CardContent>
       </Card>
@@ -364,8 +364,8 @@ export function TradingActivityDashboard ({
     <div className={cn('container mx-auto px-6 py-6 space-y-8', className)}>
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Trading Activity Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-h2 text-foreground">Trading Activity Dashboard</h1>
+        <p className="text-body-sm text-muted-foreground mt-1">
           Comprehensive view of all buy and sell transactions
         </p>
       </div>
