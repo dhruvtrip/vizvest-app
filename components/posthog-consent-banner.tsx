@@ -27,9 +27,10 @@ export function PostHogConsentBanner() {
     setConsentStatus(true)
     setShowBanner(false)
 
-    // Opt in to PostHog (safe to call even if not fully loaded yet)
+    // Opt in and upgrade to persistent storage now that user has consented (GDPR)
     if (typeof window !== 'undefined') {
       try {
+        posthog.set_config({ persistence: 'localStorage+cookie' })
         posthog.opt_in_capturing()
       } catch (error) {
         // PostHog might not be fully initialized yet, but consent is saved

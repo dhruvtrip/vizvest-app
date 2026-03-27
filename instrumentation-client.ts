@@ -8,6 +8,8 @@ if (typeof window !== 'undefined') {
     window.location.hostname === 'localhost:3000'
 
   if (!isLocalhost && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    const savedConsent = getConsentStatus()
+
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: '/ingest',
       ui_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
@@ -21,8 +23,14 @@ if (typeof window !== 'undefined') {
       // Disable session recording to protect sensitive portfolio data
       disable_session_recording: true,
 
-      // GDPR: Start with opt-out by default, then opt-in after initialization
-      opt_out_capturing_by_default: true,
+      // GDPR: Only opt out if user has explicitly declined.
+      // Before consent decision, allow anonymous tracking (no cookies/localStorage)
+      // with personal data stripped by the before_send hook.
+      opt_out_capturing_by_default: savedConsent === 'rejected',
+
+      // GDPR: Use memory-only persistence until user consents (no cookies or localStorage).
+      // This ensures no persistent identifiers are stored without explicit consent.
+      persistence: savedConsent === 'accepted' ? 'localStorage+cookie' : 'memory',
 
       // Exception capture is still enabled for error tracking (but sanitized)
       capture_exceptions: true,
@@ -44,12 +52,9 @@ if (typeof window !== 'undefined') {
         return sanitized
       },
 
-      // After PostHog is loaded, wait for user consent
+      // After PostHog is loaded, apply saved consent decision
       loaded: (posthog) => {
-        const consent = getConsentStatus()
-        if (consent === 'accepted') {
-          posthog.opt_in_capturing()
-        } else if (consent === 'rejected') {
+        if (savedConsent === 'rejected') {
           posthog.opt_out_capturing()
         }
       },
