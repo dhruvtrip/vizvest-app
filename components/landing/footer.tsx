@@ -6,18 +6,10 @@ import { motion } from 'framer-motion'
 
 const footerLinks = {
   product: [
-    { label: 'Features', href: '#features' },
-    { label: 'How it works', href: '#how-it-works' },
+    { label: 'Features', href: '/#features' },
+    { label: 'How it works', href: '/#how-it-works' },
     { label: 'Articles', href: '/articles' },
     { label: 'Dashboard', href: '/dashboard' },
-  ],
-  resources: [
-    { label: 'Documentation', href: '#' },
-    { label: 'Trading 212 Guide', href: '#' },
-  ],
-  legal: [
-    { label: 'Privacy', href: '#' },
-    { label: 'Terms', href: '#' },
   ],
 }
 
@@ -73,22 +65,6 @@ export function Footer() {
             </ul>
           </nav>
 
-          {/* Legal */}
-          <nav aria-label="Legal links">
-            <h3 className="font-medium text-xs uppercase tracking-wider text-muted-foreground mb-4">Legal</h3>
-            <ul className="space-y-3" role="list">
-              {footerLinks.legal.map((link) => (
-                <li key={link.label}>
-                  <Link 
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
         </div>
 
         {/* Bottom Bar */}

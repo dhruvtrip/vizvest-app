@@ -26,7 +26,7 @@ export function RotatingText({
   pauseDuration = 2000
 }: RotatingTextProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [currentText, setCurrentText] = useState('')
+  const [currentText, setCurrentText] = useState(words[0] ?? '')
   const [isDeleting, setIsDeleting] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)

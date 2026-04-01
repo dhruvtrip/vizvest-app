@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { ArrowLeft, Clock, Calendar, User } from 'lucide-react'
+import { ArrowLeft, Clock, Calendar } from 'lucide-react'
 import { Navbar, Footer } from '@/components/landing'
 import { getMDXComponents } from '@/components/articles/mdx-components'
 import { getArticleBySlug, getAllSlugs } from '@/lib/articles'
@@ -29,7 +29,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${meta.title} | Vizvest`,
     description: meta.description,
-    authors: [{ name: meta.author }],
     keywords: meta.tags,
     openGraph: {
       type: 'article',
@@ -37,7 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: meta.description,
       url,
       publishedTime: meta.date,
-      authors: [meta.author],
       tags: meta.tags,
     },
     twitter: {
@@ -63,7 +61,7 @@ export default async function ArticlePage({ params }: Props) {
     headline: meta.title,
     description: meta.description,
     datePublished: meta.date,
-    author: { '@type': 'Person', name: meta.author },
+    ...(meta.lastModified && { dateModified: meta.lastModified }),
     publisher: {
       '@type': 'Organization',
       name: 'Vizvest',
@@ -125,10 +123,6 @@ export default async function ArticlePage({ params }: Props) {
 
               {/* Meta bar */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground/60 border-y border-border py-4 mb-10">
-                <span className="flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
-                  {meta.author}
-                </span>
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
                   <time dateTime={meta.date}>{formattedDate}</time>

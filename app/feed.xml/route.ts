@@ -19,7 +19,6 @@ export function GET() {
       <guid isPermaLink="true">${url}</guid>
       <description><![CDATA[${article.description}]]></description>
       <pubDate>${pubDate}</pubDate>
-      <author>${article.author}</author>
       ${tags}
     </item>`
     })

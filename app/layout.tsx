@@ -22,9 +22,49 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: 'swap',
 })
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vizvest.cc'
+
 export const metadata: Metadata = {
-  title: 'Vizvest - Portfolio Analysis',
-  description: 'Visualize and analyze your trading portfolio with powerful insights. Track dividends, monitor performance, and make smarter investment decisions.',
+  metadataBase: new URL(SITE_URL),
+  title: 'Vizvest - Free Trading 212 Portfolio Analysis & Dividend Tracker',
+  description:
+    'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance — all in your browser.',
+  openGraph: {
+    type: 'website',
+    title: 'Vizvest - Free Trading 212 Portfolio Analysis & Dividend Tracker',
+    description:
+      'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance — all in your browser.',
+    url: SITE_URL,
+    siteName: 'Vizvest',
+    locale: 'en_GB',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vizvest - Free Trading 212 Portfolio Analysis & Dividend Tracker',
+    description:
+      'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance.',
+  },
+  alternates: {
+    canonical: '/',
+  },
+}
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Vizvest',
+  url: SITE_URL,
+  description:
+    'Free portfolio analysis tool for Trading 212 users. Visualize holdings, track dividends, and analyze trading performance.',
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Vizvest',
+  url: SITE_URL,
+  description:
+    'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance.',
 }
 
 export default function RootLayout({
@@ -34,6 +74,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+      </head>
       <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans`}>
         <PostHogProvider>
           <ThemeProvider
