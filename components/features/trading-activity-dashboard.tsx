@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
+import { Pagination } from '@/components/ui/pagination'
 import { isTradeAction, isBuyAction } from '@/lib/transaction-utils'
 
 /**
@@ -328,6 +329,10 @@ export function TradingActivityDashboard ({
     })
   }
 
+  // Pagination state
+  const ITEMS_PER_PAGE = 50
+  const [currentPage, setCurrentPage] = useState(1)
+
   // Filter trades by selected years
   const filteredTrades = useMemo(() => {
     if (selectedYears.size === 0) {
@@ -338,6 +343,27 @@ export function TradingActivityDashboard ({
       return selectedYears.has(year)
     })
   }, [allTrades, selectedYears])
+
+  // Reset to page 1 when the year filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedYears])
+
+  // Memoized sort — avoids re-sorting on every render and prevents array mutation
+  const sortedTrades = useMemo(
+    () => [...filteredTrades].sort(
+      (a, b) => new Date(b.Time).getTime() - new Date(a.Time).getTime()
+    ),
+    [filteredTrades]
+  )
+
+  // Pagination derived values
+  const totalPages = Math.max(1, Math.ceil(sortedTrades.length / ITEMS_PER_PAGE))
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const paginatedTrades = sortedTrades.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  const showingText = sortedTrades.length > 0
+    ? `Showing ${startIndex + 1}–${Math.min(startIndex + ITEMS_PER_PAGE, sortedTrades.length)} of ${sortedTrades.length} transactions`
+    : ''
 
   // Calculate metrics from filtered trades
   const metrics = useMemo(
@@ -470,7 +496,7 @@ export function TradingActivityDashboard ({
         <CardHeader>
           <CardTitle className="text-base font-semibold">All Transactions</CardTitle>
           <CardDescription className="text-sm">
-            {filteredTrades.length} {filteredTrades.length === 1 ? 'transaction' : 'transactions'}
+            {sortedTrades.length} {sortedTrades.length === 1 ? 'transaction' : 'transactions'}
             {selectedYears.size > 0 && ` in selected ${selectedYears.size === 1 ? 'year' : 'years'}`}
           </CardDescription>
         </CardHeader>
@@ -489,17 +515,23 @@ export function TradingActivityDashboard ({
                   <TableHead className="text-xs text-right">Result</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {filteredTrades.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-xs text-muted-foreground py-8">
-                      No transactions found for selected year(s)
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredTrades
-                    .sort((a, b) => new Date(b.Time).getTime() - new Date(a.Time).getTime())
-                    .map((transaction, index) => {
+              <AnimatePresence mode="wait">
+                <motion.tbody
+                  key={currentPage}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="[&_tr:last-child]:border-0"
+                >
+                  {paginatedTrades.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="text-center text-xs text-muted-foreground py-8">
+                        No transactions found for selected year(s)
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedTrades.map((transaction) => {
                       const isBuy = isBuyAction(transaction.Action)
                       const actionColor = isBuy
                         ? 'text-emerald-600 dark:text-emerald-400'
@@ -514,7 +546,7 @@ export function TradingActivityDashboard ({
                         transaction.totalInBaseCurrency || 0,
                         metrics.baseCurrency
                       )
-                      
+
                       // Show result only for sell transactions
                       const result = transaction.Result
                       const hasResult = !isBuy && result !== null && result !== undefined
@@ -523,12 +555,7 @@ export function TradingActivityDashboard ({
                         : 'text-red-600 dark:text-red-400'
 
                       return (
-                        <motion.tr
-                          key={transaction.ID || index}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: index * 0.01 }}
-                        >
+                        <TableRow key={transaction.ID || `${transaction.Time}-${transaction.Ticker}`}>
                           <TableCell className="text-xs">{dateStr}</TableCell>
                           <TableCell className={cn('text-xs font-medium', actionColor)}>
                             {transaction.Action}
@@ -545,13 +572,25 @@ export function TradingActivityDashboard ({
                           <TableCell className={cn('text-xs text-right font-medium', hasResult && resultColor)}>
                             {hasResult ? `${result >= 0 ? '+' : ''}${formatCurrency(result, metrics.baseCurrency)}` : '-'}
                           </TableCell>
-                        </motion.tr>
+                        </TableRow>
                       )
                     })
-                )}
-              </TableBody>
+                  )}
+                </motion.tbody>
+              </AnimatePresence>
             </Table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-border/50">
+              <p className="text-xs text-muted-foreground">{showingText}</p>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
