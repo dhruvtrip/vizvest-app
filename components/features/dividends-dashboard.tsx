@@ -4,7 +4,7 @@ import { useMemo, useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
+import { AnimatedCurrency } from '@/components/ui/animated-number'
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
+import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import {
   BarChart,
@@ -29,7 +29,7 @@ import {
   CartesianGrid
 } from 'recharts'
 import * as _ from 'lodash'
-import { isBuyAction, isSellAction, isDividendAction } from '@/lib/transaction-utils'
+import { isDividendAction } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -114,6 +114,8 @@ interface DividendTransaction {
   tax: number
   net: number
   shares: number
+  dividendPerShare: number
+  dividendCurrency: string
 }
 
 interface StockDividendData {
@@ -121,10 +123,7 @@ interface StockDividendData {
   name: string
   totalDividends: number
   paymentCount: number
-  annualDividends: number
-  dividendYield: number
-  currentShares: number
-  totalInvested: number
+  lastDividendPerShare: { amount: number; currency: string } | null
 }
 
 interface GlobalDividendData {
@@ -177,7 +176,9 @@ function calculateGlobalDividendMetrics(
       gross: net + tax,
       tax,
       net,
-      shares: t['No. of shares'] || 0
+      shares: t['No. of shares'] || 0,
+      dividendPerShare: t['Price / share'] || 0,
+      dividendCurrency: t['Currency (Price / share)'] || ''
     }
   })
 
@@ -194,20 +195,22 @@ function calculateGlobalDividendMetrics(
     if (!Array.isArray(stockDividends)) continue
     const totalDividends = stockDividends.reduce((sum, d) => sum + d.net, 0)
     const paymentCount = stockDividends.length
-    
-    // Estimate annual dividends (average monthly * 12)
-    const months = new Set(stockDividends.map(d => formatMonthYear(d.date))).size
-    const annualDividends = months > 0 ? (totalDividends / months) * 12 : totalDividends
+
+    // Get most recent dividend per share (sort by date descending)
+    const sortedByDate = [...stockDividends].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+    const lastDiv = sortedByDate[0]
+    const lastDividendPerShare = lastDiv && lastDiv.dividendPerShare > 0
+      ? { amount: lastDiv.dividendPerShare, currency: lastDiv.dividendCurrency }
+      : null
 
     byStock.set(ticker, {
       ticker,
       name: stockDividends[0]?.name || ticker,
       totalDividends,
       paymentCount,
-      annualDividends,
-      dividendYield: 0, // Will be calculated later with positions
-      currentShares: 0, // Will be set from positions
-      totalInvested: 0 // Will be set from positions
+      lastDividendPerShare
     })
   }
 
@@ -243,40 +246,6 @@ function calculateGlobalDividendMetrics(
     byQuarter,
     byYear
   }
-}
-
-/**
- * Calculates dividend yield for stocks with current holdings
- */
-function calculateDividendYield(
-  globalData: GlobalDividendData,
-  positions: StockPosition[]
-): StockDividendData[] {
-  const stockYields: StockDividendData[] = []
-
-  for (const position of positions) {
-    // Only calculate yield for current holdings
-    if (position.status !== 'holding' || position.totalInvested <= 0) {
-      continue
-    }
-
-    const stockData = globalData.byStock.get(position.ticker)
-    if (!stockData) {
-      continue
-    }
-
-    // Calculate yield: (Annual Dividends / Total Invested) * 100
-    const yieldPercent = (stockData.annualDividends / position.totalInvested) * 100
-
-    stockYields.push({
-      ...stockData,
-      dividendYield: yieldPercent,
-      currentShares: position.totalShares,
-      totalInvested: position.totalInvested
-    })
-  }
-
-  return stockYields.sort((a, b) => b.dividendYield - a.dividendYield)
 }
 
 /**
@@ -337,39 +306,6 @@ function groupDividendsByPeriod(
   }
 
   return result
-}
-
-/**
- * Calculates projected annual dividend income
- */
-function calculateProjectedAnnual(
-  globalData: GlobalDividendData
-): { projected: number; method: string } {
-  if (globalData.dividends.length === 0) {
-    return { projected: 0, method: 'No data' }
-  }
-
-  // Get most recent year's data
-  const years = Array.from(globalData.byYear.keys()).sort()
-  const mostRecentYear = years[years.length - 1]
-  const mostRecentYearTotal = globalData.byYear.get(mostRecentYear) || 0
-
-  // Calculate average monthly dividend
-  const months = globalData.byMonth.size
-  const averageMonthly = months > 0 ? globalData.totalNet / months : 0
-
-  // Use most recent year if available, otherwise project from average monthly
-  if (mostRecentYearTotal > 0 && years.length >= 1) {
-    return {
-      projected: mostRecentYearTotal,
-      method: `Based on ${mostRecentYear} data`
-    }
-  }
-
-  return {
-    projected: averageMonthly * 12,
-    method: 'Projected from historical average'
-  }
 }
 
 /**
@@ -539,85 +475,13 @@ export function DividendsDashboard ({
   const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
   const transactions = transactionsProp ?? storeTransactions
   const [viewMode, setViewMode] = useState<'month' | 'quarter'>('month')
-  const [sortField, setSortField] = useState<'yield' | 'dividends' | 'invested'>('yield')
+  const [sortField, setSortField] = useState<'dividends' | 'avgPayment' | 'payments'>('dividends')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-
-  // Calculate positions for yield calculation
-  const positions = useMemo(() => {
-    const stockTransactions = transactions.filter(t => t.Ticker)
-    if (stockTransactions.length === 0) return []
-
-    const grouped = _.groupBy(stockTransactions, 'Ticker')
-    const baseCurrency = stockTransactions[0]?.detectedBaseCurrency || 'USD'
-
-    const calculatedPositions: StockPosition[] = Object.entries(grouped).map(([ticker, tickerTransactions]) => {
-      if (!Array.isArray(tickerTransactions)) {
-        return {
-          ticker,
-          name: ticker,
-          totalShares: 0,
-          totalInvested: 0,
-          baseCurrency,
-          status: 'sold' as const,
-          realizedResult: 0
-        }
-      }
-
-      let totalShares = 0
-      let totalInvested = 0
-      let name = ''
-      let realizedResult = 0
-
-      for (const transaction of tickerTransactions) {
-        if (transaction.Name) name = transaction.Name
-        if (isDividendAction(transaction.Action)) continue
-
-        const shares = transaction['No. of shares'] || 0
-        const amount = transaction.totalInBaseCurrency || 0
-
-        if (isBuyAction(transaction.Action)) {
-          totalShares += shares
-          // Net cash flow: money going out (positive for buys)
-          totalInvested += Math.abs(amount)
-        } else if (isSellAction(transaction.Action)) {
-          totalShares -= shares
-          // Net cash flow: money coming in (subtract from deployed cash)
-          totalInvested -= Math.abs(amount)
-          // Track realized gains/losses from CSV Result column (no manual calculation)
-          realizedResult += transaction.Result || 0
-        }
-      }
-
-      return {
-        ticker,
-        name: name || ticker,
-        totalShares,
-        totalInvested, // Net cash flow: can be negative if you took out more than you put in
-        baseCurrency,
-        status: (totalShares > 0 ? 'holding' : 'sold') as 'holding' | 'sold',
-        realizedResult
-      }
-    })
-
-    return calculatedPositions
-  }, [transactions])
 
   // Calculate global dividend metrics
   const globalData = useMemo(
     () => calculateGlobalDividendMetrics(transactions),
     [transactions]
-  )
-
-  // Calculate dividend yields
-  const stockYields = useMemo(
-    () => calculateDividendYield(globalData, positions),
-    [globalData, positions]
-  )
-
-  // Calculate projected annual income
-  const projection = useMemo(
-    () => calculateProjectedAnnual(globalData),
-    [globalData]
   )
 
   // Calculate growth rate
@@ -640,30 +504,30 @@ export function DividendsDashboard ({
   const baseCurrency = transactions[0]?.detectedBaseCurrency || 'USD'
   const hasDividends = globalData.dividends.length > 0
 
-  // Sort stock yields
-  const sortedYields = useMemo(() => {
-    const sorted = [...stockYields]
-    sorted.sort((a, b) => {
+  // Sort stock dividends
+  const sortedStockDividends = useMemo(() => {
+    const stocks = Array.from(globalData.byStock.values())
+    stocks.sort((a, b) => {
       let aValue: number
       let bValue: number
 
-      if (sortField === 'yield') {
-        aValue = a.dividendYield
-        bValue = b.dividendYield
-      } else if (sortField === 'dividends') {
-        aValue = a.annualDividends
-        bValue = b.annualDividends
+      if (sortField === 'dividends') {
+        aValue = a.totalDividends
+        bValue = b.totalDividends
+      } else if (sortField === 'avgPayment') {
+        aValue = a.paymentCount > 0 ? a.totalDividends / a.paymentCount : 0
+        bValue = b.paymentCount > 0 ? b.totalDividends / b.paymentCount : 0
       } else {
-        aValue = a.totalInvested
-        bValue = b.totalInvested
+        aValue = a.paymentCount
+        bValue = b.paymentCount
       }
 
       return sortDirection === 'desc' ? bValue - aValue : aValue - bValue
     })
-    return sorted
-  }, [stockYields, sortField, sortDirection])
+    return stocks
+  }, [globalData.byStock, sortField, sortDirection])
 
-  const handleSort = (field: 'yield' | 'dividends' | 'invested') => {
+  const handleSort = (field: 'dividends' | 'avgPayment' | 'payments') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc')
     } else {
@@ -957,13 +821,13 @@ export function DividendsDashboard ({
         </AnimateOnView>
       )}
 
-      {/* Dividend Yield by Stock */}
-      {sortedYields.length > 0 && (
+      {/* Dividend Income by Stock */}
+      {sortedStockDividends.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Dividend Yield by Stock</CardTitle>
+            <CardTitle className="text-base font-semibold">Dividend Income by Stock</CardTitle>
             <CardDescription className="text-sm">
-              Current holdings only - yield based on total invested
+              All dividend-paying stocks in your portfolio
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -973,78 +837,70 @@ export function DividendsDashboard ({
                   <TableRow>
                     <TableHead className="text-xs">Stock</TableHead>
                     <TableHead className="text-xs">Company</TableHead>
-                    <TableHead className="text-xs text-right">Shares</TableHead>
-                    <TableHead className="text-xs text-right">Invested</TableHead>
                     <TableHead className="text-xs text-right">
                       <button
                         onClick={() => handleSort('dividends')}
-                        className="flex items-center gap-1 hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                        className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors underline-offset-2 hover:underline"
                       >
-                        Annual Dividends
+                        Total Dividends
                         <span className="text-[10px]">{sortField === 'dividends' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
                       </button>
                     </TableHead>
                     <TableHead className="text-xs text-right">
                       <button
-                        onClick={() => handleSort('yield')}
-                        className="flex items-center gap-1 hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                        onClick={() => handleSort('payments')}
+                        className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors underline-offset-2 hover:underline"
                       >
-                        Yield %
-                        <span className="text-[10px]">{sortField === 'yield' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
+                        Payments
+                        <span className="text-[10px]">{sortField === 'payments' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
                       </button>
                     </TableHead>
+                    <TableHead className="text-xs text-right">
+                      <button
+                        onClick={() => handleSort('avgPayment')}
+                        className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                      >
+                        Avg/Payment
+                        <span className="text-[10px]">{sortField === 'avgPayment' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-xs text-right">Last Div/Share</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedYields.map((stock) => (
-                    <TableRow key={stock.ticker}>
-                      <TableCell className="text-xs font-medium">{stock.ticker}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {stock.name}
-                      </TableCell>
-                      <TableCell className="text-xs text-right">
-                        {new Intl.NumberFormat('en-US', {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 4
-                        }).format(stock.currentShares)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right">
-                        {formatCurrency(stock.totalInvested, baseCurrency)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right">
-                        {formatCurrency(stock.annualDividends, baseCurrency)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400">
-                        {stock.dividendYield.toFixed(2)}%
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {sortedStockDividends.map((stock) => {
+                    const avgPerPayment = stock.paymentCount > 0
+                      ? stock.totalDividends / stock.paymentCount
+                      : 0
+                    return (
+                      <TableRow key={stock.ticker}>
+                        <TableCell className="text-xs font-medium">{stock.ticker}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {stock.name}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400">
+                          {formatCurrency(stock.totalDividends, baseCurrency)}
+                        </TableCell>
+                        <TableCell className="text-xs text-right">
+                          {stock.paymentCount}
+                        </TableCell>
+                        <TableCell className="text-xs text-right">
+                          {formatCurrency(avgPerPayment, baseCurrency)}
+                        </TableCell>
+                        <TableCell className="text-xs text-right text-muted-foreground">
+                          {stock.lastDividendPerShare
+                            ? `${getCurrencySymbol(stock.lastDividendPerShare.currency)}${stock.lastDividendPerShare.amount.toFixed(4)}/share`
+                            : '\u2014'}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Projected Annual Income */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Projected Annual Dividend Income</CardTitle>
-          <CardDescription className="text-sm">
-            {projection.method}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4">
-            <p className="text-4xl font-bold text-primary tracking-tight">
-              <AnimatedCurrency amount={projection.projected} currency={baseCurrency} formatFn={formatCurrency} />
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Estimated annual income based on historical patterns
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

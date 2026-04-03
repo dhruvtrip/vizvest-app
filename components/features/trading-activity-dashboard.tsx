@@ -432,7 +432,10 @@ export function TradingActivityDashboard ({
         <MetricCard
           label="Win Rate"
           value={`${metrics.winRate.toFixed(1)}%`}
-          subValue={metrics.sellCount > 0 ? `${metrics.profitableTrades} profitable` : 'No sells yet'}
+          subValue={metrics.sellCount > 0 ? (() => {
+            const breakEven = metrics.sellCount - metrics.profitableTrades - metrics.losingTrades
+            return `${metrics.profitableTrades}W / ${metrics.losingTrades}L${breakEven > 0 ? ` / ${breakEven} even` : ''}`
+          })() : 'No sells yet'}
           valueClassName={metrics.winRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
           borderColor="border-l-amber-500"
         />
