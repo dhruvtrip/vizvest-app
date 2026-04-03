@@ -108,13 +108,14 @@ interface ChartDataPoint {
 }
 
 /**
- * Converts a dividend amount to base currency
+ * Converts a withholding tax amount to base currency
+ * On T212 dividend rows, the exchange rate represents base currency per stock currency
  */
-function convertToBaseCurrency(
-  amount: number | undefined,
+function convertTaxToBaseCurrency(
+  taxAmount: number | undefined,
   exchangeRate: number | undefined
 ): number {
-  const value = amount || 0
+  const value = taxAmount || 0
   const rate = exchangeRate || 1
   return value * rate
 }
@@ -131,16 +132,17 @@ function calculateDividendMetrics(
     t => t.Ticker === ticker && isDividendAction(t.Action)
   )
 
-  // Process each dividend (use Total for gross amount, not Result)
+  // Process each dividend
+  // T212's Total for dividends is the NET amount received, already in base currency.
+  // Withholding tax is in the stock's native currency and needs conversion.
   const dividends: DividendTransaction[] = dividendTransactions.map(t => {
-    // For dividends, gross amount is in Total field (Result is typically for trading P&L)
-    const gross = convertToBaseCurrency(t.Total, t['Exchange rate'])
-    const tax = convertToBaseCurrency(t['Withholding tax'], t['Exchange rate'])
+    const net = Math.abs(t.totalInBaseCurrency || 0)
+    const tax = convertTaxToBaseCurrency(t['Withholding tax'], t['Exchange rate'])
     return {
       date: t.Time,
-      gross,
+      gross: net + tax,
       tax,
-      net: gross - tax
+      net
     }
   })
 

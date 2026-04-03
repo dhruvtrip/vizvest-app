@@ -108,9 +108,7 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
       totalDeposit += Math.abs(t.totalInBaseCurrency ?? 0)
       depositCount++
     } else if (isDividendAction(t.Action)) {
-      // Dividends: use Total field converted to base currency
-      const exchangeRate = t['Exchange rate'] || 1
-      totalDividends += (t.Total || 0) * exchangeRate
+      totalDividends += Math.abs(t.totalInBaseCurrency || 0)
     }
   }
 
