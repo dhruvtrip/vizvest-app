@@ -68,7 +68,7 @@ export function detectBaseCurrency(transactions: Trading212Transaction[]): strin
 
 /**
  * Normalizes a single transaction amount to the base currency
- * Uses the formula: baseAmount = total * exchangeRate
+ * Uses the formula: baseAmount = total / exchangeRate
  * 
  * @param transaction - A single Trading 212 transaction
  * @param baseCurrency - The target base currency to normalize to
@@ -76,7 +76,7 @@ export function detectBaseCurrency(transactions: Trading212Transaction[]): strin
  * 
  * @example
  * const baseAmount = normalizeToBaseCurrency(transaction, 'EUR')
- * // If transaction is 100 USD with exchangeRate 0.85, returns 85
+ * // If transaction is 100 USD with exchangeRate 1.175 (USD/EUR), returns 85.11 EUR
  */
 export function normalizeToBaseCurrency(
   transaction: Trading212Transaction,
@@ -101,8 +101,10 @@ export function normalizeToBaseCurrency(
     return total
   }
 
-  // Apply conversion formula: baseAmount = total * exchangeRate
-  return total * exchangeRate
+  // Apply conversion formula: baseAmount = total / exchangeRate
+  // T212's Exchange rate = units of stock currency per 1 unit of account currency
+  // e.g. rate 1.175 means 1 EUR = 1.175 USD, so USD total / 1.175 = EUR amount
+  return total / exchangeRate
 }
 
 /**

@@ -54,7 +54,7 @@ export interface StockPosition {
    * - Zero: Equal amounts bought and sold
    * Note: This is NOT the same as current value or unrealized P&L
    */
-  totalInvested: number
+  netCashFlow: number
   baseCurrency: string
   status: 'holding' | 'sold'
   /**
@@ -78,13 +78,11 @@ export interface StockMetrics {
   buyVolume: number
   buyShares: number
   buyTransactionCount: number
-  avgBuyPrice: number
-  
+
   // Sell metrics
   sellVolume: number
   sellShares: number
   sellTransactionCount: number
-  avgSellPrice: number
   
   // Net metrics (can be negative for partial data)
   netCashFlow: number

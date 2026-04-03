@@ -104,12 +104,10 @@ function calculateMetrics(
   // Calculate buy metrics
   const buyShares = buys.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
   const buyVolume = buys.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
-  const avgBuyPrice = buyShares > 0 ? buyVolume / buyShares : 0
 
   // Calculate sell metrics
   const sellShares = sells.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
   const sellVolume = sells.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
-  const avgSellPrice = sellShares > 0 ? sellVolume / sellShares : 0
 
   // Calculate realized profit/loss from CSV Result column
   const realizedResult = sells.reduce((sum, t) => sum + (t.Result || 0), 0)
@@ -144,11 +142,9 @@ function calculateMetrics(
     buyVolume,
     buyShares,
     buyTransactionCount: buys.length,
-    avgBuyPrice,
     sellVolume,
     sellShares,
     sellTransactionCount: sells.length,
-    avgSellPrice,
     netCashFlow,
     netShareFlow,
     realizedResult,
@@ -209,11 +205,9 @@ export function StockDetail ({
             buyVolume: 0,
             buyShares: 0,
             buyTransactionCount: 0,
-            avgBuyPrice: 0,
             sellVolume: 0,
             sellShares: 0,
             sellTransactionCount: 0,
-            avgSellPrice: 0,
             netCashFlow: 0,
             netShareFlow: 0,
             realizedResult: 0,

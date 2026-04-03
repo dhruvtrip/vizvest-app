@@ -13,7 +13,8 @@ interface TickerAnalysis {
   firstTransactionType: string
   netShares: number
   hasSellBeforeBuy: boolean
-  earlySellingActivity: boolean
+  runningSharesWentNegative: boolean
+  minRunningShares: number
 }
 
 /**
@@ -33,7 +34,8 @@ function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string
       firstTransactionType: '',
       netShares: 0,
       hasSellBeforeBuy: false,
-      earlySellingActivity: false
+      runningSharesWentNegative: false,
+      minRunningShares: 0
     }
   }
 
@@ -42,14 +44,16 @@ function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string
   const firstTransactionDate = new Date(firstTransaction.Time)
   const lastTransactionDate = new Date(lastTransaction.Time)
 
-  // Calculate net shares
+  // Calculate net shares and track running total
   let netShares = 0
   let hasSeenBuy = false
   let hasSellBeforeBuy = false
+  let runningSharesWentNegative = false
+  let minRunningShares = 0
 
   for (const t of tickerTransactions) {
     const shares = t['No. of shares'] || 0
-    
+
     if (isBuyAction(t.Action)) {
       netShares += shares
       hasSeenBuy = true
@@ -59,17 +63,12 @@ function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string
       }
       netShares -= shares
     }
+
+    if (netShares < -0.0001) {
+      runningSharesWentNegative = true
+    }
+    minRunningShares = Math.min(minRunningShares, netShares)
   }
-
-  // Check for selling activity in the first 7 days of data range
-  const dataStartDate = firstTransactionDate
-  const sevenDaysLater = new Date(dataStartDate)
-  sevenDaysLater.setDate(sevenDaysLater.getDate() + 7)
-
-  const earlySellingActivity = tickerTransactions.some(t => {
-    const tDate = new Date(t.Time)
-    return isSellAction(t.Action) && tDate <= sevenDaysLater
-  })
 
   return {
     ticker,
@@ -78,7 +77,8 @@ function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string
     firstTransactionType: firstTransaction.Action,
     netShares,
     hasSellBeforeBuy,
-    earlySellingActivity
+    runningSharesWentNegative,
+    minRunningShares
   }
 }
 
@@ -117,17 +117,6 @@ function formatDateRange(start: string, end: string): string {
 }
 
 /**
- * Calculates the number of days between two date strings
- */
-function getDaysBetween(start: string, end: string): number {
-  const startDate = new Date(start)
-  const endDate = new Date(end)
-  const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
-}
-
-/**
  * Main function to detect partial data in transaction history
  * Returns detailed warning information if partial data is detected
  */
@@ -143,7 +132,6 @@ export function detectPartialData(transactions: NormalizedTransaction[]): Partia
   }
 
   const dateRange = getDateRange(transactions)
-  const daysCovered = getDaysBetween(dateRange.start, dateRange.end)
 
   // Get all unique tickers with buy/sell transactions
   const tickers = [...new Set(
@@ -156,7 +144,6 @@ export function detectPartialData(transactions: NormalizedTransaction[]): Partia
   const affectedTickers: string[] = []
   const reasons: string[] = []
   let highConfidenceCount = 0
-  let mediumConfidenceCount = 0
 
   // Analyze each ticker
   for (const ticker of tickers) {
@@ -178,11 +165,13 @@ export function detectPartialData(transactions: NormalizedTransaction[]): Partia
       highConfidenceCount++
     }
 
-    // Heuristic 3: Selling activity in first 7 days (MEDIUM confidence)
-    if (analysis.earlySellingActivity && daysCovered > 30) {
+    // Heuristic 3: Running share count went negative at any point (HIGH confidence)
+    // If shares dipped below zero mid-stream but recovered via later buys,
+    // it proves prior holdings existed — you can't sell more than you've accumulated.
+    if (analysis.runningSharesWentNegative && analysis.netShares >= -0.0001) {
       isAffected = true
-      tickerReasons.push(`${ticker}: Early selling activity suggests prior holdings`)
-      mediumConfidenceCount++
+      tickerReasons.push(`${ticker}: Share count went negative during transaction history (min: ${analysis.minRunningShares.toFixed(2)}), indicating prior holdings`)
+      highConfidenceCount++
     }
 
     if (isAffected) {
@@ -192,11 +181,10 @@ export function detectPartialData(transactions: NormalizedTransaction[]): Partia
   }
 
   // Determine overall confidence level
+  // All heuristics are now mathematically provable (HIGH confidence)
   let confidence: 'high' | 'medium' | 'low' = 'low'
   if (highConfidenceCount > 0) {
     confidence = 'high'
-  } else if (mediumConfidenceCount > 0) {
-    confidence = 'medium'
   }
 
   const isPartialData = affectedTickers.length > 0
@@ -248,14 +236,14 @@ export function getTickerPartialDataExplanation(
   if (analysis.netShares < -0.0001) {
     return `You sold ${Math.abs(analysis.netShares).toFixed(2)} more shares than you bought in this period, indicating you held shares from before.`
   }
-  
+
   if (analysis.hasSellBeforeBuy) {
     return 'Sell transactions appear before any buy transactions, indicating prior holdings not shown in this data.'
   }
-  
-  if (analysis.earlySellingActivity) {
-    return 'Early selling activity suggests you held shares from before the start of this data period.'
+
+  if (analysis.runningSharesWentNegative) {
+    return `Share count went negative during this period (min: ${analysis.minRunningShares.toFixed(2)}), indicating you held shares from before that were sold.`
   }
-  
+
   return 'Metrics show activity within the uploaded timeframe only.'
 }

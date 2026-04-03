@@ -13,6 +13,7 @@ export const TransactionAction = {
   LIMIT_BUY: 'Limit buy',
   MARKET_SELL: 'Market sell',
   LIMIT_SELL: 'Limit sell',
+  STOP_SELL: 'Stop sell',
   DEPOSIT: 'Deposit',
   DIVIDEND: 'Dividend (Dividend)',
   INTEREST: 'Interest on cash'
@@ -36,7 +37,8 @@ export function isBuyAction(action: string): boolean {
 export function isSellAction(action: string): boolean {
   return (
     action === TransactionAction.MARKET_SELL ||
-    action === TransactionAction.LIMIT_SELL
+    action === TransactionAction.LIMIT_SELL ||
+    action === TransactionAction.STOP_SELL
   )
 }
 

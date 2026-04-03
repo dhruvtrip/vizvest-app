@@ -81,7 +81,7 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
   // Calculate position for each ticker
   const positions: StockPosition[] = Object.entries(grouped).map(([ticker, tickerTransactions]) => {
     let totalShares = 0
-    let totalInvested = 0
+    let netCashFlow = 0
     let realizedResult = 0
     let name = ''
 
@@ -102,24 +102,25 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
       if (isBuyAction(transaction.Action)) {
         totalShares += shares
         // Net cash flow: money going out (positive for buys)
-        totalInvested += Math.abs(amount)
+        netCashFlow += Math.abs(amount)
       } else if (isSellAction(transaction.Action)) {
         totalShares -= shares
         // Net cash flow: money coming in (subtract from deployed cash)
-        totalInvested -= Math.abs(amount)
+        netCashFlow -= Math.abs(amount)
         // Track realized gains/losses from CSV Result column (no manual calculation)
         realizedResult += transaction.Result || 0
       }
     }
 
     // Determine if this is a current holding or sold position
-    const status = totalShares > 0 ? 'holding' : 'sold'
+    // Use epsilon to guard against floating point drift from many fractional share transactions
+    const status = totalShares > 0.0001 ? 'holding' : 'sold'
 
     return {
       ticker,
       name: name || ticker,
       totalShares,
-      totalInvested, // Net cash flow: can be negative if you took out more than you put in
+      netCashFlow, // Net cash flow: can be negative if you took out more than you put in
       baseCurrency,
       status,
       realizedResult
@@ -132,7 +133,7 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
     if (a.status !== b.status) {
       return a.status === 'holding' ? -1 : 1
     }
-    return Math.abs(b.totalInvested) - Math.abs(a.totalInvested)
+    return Math.abs(b.netCashFlow) - Math.abs(a.netCashFlow)
   })
 }
 
@@ -149,7 +150,7 @@ function StockPositionTile({
   isPartialData: boolean
 }) {
   const isNetSelling = position.totalShares < 0
-  const hasNegativeInvested = position.totalInvested < 0
+  const hasNegativeInvested = position.netCashFlow < 0
 
   return (
     <Card
@@ -214,7 +215,7 @@ function StockPositionTile({
 
           <div className="flex items-center justify-between">
             <span className="text-body-sm text-muted-foreground">
-              {hasNegativeInvested ? 'Net Cash' : 'Invested'}
+              {hasNegativeInvested ? 'Net Cash' : 'Net Invested'}
             </span>
             <span className={cn(
               'text-body-sm font-medium currency',
@@ -222,7 +223,7 @@ function StockPositionTile({
                 ? 'change-positive'
                 : 'text-foreground'
             )}>
-              {formatCurrency(position.totalInvested, position.baseCurrency)}
+              {formatCurrency(position.netCashFlow, position.baseCurrency)}
             </span>
           </div>
         </div>
