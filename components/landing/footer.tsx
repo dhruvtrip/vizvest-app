@@ -11,6 +11,9 @@ const footerLinks = {
     { label: 'Articles', href: '/articles' },
     { label: 'Dashboard', href: '/dashboard' },
   ],
+  legal: [
+    { label: 'Privacy Policy', href: '/privacy' },
+  ],
 }
 
 export function Footer() {
@@ -54,7 +57,24 @@ export function Footer() {
             <ul className="space-y-3" role="list">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
-                  <Link 
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* Legal */}
+          <nav aria-label="Legal links">
+            <h3 className="font-medium text-xs uppercase tracking-wider text-muted-foreground mb-4">Legal</h3>
+            <ul className="space-y-3" role="list">
+              {footerLinks.legal.map((link) => (
+                <li key={link.label}>
+                  <Link
                     href={link.href}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm"
                   >
