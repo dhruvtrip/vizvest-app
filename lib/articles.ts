@@ -30,9 +30,11 @@ export function getArticles(): ArticleMeta[] {
       title: frontmatter.title as string,
       description: frontmatter.description as string,
       date: frontmatter.date as string,
+      lastModified: frontmatter.lastModified as string | undefined,
       tags: (frontmatter.tags as string[]) ?? [],
       image: frontmatter.image as string | undefined,
       published: true,
+      faqs: frontmatter.faqs as ArticleMeta['faqs'],
       readingTime: readingTime(content).text,
     }
 
@@ -57,9 +59,11 @@ export function getArticleBySlug(slug: string): { meta: ArticleMeta; content: st
     title: frontmatter.title as string,
     description: frontmatter.description as string,
     date: frontmatter.date as string,
+    lastModified: frontmatter.lastModified as string | undefined,
     tags: (frontmatter.tags as string[]) ?? [],
     image: frontmatter.image as string | undefined,
     published: true,
+    faqs: frontmatter.faqs as ArticleMeta['faqs'],
     readingTime: readingTime(content).text,
   }
 

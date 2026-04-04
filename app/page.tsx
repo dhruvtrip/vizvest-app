@@ -1,5 +1,3 @@
-'use client'
-
 import { Navbar, Hero, ProductShot, FeaturesBento, HowItWorks, FAQs, CTA, Footer } from '@/components/landing'
 
 const faqJsonLd = {

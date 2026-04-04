@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const url = `${SITE_URL}/articles/${slug}`
 
   return {
-    title: `${meta.title} | Vizvest`,
+    title: meta.title.length <= 50 ? `${meta.title} | Vizvest` : meta.title,
     description: meta.description,
     keywords: meta.tags,
     openGraph: {
@@ -62,6 +62,11 @@ export default async function ArticlePage({ params }: Props) {
     description: meta.description,
     datePublished: meta.date,
     ...(meta.lastModified && { dateModified: meta.lastModified }),
+    author: {
+      '@type': 'Organization',
+      name: 'Vizvest',
+      url: SITE_URL,
+    },
     publisher: {
       '@type': 'Organization',
       name: 'Vizvest',
@@ -71,6 +76,21 @@ export default async function ArticlePage({ params }: Props) {
     keywords: meta.tags.join(', '),
     ...(meta.image && { image: `${SITE_URL}${meta.image}` }),
   }
+
+  const faqJsonLd = meta.faqs && meta.faqs.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: meta.faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })),
+      }
+    : null
 
   const formattedDate = new Date(meta.date).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -84,6 +104,12 @@ export default async function ArticlePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <Navbar />
 
         <div className="relative pt-28 pb-20 overflow-hidden">

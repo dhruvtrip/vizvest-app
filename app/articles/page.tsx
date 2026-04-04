@@ -1,18 +1,17 @@
 import type { Metadata } from 'next'
-import { motion } from 'framer-motion'
 import { Navbar, Footer } from '@/components/landing'
 import { ArticleCard } from '@/components/articles/article-card'
 import { getArticles } from '@/lib/articles'
 import { FileText } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Articles | Vizvest',
+  title: 'Trading 212 Guides & Portfolio Investing Articles | Vizvest',
   description:
-    'Insights on portfolio tracking, dividend investing, and making the most of your Trading 212 data.',
+    'Guides on Trading 212 portfolio tracking, dividend investing, P&L, and making the most of your investment data.',
   openGraph: {
-    title: 'Articles | Vizvest',
+    title: 'Trading 212 Guides & Portfolio Investing Articles | Vizvest',
     description:
-      'Insights on portfolio tracking, dividend investing, and making the most of your Trading 212 data.',
+      'Guides on Trading 212 portfolio tracking, dividend investing, P&L, and making the most of your investment data.',
     url: `${process.env.NEXT_PUBLIC_SITE_URL}/articles`,
     type: 'website',
   },
@@ -42,10 +41,9 @@ export default function ArticlesPage() {
                 <FileText className="w-6 h-6 text-primary" />
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-4">Articles</h1>
+            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-4">Trading 212 Guides & Portfolio Analysis</h1>
             <p className="text-base text-muted-foreground/80 leading-relaxed">
-              Insights on portfolio tracking, dividend investing, and making the most of your
-              Trading 212 data.
+              Step-by-step guides on understanding your investment data and returns.
             </p>
           </div>
 

@@ -1,3 +1,8 @@
+export interface ArticleFaq {
+  question: string
+  answer: string
+}
+
 export interface ArticleFrontmatter {
   title: string
   description: string
@@ -6,6 +11,7 @@ export interface ArticleFrontmatter {
   tags: string[]
   image?: string
   published: boolean
+  faqs?: ArticleFaq[]
 }
 
 export interface ArticleMeta extends ArticleFrontmatter {
