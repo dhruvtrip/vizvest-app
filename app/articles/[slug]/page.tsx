@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { ArrowLeft, Clock, Calendar } from 'lucide-react'
+import { ArrowLeft, Clock, Calendar, User } from 'lucide-react'
 import { Navbar, Footer } from '@/components/landing'
 import { getMDXComponents } from '@/components/articles/mdx-components'
 import { getArticleBySlug, getAllSlugs } from '@/lib/articles'
@@ -62,11 +62,22 @@ export default async function ArticlePage({ params }: Props) {
     description: meta.description,
     datePublished: meta.date,
     ...(meta.lastModified && { dateModified: meta.lastModified }),
-    author: {
-      '@type': 'Organization',
-      name: 'Vizvest',
-      url: SITE_URL,
-    },
+    author: meta.author
+      ? {
+          '@type': 'Person',
+          name: meta.author,
+          jobTitle: 'Founder',
+          worksFor: {
+            '@type': 'Organization',
+            name: 'Vizvest',
+            url: SITE_URL,
+          },
+        }
+      : {
+          '@type': 'Organization',
+          name: 'Vizvest',
+          url: SITE_URL,
+        },
     publisher: {
       '@type': 'Organization',
       name: 'Vizvest',
@@ -157,6 +168,12 @@ export default async function ArticlePage({ params }: Props) {
                   <Clock className="w-3.5 h-3.5" />
                   {meta.readingTime}
                 </span>
+                {meta.author && (
+                  <span className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    {meta.author} · Founder, Vizvest
+                  </span>
+                )}
               </div>
 
               {/* MDX Content */}
