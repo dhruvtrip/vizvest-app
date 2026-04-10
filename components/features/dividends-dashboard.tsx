@@ -608,7 +608,7 @@ export function DividendsDashboard ({
         <AnimateOnView minHeight={450}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Total Dividend Income Over Time</CardTitle>
+              <CardTitle className="text-base font-normal">Total Dividend Income Over Time</CardTitle>
               <CardDescription className="text-sm">
                 Cumulative dividend income by month
               </CardDescription>
@@ -666,7 +666,7 @@ export function DividendsDashboard ({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Dividend Trends</CardTitle>
+                  <CardTitle className="text-base font-normal">Dividend Trends</CardTitle>
                   <CardDescription className="text-sm">
                     {viewMode === 'month' ? 'Monthly' : 'Quarterly'} dividend income
                   </CardDescription>
@@ -747,7 +747,7 @@ export function DividendsDashboard ({
         <AnimateOnView minHeight={460}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Year-over-Year Growth</CardTitle>
+              <CardTitle className="text-base font-normal">Year-over-Year Growth</CardTitle>
               <CardDescription className="text-sm">
                 Annual dividend income comparison
               </CardDescription>
@@ -825,7 +825,7 @@ export function DividendsDashboard ({
       {sortedStockDividends.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Dividend Income by Stock</CardTitle>
+            <CardTitle className="text-base font-normal">Dividend Income by Stock</CardTitle>
             <CardDescription className="text-sm">
               All dividend-paying stocks in your portfolio
             </CardDescription>

@@ -8,7 +8,6 @@ interface RotatingTextProps {
   words: string[]
   interval?: number
   className?: string
-  gradientColors?: [string, string]
   pauseOnHover?: boolean
   typingSpeed?: number
   deletingSpeed?: number
@@ -19,7 +18,6 @@ export function RotatingText({
   words,
   interval,
   className,
-  gradientColors = ['#3b82f6', '#8b5cf6'],
   pauseOnHover = true,
   typingSpeed = 100,
   deletingSpeed = 50,
@@ -82,9 +80,6 @@ export function RotatingText({
     }
   }
 
-  // Use solid blue color
-  const textColor = gradientColors[0] || '#3b82f6'
-
   const cursorVariants = {
     blinking: {
       opacity: [1, 1, 0, 0],
@@ -106,23 +101,14 @@ export function RotatingText({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <span
-        className="inline-block"
-        style={{
-          color: textColor
-        }}
-      >
-        {currentText}
-      </span>
+      <span className="inline-block">{currentText}</span>
       <motion.span
         variants={cursorVariants}
         animate="blinking"
-        className="inline-block ml-1"
+        className="inline-block ml-1 bg-current align-baseline"
         style={{
           width: '2px',
-          height: '1em',
-          background: textColor,
-          verticalAlign: 'baseline'
+          height: '1em'
         }}
         aria-hidden="true"
       />

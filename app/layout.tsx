@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
+import { Funnel_Sans, Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -8,16 +8,23 @@ import { PostHogConsentBanner } from '@/components/posthog-consent-banner'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
 
-const ibmPlexSans = IBM_Plex_Sans({
+const funnelSans = Funnel_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500'],
+  variable: '--font-heading',
+  display: 'swap',
+})
+
+const geist = Geist({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
   variable: '--font-sans',
   display: 'swap',
 })
 
-const ibmPlexMono = IBM_Plex_Mono({
+const geistMono = Geist_Mono({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '500'],
   variable: '--font-mono',
   display: 'swap',
 })
@@ -84,7 +91,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans`}>
+      <body className={`${funnelSans.variable} ${geist.variable} ${geistMono.variable} font-sans`}>
         <PostHogProvider>
           <ThemeProvider
             attribute="class"

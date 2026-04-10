@@ -41,7 +41,7 @@ export default function ArticlesPage() {
                 <FileText className="w-6 h-6 text-primary" />
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-4">Trading 212 Guides & Portfolio Analysis</h1>
+            <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-4">Trading 212 Guides & Portfolio Analysis</h1>
             <p className="text-base text-muted-foreground/80 leading-relaxed">
               Step-by-step guides on understanding your investment data and returns.
             </p>

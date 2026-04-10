@@ -99,7 +99,7 @@ export function Hero() {
 
           {/* Heading */}
           <motion.div variants={fadeInUp} className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-semibold tracking-tight leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-light tracking-tight leading-[1.05]">
               Visualize Your{' '}
               <span className="block">
                 <RotatingText
@@ -110,7 +110,6 @@ export function Hero() {
                     'Stock Positions',
                     'Market Winners'
                   ]}
-                  gradientColors={['#3b82f6', '#8b5cf6']}
                   className="text-foreground"
                 />
               </span>

@@ -114,7 +114,7 @@ export function FAQs() {
             <HelpCircle className="w-3 h-3" aria-hidden="true" />
             FAQs
           </motion.div>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
             Frequently asked questions
           </h2>
         </motion.div>

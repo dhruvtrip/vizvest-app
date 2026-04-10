@@ -37,7 +37,7 @@ export default function PrivacyPage() {
                   <Shield className="w-6 h-6 text-primary" />
                 </div>
               </div>
-              <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-4">Privacy Policy</h1>
+              <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-4">Privacy Policy</h1>
               <p className="text-sm text-muted-foreground">Last updated: April 2026</p>
             </div>
 
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
 
               {/* Section 1 */}
               <div>
-                <h2 className="text-xl font-semibold mb-3">Your financial data</h2>
+                <h2 className="text-xl font-normal mb-3">Your financial data</h2>
                 <p className="text-muted-foreground leading-relaxed">
                   When you upload a Trading 212 CSV file to Vizvest, it is parsed and analysed entirely inside your browser using JavaScript. The file is never transmitted to our servers — we don&apos;t have the infrastructure to receive it, store it, or read it.
                 </p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
 
               {/* Section 2 */}
               <div>
-                <h2 className="text-xl font-semibold mb-3">Analytics (opt-in)</h2>
+                <h2 className="text-xl font-normal mb-3">Analytics (opt-in)</h2>
                 <p className="text-muted-foreground leading-relaxed">
                   We use <strong>PostHog</strong> to understand how people use Vizvest — which features are used, where people drop off, and whether new features are working. This helps us improve the product.
                 </p>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
 
               {/* Section 3 */}
               <div>
-                <h2 className="text-xl font-semibold mb-3">What we don&apos;t do</h2>
+                <h2 className="text-xl font-normal mb-3">What we don&apos;t do</h2>
                 <ul className="space-y-2 text-muted-foreground text-sm list-disc list-inside">
                   <li>We do not sell, share, or monetise any user data.</li>
                   <li>We do not use advertising networks or tracking pixels.</li>
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
 
               {/* Section 4 */}
               <div>
-                <h2 className="text-xl font-semibold mb-3">Changes to this policy</h2>
+                <h2 className="text-xl font-normal mb-3">Changes to this policy</h2>
                 <p className="text-muted-foreground leading-relaxed">
                   If we ever change how we handle data — particularly if we were to introduce server-side processing or accounts — we will update this page and note the date. We will not quietly expand data collection.
                 </p>

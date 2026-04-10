@@ -88,7 +88,7 @@ export function HowItWorks() {
             <Wrench className="w-3 h-3" aria-hidden="true" />
             How it works
           </motion.div>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
             Get started in seconds
           </h2>
           <p className="text-muted-foreground">
@@ -150,7 +150,7 @@ export function HowItWorks() {
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
+                    <h3 className="text-lg font-normal mb-2 group-hover:text-primary transition-colors">
                       {step.title}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4 leading-relaxed">

@@ -304,7 +304,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
 
           {/* Content */}
           <div className="flex-1">
-            <h3 className="text-base font-semibold mb-2 group-hover:text-primary transition-colors">
+            <h3 className="text-base font-normal mb-2 group-hover:text-primary transition-colors">
               {feature.title}
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -317,7 +317,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
             <div className="mt-4 flex items-center gap-2">
               <span
                 className={cn(
-                  'text-2xl font-bold transition-colors duration-300 tabular-nums',
+                  'text-2xl font-light font-heading tracking-tight transition-colors duration-300 tabular-nums',
                   perfValue >= 0 ? 'text-emerald-500' : 'text-rose-500'
                 )}
               >
@@ -472,7 +472,7 @@ export function FeaturesBento() {
             <Zap className="w-3 h-3" aria-hidden="true" />
             Features
           </motion.div>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
             Everything you need to understand
             <span className="block text-primary">about your investments</span>
           </h2>

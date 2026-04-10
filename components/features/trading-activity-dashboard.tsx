@@ -494,7 +494,7 @@ export function TradingActivityDashboard ({
       {/* Transactions Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-semibold">All Transactions</CardTitle>
+          <CardTitle className="text-base font-normal">All Transactions</CardTitle>
           <CardDescription className="text-sm">
             {sortedTrades.length} {sortedTrades.length === 1 ? 'transaction' : 'transactions'}
             {selectedYears.size > 0 && ` in selected ${selectedYears.size === 1 ? 'year' : 'years'}`}
