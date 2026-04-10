@@ -88,10 +88,10 @@ export function Hero() {
         >
           {/* Badge */}
           <motion.div variants={fadeInUp}>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 dark:bg-primary/5 border border-primary/20 dark:border-primary/10 text-xs font-medium text-primary backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand/10 border border-brand/25 text-xs font-medium text-brand backdrop-blur-sm">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand" />
               </span>
               Trading Portfolio Analytics
             </span>
@@ -124,12 +124,11 @@ export function Hero() {
             <Button
               asChild
               size="lg"
-              className="text-sm h-11 px-8 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2"
+              className="text-sm h-11 px-8 gap-2 bg-brand text-white hover:bg-brand"
               onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
             >
               <Link href="/dashboard" aria-label="Open dashboard to analyze your portfolio">
                 Open Dashboard
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-sm h-11 px-8 hover:bg-muted/50 transition-colors border-border/50 backdrop-blur-sm">

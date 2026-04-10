@@ -400,7 +400,7 @@ function CustomTooltip({
     <div className="bg-popover/90 backdrop-blur-md border border-border/50 rounded-lg shadow-xl shadow-black/10 px-4 py-2.5">
       {payload.map((entry, index) => (
         <div key={index} className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+          <div className="w-2 h-2 rounded-full bg-brand flex-shrink-0" />
           <p className="text-sm font-semibold text-foreground">
             {entry.dataKey === 'cumulative' ? 'Cumulative: ' : ''}
             {formatCurrency(entry.value, baseCurrency)}
@@ -619,8 +619,8 @@ export function DividendsDashboard ({
                   <AreaChart data={incomeOverTimeData}>
                     <defs>
                       <linearGradient id="dividendGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="hsl(var(--brand))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--brand))" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
@@ -641,12 +641,12 @@ export function DividendsDashboard ({
                     <Area
                       type="natural"
                       dataKey="cumulative"
-                      stroke="hsl(var(--primary))"
+                      stroke="hsl(var(--brand))"
                       strokeWidth={2.5}
                       fillOpacity={1}
                       fill="url(#dividendGradient)"
-                      dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
-                      activeDot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+                      dot={{ r: 3, fill: 'hsl(var(--brand))', strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: 'hsl(var(--brand))', strokeWidth: 2, stroke: 'hsl(var(--background))' }}
                       animationDuration={1000}
                       animationEasing="ease-out"
                       animationBegin={100}
@@ -703,8 +703,8 @@ export function DividendsDashboard ({
                   <BarChart data={trendData}>
                     <defs>
                       <linearGradient id="barGradientTrend" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
+                        <stop offset="0%" stopColor="hsl(var(--brand))" stopOpacity={1} />
+                        <stop offset="100%" stopColor="hsl(var(--brand))" stopOpacity={0.7} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
@@ -758,8 +758,8 @@ export function DividendsDashboard ({
                   <BarChart data={yearComparisons}>
                     <defs>
                       <linearGradient id="barGradientYoY" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
+                        <stop offset="0%" stopColor="hsl(var(--brand))" stopOpacity={1} />
+                        <stop offset="100%" stopColor="hsl(var(--brand))" stopOpacity={0.7} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />

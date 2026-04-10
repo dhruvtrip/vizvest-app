@@ -33,13 +33,13 @@ const getColorClass = (level: number) => {
     case 0:
       return 'bg-neutral-200 dark:bg-slate-900'
     case 1:
-      return 'bg-green-400/40 dark:bg-green-400/30'
+      return 'bg-[hsl(var(--brand)/0.25)]'
     case 2:
-      return 'bg-green-500/60 dark:bg-green-500/50'
+      return 'bg-[hsl(var(--brand)/0.5)]'
     case 3:
-      return 'bg-green-600/80 dark:bg-green-600/70'
+      return 'bg-[hsl(var(--brand)/0.75)]'
     case 4:
-      return 'bg-green-700/100 dark:bg-green-700/90'
+      return 'bg-[hsl(var(--brand))]'
     default:
       return 'bg-neutral-200 dark:bg-slate-900'
   }

@@ -261,40 +261,24 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-50px' }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
-      className={cn('group relative', feature.className)}
+      className={cn('relative', feature.className)}
     >
       <Card className={cn(
-        'relative h-full overflow-hidden transition-all duration-500',
-        'border-border/50 hover:border-border',
-        'bg-card/50 backdrop-blur-sm',
-        'hover:shadow-xl hover:shadow-primary/5',
-        'hover:-translate-y-1'
+        'relative h-full overflow-hidden',
+        'border-border/50',
+        'bg-card/50 backdrop-blur-sm'
       )}>
-        {/* Gradient overlay on hover */}
-        <div className={cn(
-          'absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500',
-          feature.gradient
-        )} />
-        
-        {/* Animated border gradient */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className="absolute inset-[1px] rounded-[inherit] bg-gradient-to-br from-primary/20 via-transparent to-accent/20" style={{ mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', maskComposite: 'xor', padding: '1px' }} />
-        </div>
-
         <CardContent className="relative z-10 h-full p-6 flex flex-col">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
-            <motion.div 
+            <div
               className={cn(
                 'w-10 h-10 rounded-xl flex items-center justify-center',
-                feature.iconBg,
-                'group-hover:scale-110 transition-transform duration-300'
+                feature.iconBg
               )}
-              whileHover={{ rotate: [0, -10, 10, 0] }}
-              transition={{ duration: 0.5 }}
             >
               <feature.icon className={cn('w-5 h-5', feature.iconColor)} />
-            </motion.div>
+            </div>
             {feature.badge && (
               <Badge variant="secondary" className="text-[10px] bg-muted/50 backdrop-blur-sm">
                 {feature.badge}
@@ -304,7 +288,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
 
           {/* Content */}
           <div className="flex-1">
-            <h3 className="text-base font-normal mb-2 group-hover:text-primary transition-colors">
+            <h3 className="text-base font-normal mb-2">
               {feature.title}
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">

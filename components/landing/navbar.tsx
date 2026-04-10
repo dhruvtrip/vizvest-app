@@ -103,7 +103,7 @@ export function Navbar() {
 
             {/* Right: Desktop CTA */}
             <div className="hidden md:flex items-center">
-              <Button asChild size="sm" className="text-xs h-8 gap-1">
+              <Button asChild size="sm" className="text-xs h-8 gap-1 bg-brand text-white hover:bg-brand">
                 <Link href="/dashboard" aria-label="Open dashboard application">
                   Open App
                   <ChevronRight className="w-3 h-3" aria-hidden="true" />
