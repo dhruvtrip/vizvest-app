@@ -430,21 +430,18 @@ export function TradingActivityDashboard ({
         <MetricCard
           label="Total Transactions"
           value={metrics.totalTransactions.toString()}
-          borderColor="border-l-blue-500"
         />
         <MetricCard
           label="Buy Transactions"
           value={metrics.buyCount.toString()}
           subValue={formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency)}
           valueClassName="text-emerald-600 dark:text-emerald-400"
-          borderColor="border-l-emerald-500"
         />
         <MetricCard
           label="Sell Transactions"
           value={metrics.sellCount.toString()}
           subValue={formatCurrency(metrics.totalSellVolume, metrics.baseCurrency)}
           valueClassName="text-red-600 dark:text-red-400"
-          borderColor="border-l-red-500"
         />
         <MetricCard
           label="Realized P&L"
@@ -453,7 +450,6 @@ export function TradingActivityDashboard ({
           currency={metrics.baseCurrency}
           subValue={`${metrics.profitableTrades}W / ${metrics.losingTrades}L`}
           valueClassName={metrics.realizedPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
-          borderColor={metrics.realizedPnL >= 0 ? 'border-l-emerald-500' : 'border-l-red-500'}
         />
         <MetricCard
           label="Win Rate"
@@ -463,7 +459,6 @@ export function TradingActivityDashboard ({
             return `${metrics.profitableTrades}W / ${metrics.losingTrades}L${breakEven > 0 ? ` / ${breakEven} even` : ''}`
           })() : 'No sells yet'}
           valueClassName={metrics.winRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
-          borderColor="border-l-amber-500"
         />
         <MetricCard
           label="Total Buy Volume"
@@ -471,7 +466,6 @@ export function TradingActivityDashboard ({
           rawValue={metrics.totalBuyVolume}
           currency={metrics.baseCurrency}
           valueClassName="text-emerald-600 dark:text-emerald-400"
-          borderColor="border-l-emerald-500"
         />
         <MetricCard
           label="Total Sell Volume"
@@ -479,12 +473,10 @@ export function TradingActivityDashboard ({
           rawValue={metrics.totalSellVolume}
           currency={metrics.baseCurrency}
           valueClassName="text-red-600 dark:text-red-400"
-          borderColor="border-l-rose-500"
         />
         <MetricCard
           label="Most Traded Stock"
           value={metrics.mostTradedStock ? `${metrics.mostTradedStock.ticker}` : 'N/A'}
-          borderColor="border-l-violet-500"
         />
       </div>
 

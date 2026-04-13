@@ -420,7 +420,6 @@ function MetricCard({
   subValue,
   className,
   valueClassName,
-  borderColor,
   rawValue,
   currency
 }: {
@@ -429,7 +428,6 @@ function MetricCard({
   subValue?: string
   className?: string
   valueClassName?: string
-  borderColor?: string
   rawValue?: number
   currency?: string
 }) {
@@ -440,7 +438,7 @@ function MetricCard({
       transition={{ duration: 0.3 }}
       className="h-full"
     >
-      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col', borderColor && `border-l-[3px] ${borderColor}`, className)}>
+      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col', `border-l-[3px]`, className)}>
         <CardContent className="p-5 flex flex-col h-full">
           <p className="metric-label text-muted-foreground flex-shrink-0">{label}</p>
           <p className={cn('metric-value text-foreground mt-1 flex-shrink-0', valueClassName)}>
@@ -570,7 +568,6 @@ export function DividendsDashboard ({
           value={formatCurrency(globalData.totalGross, baseCurrency)}
           rawValue={globalData.totalGross}
           currency={baseCurrency}
-          borderColor="border-l-amber-500"
         />
         <MetricCard
           label="Withholding Tax"
@@ -578,7 +575,6 @@ export function DividendsDashboard ({
           rawValue={globalData.totalTax}
           currency={baseCurrency}
           valueClassName="text-muted-foreground"
-          borderColor="border-l-rose-500"
         />
         <MetricCard
           label="Net Dividends"
@@ -586,12 +582,10 @@ export function DividendsDashboard ({
           rawValue={globalData.totalNet}
           currency={baseCurrency}
           valueClassName="text-emerald-600 dark:text-emerald-400"
-          borderColor="border-l-emerald-500"
         />
         <MetricCard
           label="Total Payments"
           value={globalData.paymentCount.toString()}
-          borderColor="border-l-blue-500"
         />
         <MetricCard
           label="Avg per Payment"
@@ -599,7 +593,6 @@ export function DividendsDashboard ({
           rawValue={averagePerPayment}
           currency={baseCurrency}
           subValue={`${globalData.paymentCount} payments`}
-          borderColor="border-l-violet-500"
         />
       </div>
 

@@ -49,7 +49,6 @@ interface MetricData {
   rawValue: number
   currency: string
   subValue?: string
-  borderColor: string
   valueColor?: string
 }
 
@@ -168,8 +167,7 @@ function MetricCard({
       <Card className={cn(
         'relative overflow-hidden transition-all duration-300',
         'border-border/50 hover:border-border',
-        'hover:shadow-lg hover:shadow-primary/5',
-        `border-l-[3px] ${metric.borderColor}`
+        'hover:shadow-lg hover:shadow-primary/5'
       )}>
         <CardContent className="relative z-10 p-5">
           <p className="metric-label text-muted-foreground mb-2">{metric.label}</p>
@@ -205,7 +203,6 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       rawValue: metrics.totalInvested,
       currency: metrics.baseCurrency,
       subValue: 'Total bought',
-      borderColor: 'border-l-blue-500',
     },
     {
       label: 'Sell Volume',
@@ -213,7 +210,6 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       rawValue: metrics.totalSold,
       currency: metrics.baseCurrency,
       subValue: 'Total sold',
-      borderColor: 'border-l-rose-500',
     },
     {
       label: 'Realized P&L',
@@ -221,7 +217,6 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       rawValue: metrics.realizedPnL,
       currency: metrics.baseCurrency,
       subValue: `${metrics.soldCount} position${metrics.soldCount !== 1 ? 's' : ''} closed`,
-      borderColor: isRealizedPositive ? 'border-l-emerald-500' : 'border-l-red-500',
       valueColor: isRealizedPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400',
     },
     {
@@ -230,7 +225,6 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       rawValue: metrics.totalDividends,
       currency: metrics.baseCurrency,
       subValue: 'Dividend income',
-      borderColor: 'border-l-amber-500',
       valueColor: metrics.totalDividends > 0 ? 'text-emerald-600 dark:text-emerald-400' : undefined,
     },
     {

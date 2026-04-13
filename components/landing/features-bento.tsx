@@ -296,7 +296,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
             <div className="mt-4 flex items-center justify-center">
               <span
                 className={cn(
-                  'text-5xl sm:text-6xl font-light font-heading tracking-tight transition-colors duration-300 tabular-nums',
+                  'text-5xl sm:text-6xl font-light font-mono tracking-tight transition-colors duration-300 tabular-nums',
                   perfValue >= 0 ? 'text-emerald-500' : 'text-rose-500'
                 )}
               >
@@ -332,7 +332,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-semibold text-emerald-500 tabular-nums tracking-tight">
+                <span className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-semibold font-mono text-emerald-500 tabular-nums tracking-tight">
                   {yieldValue.toFixed(1)}%
                 </span>
               </div>

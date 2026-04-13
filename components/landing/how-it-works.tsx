@@ -3,53 +3,31 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
-import { Upload, BarChart2, LineChart, Wrench } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Wrench } from 'lucide-react'
 
 const steps = [
   {
     number: '01',
-    icon: Upload,
+    progress: 0.33,
     title: 'Upload your data',
-    description: 'Export your transaction history from Trading 212 as a CSV file.',
-    points: [
-      'Supports CSV export format',
-      'Drag and drop upload',
-      'Instant validation',
-    ],
-    gradient: 'from-blue-500 to-cyan-500',
-    bgGradient: 'from-blue-500/10 to-cyan-500/10',
-    iconColor: 'text-blue-500',
+    description: 'Export your Trading 212 transaction history as a CSV and drop it in. Supports drag-and-drop with instant validation.',
   },
   {
     number: '02',
-    icon: BarChart2,
+    progress: 0.66,
     title: 'Explore insights',
-    description: 'Get an instant overview with interactive visualizations.',
-    points: [
-      'Allocation breakdown',
-      'Performance charts',
-      'Dividend tracking',
-    ],
-    gradient: 'from-violet-500 to-purple-500',
-    bgGradient: 'from-violet-500/10 to-purple-500/10',
-    iconColor: 'text-violet-500',
+    description: 'Get an instant overview — allocation, performance charts, and dividend tracking, all built automatically.',
   },
   {
     number: '03',
-    icon: LineChart,
+    progress: 1,
     title: 'Track performance',
-    description: 'Drill down into individual stocks and monitor trends.',
-    points: [
-      'Stock analysis',
-      'Transaction history',
-      'P/L calculations',
-    ],
-    gradient: 'from-emerald-500 to-green-500',
-    bgGradient: 'from-emerald-500/10 to-green-500/10',
-    iconColor: 'text-emerald-500',
+    description: 'Drill into individual stocks, review transaction history, and watch P/L evolve over time.',
   },
 ]
+
+const RING_RADIUS = 42
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 
 export function HowItWorks() {
   const ref = useRef(null)
@@ -59,10 +37,10 @@ export function HowItWorks() {
     <section id="how-it-works" className="py-24 lg:py-32 relative overflow-hidden" ref={ref}>
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background" />
-      
-<div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 max-w-7xl relative">
+
+      <div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 max-w-7xl relative">
         {/* Section Header */}
-        <motion.div 
+        <motion.div
           className="text-center max-w-2xl mx-auto mb-16"
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -88,89 +66,64 @@ export function HowItWorks() {
         </motion.div>
 
         {/* Steps */}
-        <div className="relative">
-          {/* Connector line */}
-          <div className="hidden md:block absolute top-24 left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-px">
-            <motion.div 
-              className="h-full bg-gradient-to-r from-blue-500/50 via-violet-500/50 to-emerald-500/50"
-              initial={{ scaleX: 0 }}
-              animate={isInView ? { scaleX: 1 } : {}}
-              transition={{ delay: 0.5, duration: 1 }}
-              style={{ transformOrigin: 'left' }}
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 auto-rows-[280px]">
+          {steps.map((step, index) => (
+            <motion.div
+              key={step.number}
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.1 + index * 0.1, duration: 0.5 }}
+              className="relative"
+            >
+              <Card className="relative h-full overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
+                <CardContent className="relative z-10 h-full p-6 flex flex-col">
+                  {/* Content */}
+                  <div>
+                    <h3 className="text-lg font-normal text-foreground tracking-tight mb-2">
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {steps.map((step, index) => (
-              <motion.div 
-                key={step.number}
-                initial={{ opacity: 0, y: 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.2 + index * 0.15, duration: 0.5 }}
-              >
-                <Card className={cn(
-                  'h-full overflow-hidden transition-all duration-500',
-                  'border-border/50 hover:border-border',
-                  'bg-card/50 backdrop-blur-sm',
-                  'hover:shadow-xl hover:shadow-primary/5',
-                  'hover:-translate-y-1 group'
-                )}>
-                  {/* Gradient overlay on hover */}
-                  <div className={cn(
-                    'absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500',
-                    step.bgGradient
-                  )} />
-
-                  <CardContent className="relative z-10 p-6">
-                    {/* Step indicator */}
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className={cn(
-                        'w-12 h-12 rounded-xl flex items-center justify-center',
-                        'bg-gradient-to-br',
-                        step.bgGradient,
-                        'group-hover:scale-110 transition-transform duration-300'
-                      )}>
-                        <step.icon className={cn('w-6 h-6', step.iconColor)} />
-                      </div>
-                      <span className={cn(
-                        'text-4xl font-bold bg-gradient-to-br bg-clip-text text-transparent opacity-30',
-                        step.gradient
-                      )}>
+                  {/* Progress ring with step number */}
+                  <div className="mt-auto flex items-center justify-center pt-6">
+                    <div className="relative w-20 h-20" role="img" aria-label={`Step ${step.number} of 3`}>
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={RING_RADIUS}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          className="text-border/60"
+                        />
+                        <motion.circle
+                          cx="50"
+                          cy="50"
+                          r={RING_RADIUS}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          className="text-brand"
+                          strokeDasharray={RING_CIRCUMFERENCE}
+                          initial={{ strokeDashoffset: RING_CIRCUMFERENCE }}
+                          animate={isInView ? { strokeDashoffset: RING_CIRCUMFERENCE * (1 - step.progress) } : {}}
+                          transition={{ delay: 0.4 + index * 0.15, duration: 1, ease: 'easeOut' }}
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-lg font-mono font-medium text-foreground tabular-nums tracking-tight">
                         {step.number}
                       </span>
                     </div>
-
-                    {/* Content */}
-                    <h3 className="text-lg font-normal mb-2 group-hover:text-primary transition-colors">
-                      {step.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                      {step.description}
-                    </p>
-
-                    {/* Bullet points */}
-                    <ul className="space-y-2">
-                      {step.points.map((point, i) => (
-                        <motion.li 
-                          key={point}
-                          className="flex items-center gap-2 text-xs text-muted-foreground"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={isInView ? { opacity: 1, x: 0 } : {}}
-                          transition={{ delay: 0.5 + index * 0.15 + i * 0.1 }}
-                        >
-                          <div className={cn(
-                            'w-1.5 h-1.5 rounded-full bg-gradient-to-r',
-                            step.gradient
-                          )} />
-                          <span>{point}</span>
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
