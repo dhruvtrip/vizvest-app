@@ -57,8 +57,8 @@ export function Navbar() {
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
           isScrolled
-            ? 'bg-background/80 backdrop-blur-lg border-b border-border/50 shadow-sm'
-            : 'bg-transparent'
+            ? 'bg-background/50 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/10 dark:border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
+            : 'bg-background/20 backdrop-blur-md backdrop-saturate-150'
         )}
       >
         <nav className="container mx-auto px-6" aria-label="Main navigation">
@@ -93,7 +93,7 @@ export function Navbar() {
                 <li key={link.label} role="none">
                   <Link
                     href={link.href}
-                    className="px-3 py-2 text-sm sm:text-base text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    className="px-3 py-2 text-xs sm:text-sm font-mono uppercase tracking-[1.2px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
                     {link.label}
                   </Link>
@@ -133,7 +133,7 @@ export function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-16 z-40 bg-background/95 backdrop-blur-lg border-b border-border md:hidden"
+            className="fixed inset-x-0 top-16 z-40 bg-background/60 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/10 dark:border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.08)] md:hidden"
             id="mobile-menu"
             role="dialog"
             aria-modal="true"
@@ -146,7 +146,7 @@ export function Navbar() {
                     <Link
                       ref={index === 0 ? firstMenuItemRef : null}
                       href={link.href}
-                      className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="block px-3 py-2 text-xs font-mono uppercase tracking-[1.2px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {link.label}

@@ -5,10 +5,8 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
-import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern'
 import { RotatingText } from '@/components/ui/rotating-text'
 import { ArrowRight, Shield, Zap, Lock, HandCoins } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -43,15 +41,6 @@ export function Hero() {
         {/* Radial gradient spotlight */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),transparent)]" />
 
-        {/* Grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
-            backgroundSize: '64px 64px'
-          }}
-        />
-
         {/* Animated glow orbs */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -66,18 +55,6 @@ export function Hero() {
           className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/20 dark:bg-accent/10 rounded-full blur-[100px]"
         />
       </div>
-
-      {/* Animated Grid Pattern */}
-      <AnimatedGridPattern
-        numSquares={40}
-        maxOpacity={0.08}
-        duration={4}
-        repeatDelay={1}
-        className={cn(
-          "[mask-image:radial-gradient(700px_circle_at_center,white,transparent)]",
-          "fill-primary/20 stroke-primary/20 dark:fill-primary/10 dark:stroke-primary/10",
-        )}
-      />
 
       <div className="container mx-auto px-6 relative z-10 py-14 lg:py-32">
         <motion.div

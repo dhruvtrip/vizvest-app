@@ -1,4 +1,4 @@
-import { Navbar, Hero, ProductShot, FeaturesBento, HowItWorks, FAQs, CTA, Footer } from '@/components/landing'
+import { Navbar, Hero, ProductDemo, FeaturesBento, HowItWorks, FAQs, CTA, Footer } from '@/components/landing'
 
 const faqJsonLd = {
   '@context': 'https://schema.org',
@@ -57,7 +57,7 @@ export default function HomePage() {
       <main id="main-content" className="min-h-screen">
         <Navbar />
         <Hero />
-        <ProductShot />
+        <ProductDemo />
         <FeaturesBento />
         <HowItWorks />
         <FAQs />

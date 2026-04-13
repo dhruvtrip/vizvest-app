@@ -5,68 +5,52 @@ import { motion, useInView } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import {
-  TrendingUp,
-  DollarSign,
-  Globe,
-  BarChart3,
-  Zap,
-  Activity
-} from 'lucide-react'
+import { Zap } from 'lucide-react'
 
 const features = [
   {
-    icon: Activity,
-    title: 'Trading Activity',
+    eyebrow: 'TRADING ACTIVITY',
+    title: 'Track every trade, every day',
     description: 'Visualize your trading patterns with an interactive activity heatmap.',
     className: 'md:col-span-1',
-    gradient: 'from-violet-500/10 to-purple-500/10',
-    iconBg: 'bg-violet-500/10',
-    iconColor: 'text-violet-500',
     badge: 'New',
     showHeatmap: true,
   },
   {
-    icon: TrendingUp,
-    title: 'Performance',
+    eyebrow: 'PERFORMANCE',
+    title: 'Full P&L at a glance',
     description: 'Track your gains and losses over time with detailed analytics.',
     className: 'md:col-span-1',
-    gradient: 'from-emerald-500/10 to-green-500/10',
-    iconBg: 'bg-emerald-500/10',
-    iconColor: 'text-emerald-500',
     showPercentage: true,
     percentage: '+24.5%'
   },
   {
-    icon: DollarSign,
-    title: 'Dividend Tracking',
+    eyebrow: 'TAX & FEES',
+    title: 'See what trading actually costs',
+    description: 'Every commission, FX spread, and withholding tax tallied automatically — so you know your real return, not the headline one.',
+    className: 'h-full',
+    showCostBreakdown: true,
+    costs: [
+      { label: 'FEES PAID', value: '€47.82', tone: 'neutral' as const },
+      { label: 'FX COSTS', value: '€12.14', tone: 'neutral' as const },
+      { label: 'WITHHOLDING TAX', value: '€8.21', tone: 'neutral' as const },
+      { label: 'NET RETURN', value: '+€4,144.36', tone: 'positive' as const },
+    ]
+  },
+  {
+    eyebrow: 'DIVIDEND TRACKING',
+    title: 'Watch your income compound',
     description: 'Monitor dividend income, yields, and payment schedules.',
     className: 'md:col-span-1',
-    gradient: 'from-amber-500/10 to-orange-500/10',
-    iconBg: 'bg-amber-500/10',
-    iconColor: 'text-amber-500',
     badge: 'Popular',
     showYield: true,
     yieldValue: '3.8%'
   },
   {
-    icon: Globe,
-    title: 'Multi-Currency',
-    description: 'Automatic currency detection and normalization for global portfolios.',
-    className: 'md:col-span-2',
-    gradient: 'from-cyan-500/10 to-teal-500/10',
-    iconBg: 'bg-cyan-500/10',
-    iconColor: 'text-cyan-500',
-    currencies: ['USD', 'GBX', 'GBP', 'EUR', 'CHF', 'CAD']
-  },
-  {
-    icon: BarChart3,
-    title: 'Stock Analysis',
+    eyebrow: 'STOCK ANALYSIS',
+    title: 'All trades in one view',
     description: 'View individual stocks with full transaction history.',
     className: 'md:col-span-1',
-    gradient: 'from-pink-500/10 to-rose-500/10',
-    iconBg: 'bg-pink-500/10',
-    iconColor: 'text-pink-500',
     showTransactions: true,
     transactions: [
       { type: 'BUY', ticker: 'AAPL' },
@@ -75,6 +59,14 @@ const features = [
       { type: 'BUY', ticker: 'GOOGL' },
       { type: 'SELL', ticker: 'NVDA' },
     ]
+  },
+  {
+    eyebrow: 'MULTI-CURRENCY',
+    title: 'Trade across currencies natively',
+    description: 'USD, EUR, GBP, CHF and more — normalized automatically.',
+    className: 'h-full',
+    compact: true,
+    currencies: ['USD', 'GBX', 'GBP', 'EUR', 'CHF', 'CAD']
   },
 ]
 
@@ -268,40 +260,43 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
         'border-border/50',
         'bg-card/50 backdrop-blur-sm'
       )}>
-        <CardContent className="relative z-10 h-full p-6 flex flex-col">
+        <CardContent className={cn(
+          'relative z-10 h-full flex flex-col',
+          feature.compact ? 'p-4' : 'p-6'
+        )}>
           {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div
-              className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center',
-                feature.iconBg
-              )}
-            >
-              <feature.icon className={cn('w-5 h-5', feature.iconColor)} />
-            </div>
+          <div className={cn('flex items-start justify-between gap-2', feature.compact ? 'mb-2' : 'mb-3')}>
+            <p className="text-[11px] font-mono font-medium text-muted-foreground tracking-[1.2px] uppercase">
+              {feature.eyebrow}
+            </p>
             {feature.badge && (
-              <Badge variant="secondary" className="text-[10px] bg-muted/50 backdrop-blur-sm">
+              <Badge variant="secondary" className="text-[10px] bg-muted/50 backdrop-blur-sm shrink-0">
                 {feature.badge}
               </Badge>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1">
-            <h3 className="text-base font-normal mb-2">
+          <div>
+            <h3 className={cn(
+              'font-normal text-foreground tracking-tight',
+              feature.compact ? 'text-sm mb-0' : 'text-lg mb-2'
+            )}>
               {feature.title}
             </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {feature.description}
-            </p>
+            {!feature.compact && (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {feature.description}
+              </p>
+            )}
           </div>
 
           {/* Feature-specific content */}
           {feature.showPercentage && (
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-4 flex items-center justify-center">
               <span
                 className={cn(
-                  'text-2xl font-light font-heading tracking-tight transition-colors duration-300 tabular-nums',
+                  'text-5xl sm:text-6xl font-light font-heading tracking-tight transition-colors duration-300 tabular-nums',
                   perfValue >= 0 ? 'text-emerald-500' : 'text-rose-500'
                 )}
               >
@@ -312,32 +307,32 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
 
           {feature.showYield && (
             <div className="mt-4 flex items-center justify-center">
-              <div className="relative w-16 h-16" role="img" aria-label={`Yield: ${yieldValue.toFixed(1)}%`}>
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32" role="img" aria-label={`Yield: ${yieldValue.toFixed(1)}%`}>
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
                   <circle
                     cx="50" cy="50" r="40"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="10"
+                    strokeWidth="8"
                     className="text-muted/30"
                   />
                   <motion.circle
                     cx="50" cy="50" r="40"
                     fill="none"
                     stroke="url(#yieldGradient)"
-                    strokeWidth="10"
+                    strokeWidth="8"
                     strokeLinecap="round"
                     animate={{ pathLength: yieldValue / 10 }}
                     transition={{ duration: 0.08, ease: 'linear' }}
                   />
                   <defs>
                     <linearGradient id="yieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#f59e0b" />
-                      <stop offset="100%" stopColor="#f97316" />
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#059669" />
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-500 tabular-nums">
+                <span className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-semibold text-emerald-500 tabular-nums tracking-tight">
                   {yieldValue.toFixed(1)}%
                 </span>
               </div>
@@ -376,18 +371,48 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
           )}
 
           {feature.currencies && (
-            <div className="mt-4 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {feature.currencies.map((currency) => (
-                <div key={currency} className="px-2 py-1 rounded-md bg-muted/50 text-xs font-mono text-muted-foreground">
+                <div key={currency} className="px-2 py-0.5 rounded-md bg-muted/50 text-[11px] font-mono text-muted-foreground">
                   {currency}
                 </div>
               ))}
             </div>
           )}
 
+          {feature.showCostBreakdown && feature.costs && (
+            <div className="mt-5 flex flex-col gap-2">
+              {feature.costs.map((cost, i) => (
+                <motion.div
+                  key={cost.label}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ delay: i * 0.1, duration: 0.4 }}
+                  className={cn(
+                    'flex items-center justify-between rounded-lg border px-3 py-2.5',
+                    cost.tone === 'positive'
+                      ? 'border-emerald-500/30 bg-emerald-500/5'
+                      : 'border-border/50 bg-muted/30'
+                  )}
+                >
+                  <p className="text-[10px] font-mono text-muted-foreground tracking-[1.2px]">
+                    {cost.label}
+                  </p>
+                  <p className={cn(
+                    'text-sm font-mono font-semibold tabular-nums',
+                    cost.tone === 'positive' ? 'text-emerald-500' : 'text-foreground'
+                  )}>
+                    {cost.value}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
           {feature.showHeatmap && (
             <div
-              className="mt-4 pt-4 border-t border-border/50"
+              className="mt-auto pt-4 border-t border-border/50"
               onMouseEnter={() => { isHoveredRef.current = true }}
               onMouseLeave={() => { isHoveredRef.current = false }}
             >
@@ -467,9 +492,24 @@ export function FeaturesBento() {
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 auto-rows-[280px]">
-          {features.map((feature, index) => (
-            <FeatureCard key={feature.title} feature={feature} index={index} />
-          ))}
+          {features
+            .filter(f => !f.showCostBreakdown && !f.compact)
+            .map((feature, index) => (
+              <FeatureCard key={feature.title} feature={feature} index={index} />
+            ))}
+          {/* Col 3 stack: Tax & Fees (large) + Multi-Currency (compact) */}
+          <div className="md:col-start-3 md:row-start-1 md:row-span-2 flex flex-col gap-4 lg:gap-5 min-h-0">
+            {features.filter(f => f.showCostBreakdown).map((feature, index) => (
+              <div key={feature.title} className="flex-1 min-h-0">
+                <FeatureCard feature={feature} index={2} />
+              </div>
+            ))}
+            {features.filter(f => f.compact).map((feature, index) => (
+              <div key={feature.title} className="shrink-0 h-[120px]">
+                <FeatureCard feature={feature} index={5} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
