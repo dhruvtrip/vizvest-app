@@ -222,7 +222,6 @@ function MetricCard({
   subValue,
   className,
   valueClassName,
-  borderColor,
   rawValue,
   currency
 }: {
@@ -231,7 +230,6 @@ function MetricCard({
   subValue?: string
   className?: string
   valueClassName?: string
-  borderColor?: string
   rawValue?: number
   currency?: string
 }) {
@@ -242,7 +240,7 @@ function MetricCard({
       transition={{ duration: 0.3 }}
       className="h-full"
     >
-      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col', borderColor && `border-l-[3px] ${borderColor}`, className)}>
+      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col' ,`border-l-[3px]`, className)}>
         <CardContent className="p-5 flex flex-col h-full">
           <p className="metric-label text-muted-foreground flex-shrink-0">{label}</p>
           <p className={cn('metric-value text-foreground mt-1 flex-shrink-0', valueClassName)}>

@@ -233,7 +233,6 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       rawValue: metrics.totalFees,
       currency: metrics.baseCurrency,
       subValue: 'Conversion costs',
-      borderColor: 'border-l-violet-500',
     },
     {
       label: 'Total Deposits',
@@ -241,7 +240,6 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       rawValue: metrics.totalDeposit,
       currency: metrics.baseCurrency,
       subValue: `${metrics.depositCount} deposit${metrics.depositCount !== 1 ? 's' : ''} made`,
-      borderColor: 'border-l-slate-500',
     }
   ]
 
