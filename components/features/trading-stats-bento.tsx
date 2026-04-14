@@ -164,9 +164,138 @@ interface TradingStatsBentoProps {
   className?: string
 }
 
+function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-20% 0px' })
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (!inView) return
+    const controls = animate(0, value, {
+      duration: 0.8,
+      ease: 'easeOut',
+      onUpdate: (v) => setDisplay(v),
+    })
+    return () => controls.stop()
+  }, [inView, value])
+
+  return <span ref={ref}>{display.toFixed(decimals)}</span>
+}
+
+interface StatTileProps {
+  icon: React.ReactNode
+  label: string
+  value: React.ReactNode
+  subtext: string
+  index: number
+  highlight?: boolean
+  className?: string
+}
+
+function StatTile({ icon, label, value, subtext, index, highlight = false, className }: StatTileProps) {
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-10% 0px' }}
+      transition={{ delay: index * 0.06, duration: 0.4 }}
+    >
+      <Card className="relative overflow-hidden border-border/50 hover:border-border transition-colors h-full">
+        <CardContent className="p-4 sm:p-5 flex flex-col gap-3">
+          <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+            {icon}
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p
+              className={cn(
+                'text-2xl sm:text-3xl font-mono font-semibold tabular-nums tracking-tight',
+                highlight ? 'text-brand' : 'text-foreground'
+              )}
+            >
+              {value}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">{subtext}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
+
 export function TradingStatsBento({ transactions, className }: TradingStatsBentoProps) {
-  // Placeholder — filled in Task 2
   const stats = computeStats(transactions)
   if (!stats) return null
-  return <div className={className} data-testid="trading-stats-bento" />
+
+  const dateRange = stats.longestStreak
+    ? `${stats.longestStreak.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${stats.longestStreak.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    : '—'
+
+  const busiestDateLabel = stats.busiestDay
+    ? stats.busiestDay.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
+    : '—'
+
+  return (
+    <div className={cn('space-y-4', className)} data-testid="trading-stats-bento">
+      <div>
+        <p className="text-[11px] font-mono font-medium uppercase tracking-[1.5px] text-muted-foreground">
+          All-Time Highlights
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Based on your full trade history, ignoring year filters
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatTile
+          index={0}
+          icon={<Flame className="w-4 h-4" />}
+          label="Longest streak"
+          value={
+            <>
+              <AnimatedNumber value={stats.longestStreak?.days ?? 0} />{' '}
+              <span className="text-sm font-normal text-muted-foreground">days</span>
+            </>
+          }
+          subtext={dateRange}
+          highlight
+        />
+        <StatTile
+          index={1}
+          icon={<Zap className="w-4 h-4" />}
+          label="Busiest day"
+          value={
+            <>
+              <AnimatedNumber value={stats.busiestDay?.count ?? 0} />{' '}
+              <span className="text-sm font-normal text-muted-foreground">trades</span>
+            </>
+          }
+          subtext={busiestDateLabel}
+        />
+        <StatTile
+          index={2}
+          icon={<CalendarDays className="w-4 h-4" />}
+          label="Favorite day"
+          value={stats.favoriteDay?.day ?? '—'}
+          subtext={stats.favoriteDay ? `${stats.favoriteDay.percentage}% of trades` : '—'}
+        />
+        <StatTile
+          index={3}
+          icon={<TrendingUp className="w-4 h-4" />}
+          label="Most active month"
+          value={stats.mostActiveMonth?.label ?? '—'}
+          subtext={stats.mostActiveMonth ? `${stats.mostActiveMonth.count} trades` : '—'}
+        />
+        <StatTile
+          index={4}
+          className="sm:col-span-2 lg:col-span-1"
+          icon={<Activity className="w-4 h-4" />}
+          label="Trades per active day"
+          value={<AnimatedNumber value={stats.tradesPerActiveDay} decimals={1} />}
+          subtext="avg on active days"
+        />
+      </div>
+    </div>
+  )
 }
