@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { TradingHeatmap } from '@/components/ui/trading-heatmap'
+import { TradingStatsBento } from '@/components/features/trading-stats-bento'
 import { Pagination } from '@/components/ui/pagination'
 import { isTradeAction, isBuyAction } from '@/lib/transaction-utils'
 
@@ -480,6 +481,9 @@ export function TradingActivityDashboard ({
 
       {/* Trading Heatmap */}
       <TradingHeatmap transactions={filteredTrades} />
+
+      {/* All-time trading stats */}
+      <TradingStatsBento transactions={storeTransactions} />
 
       {/* Transactions Table */}
       <Card>
