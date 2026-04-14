@@ -491,7 +491,7 @@ export function FeaturesBento() {
         </motion.div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 auto-rows-[280px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 auto-rows-auto md:auto-rows-[280px]">
           {features
             .filter(f => !f.showCostBreakdown && !f.compact)
             .map((feature, index) => (
@@ -500,7 +500,7 @@ export function FeaturesBento() {
           {/* Col 3 stack: Tax & Fees (large) + Multi-Currency (compact) */}
           <div className="md:col-start-3 md:row-start-1 md:row-span-2 flex flex-col gap-4 lg:gap-5 min-h-0">
             {features.filter(f => f.showCostBreakdown).map((feature, index) => (
-              <div key={feature.title} className="flex-1 min-h-0">
+              <div key={feature.title} className="md:flex-1 md:min-h-0">
                 <FeatureCard feature={feature} index={2} />
               </div>
             ))}
