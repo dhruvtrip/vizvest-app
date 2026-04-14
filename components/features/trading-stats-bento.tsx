@@ -19,7 +19,9 @@ function toDateKey(time: string): string {
 }
 
 function filterTrades(transactions: NormalizedTransaction[]): NormalizedTransaction[] {
-  return transactions.filter((t) => isTradeAction(t.Action))
+  return transactions.filter(
+    (t) => isTradeAction(t.Action) && !Number.isNaN(new Date(t.Time).getTime())
+  )
 }
 
 export function longestStreak(

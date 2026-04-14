@@ -163,3 +163,17 @@ describe('computeStats', () => {
     expect(result?.tradesPerActiveDay).toBe(1)
   })
 })
+
+describe('invalid date handling', () => {
+  it('drops trades with malformed Time strings', () => {
+    const trades = [
+      trade('2025-03-01T09:00:00'),
+      trade('not-a-date'),
+      trade(''),
+    ]
+    const result = computeStats(trades)
+    expect(result?.busiestDay?.count).toBe(1)
+    expect(result?.mostActiveMonth?.count).toBe(1)
+    expect(result?.tradesPerActiveDay).toBe(1)
+  })
+})
