@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { getPartialDataExplanation } from '@/lib/partial-data-detector'
 import { EmailSignupDialog } from '@/components/features/email-signup-dialog'
+import { Footer } from '@/components/landing/footer'
 
 export default function DashboardPage () {
   const {
@@ -87,7 +88,8 @@ export default function DashboardPage () {
   }, [uploadAnother])
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] relative">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-1 relative">
 
       {hasData && <DashboardSidebar />}
 
@@ -308,6 +310,9 @@ export default function DashboardPage () {
           </ErrorBoundary>
         )}
       </main>
+
+    </div>
+      {showWelcome && <Footer />}
     </div>
   )
 }
