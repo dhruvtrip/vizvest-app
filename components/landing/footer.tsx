@@ -23,7 +23,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-border/50 bg-muted/30 dark:bg-background" role="contentinfo">
-      <div className="container mx-auto px-6 py-12 lg:py-16">
+      <div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 max-w-7xl py-12 lg:py-16">
         {/* Link columns */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10 lg:gap-16">
           {/* Brand */}
