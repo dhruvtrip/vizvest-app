@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
 import { useShallow } from 'zustand/react/shallow'
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { getPartialDataExplanation } from '@/lib/partial-data-detector'
+import { EmailSignupDialog } from '@/components/features/email-signup-dialog'
 
 export default function DashboardPage () {
   const {
@@ -59,6 +60,14 @@ export default function DashboardPage () {
   const dividendsRef = useRef<HTMLDivElement>(null)
 
   const hasData = normalizedTransactions.length > 0
+
+  const [showSignupDialog, setShowSignupDialog] = useState(false)
+
+  useEffect(() => {
+    if (!hasData) return
+    const timer = setTimeout(() => setShowSignupDialog(true), 10_000)
+    return () => clearTimeout(timer)
+  }, [hasData])
   const showOverview = hasData && !selectedTicker && !showDividendsDashboard && !showTradingActivityDashboard
   const showDetail = hasData && selectedTicker !== null && !showDividendsDashboard && !showTradingActivityDashboard
   const showWelcome = !hasData && !isNormalizing && showUpload
@@ -83,6 +92,7 @@ export default function DashboardPage () {
       {hasData && <DashboardSidebar />}
 
       <main className="flex-1 min-w-0 w-full lg:w-auto">
+        <EmailSignupDialog show={showSignupDialog} />
         {hasData && <DashboardPills />}
         <AnimatePresence>
           {uploadInfo && hasData && !isAlertDismissed && (
