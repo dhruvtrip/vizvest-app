@@ -108,8 +108,9 @@ interface ChartDataPoint {
 }
 
 /**
- * Converts a withholding tax amount to base currency
- * On T212 dividend rows, the exchange rate represents base currency per stock currency
+ * Converts a withholding tax amount to base currency.
+ * T212 exchange rate = stock currency per base currency (e.g. 1.175 means 1 EUR = 1.175 USD),
+ * so divide to convert from stock currency to base currency.
  */
 function convertTaxToBaseCurrency(
   taxAmount: number | undefined,
@@ -117,7 +118,7 @@ function convertTaxToBaseCurrency(
 ): number {
   const value = taxAmount || 0
   const rate = exchangeRate || 1
-  return value * rate
+  return value / rate
 }
 
 /**

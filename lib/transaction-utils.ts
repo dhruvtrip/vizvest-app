@@ -11,6 +11,7 @@
 export const TransactionAction = {
   MARKET_BUY: 'Market buy',
   LIMIT_BUY: 'Limit buy',
+  STOP_LIMIT_BUY: 'Stop limit buy',
   MARKET_SELL: 'Market sell',
   LIMIT_SELL: 'Limit sell',
   STOP_SELL: 'Stop sell',
@@ -22,12 +23,13 @@ export const TransactionAction = {
 export type TransactionActionType = typeof TransactionAction[keyof typeof TransactionAction]
 
 /**
- * Check if transaction is a buy action (Market or Limit)
+ * Check if transaction is a buy action (Market, Limit, or Stop limit)
  */
 export function isBuyAction(action: string): boolean {
   return (
     action === TransactionAction.MARKET_BUY ||
-    action === TransactionAction.LIMIT_BUY
+    action === TransactionAction.LIMIT_BUY ||
+    action === TransactionAction.STOP_LIMIT_BUY
   )
 }
 
