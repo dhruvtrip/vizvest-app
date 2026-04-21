@@ -2,11 +2,21 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { normalizeAllTransactions } from '@/lib/currency-normalizer'
 import { detectPartialData } from '@/lib/partial-data-detector'
+import { mergeAndDedupe, type MergeResult, type ParsedFile } from '@/lib/csv-merger'
 import type { Trading212Transaction, NormalizedTransaction, PartialDataWarning } from '@/types/trading212'
 
 export interface UploadInfo {
   fileName: string
   rowCount: number
+  fileCount?: number
+  duplicatesRemoved?: number
+  fileNames?: string[]
+}
+
+export interface MergeBanner {
+  fileCount: number
+  duplicatesRemoved: number
+  totalRows: number
 }
 
 interface DashboardState {
@@ -25,9 +35,16 @@ interface DashboardState {
   showTradingActivityDashboard: boolean
   partialDataWarning: PartialDataWarning | null
   isPartialDataDismissed: boolean
+  mergeBanner: MergeBanner | null
+  isMergeBannerDismissed: boolean
+  pendingMerge: MergeResult | null
 
   handleDataParsed: (data: Trading212Transaction[], uploadInfo: UploadInfo) => void
-  normalizeTransactions: () => void
+  handleMultipleFilesParsed: (files: ParsedFile[]) => void
+  commitMerge: (merge: MergeResult, forcedBaseCurrency?: string) => void
+  cancelPendingMerge: () => void
+  dismissMergeBanner: () => void
+  normalizeTransactions: (forcedBaseCurrency?: string) => void
   uploadAnother: () => void
   dismissAlert: () => void
   dismissPartialDataAlert: () => void
@@ -53,7 +70,10 @@ const initialState = {
   showDividendsDashboard: false,
   showTradingActivityDashboard: false,
   partialDataWarning: null as PartialDataWarning | null,
-  isPartialDataDismissed: false
+  isPartialDataDismissed: false,
+  mergeBanner: null as MergeBanner | null,
+  isMergeBannerDismissed: false,
+  pendingMerge: null as MergeResult | null
 }
 
 export const useDashboardStore = create<DashboardState>()(
@@ -68,12 +88,63 @@ export const useDashboardStore = create<DashboardState>()(
           showUpload: false,
           selectedTicker: null,
           error: null,
-          isAlertDismissed: false
+          isAlertDismissed: false,
+          mergeBanner: null,
+          isMergeBannerDismissed: false,
+          pendingMerge: null
         })
         get().normalizeTransactions()
       },
 
-      normalizeTransactions: () => {
+      handleMultipleFilesParsed: (files) => {
+        if (files.length === 0) return
+        const result = mergeAndDedupe(files)
+
+        if (result.uniqueBaseCurrencies.length > 1) {
+          set({ pendingMerge: result })
+          return
+        }
+
+        get().commitMerge(result)
+      },
+
+      commitMerge: (merge, forcedBaseCurrency) => {
+        const fileNames = merge.perFileBaseCurrencies.map(f => f.fileName)
+        const uploadInfo: UploadInfo = {
+          fileName: fileNames.length === 1 ? fileNames[0] : `${fileNames.length} files`,
+          rowCount: merge.merged.length,
+          fileCount: merge.fileCount,
+          duplicatesRemoved: merge.duplicatesRemoved,
+          fileNames
+        }
+
+        const showBanner = merge.fileCount > 1 || merge.duplicatesRemoved > 0
+
+        set({
+          rawTransactions: merge.merged,
+          uploadInfo,
+          showUpload: false,
+          selectedTicker: null,
+          error: null,
+          isAlertDismissed: false,
+          pendingMerge: null,
+          mergeBanner: showBanner
+            ? {
+                fileCount: merge.fileCount,
+                duplicatesRemoved: merge.duplicatesRemoved,
+                totalRows: merge.merged.length
+              }
+            : null,
+          isMergeBannerDismissed: false
+        })
+        get().normalizeTransactions(forcedBaseCurrency)
+      },
+
+      cancelPendingMerge: () => set({ pendingMerge: null }),
+
+      dismissMergeBanner: () => set({ isMergeBannerDismissed: true }),
+
+      normalizeTransactions: (forcedBaseCurrency) => {
         const raw = get().rawTransactions
         if (raw.length === 0) {
           set({
@@ -87,12 +158,12 @@ export const useDashboardStore = create<DashboardState>()(
         set({ isNormalizing: true, error: null })
 
         try {
-          const normalized = normalizeAllTransactions(raw)
+          const normalized = normalizeAllTransactions(raw, forcedBaseCurrency)
           const detected = normalized[0]?.detectedBaseCurrency || 'USD'
-          
+
           // Detect partial data after normalization
           const partialDataWarning = detectPartialData(normalized)
-          
+
           set({
             normalizedTransactions: normalized,
             baseCurrency: detected,
@@ -119,7 +190,10 @@ export const useDashboardStore = create<DashboardState>()(
           selectedTicker: null,
           isAlertDismissed: false,
           partialDataWarning: null,
-          isPartialDataDismissed: false
+          isPartialDataDismissed: false,
+          mergeBanner: null,
+          isMergeBannerDismissed: false,
+          pendingMerge: null
         })
       },
 

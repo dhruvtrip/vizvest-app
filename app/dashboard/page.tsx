@@ -33,9 +33,12 @@ export default function DashboardPage () {
     selectedTicker,
     partialDataWarning,
     isPartialDataDismissed,
+    mergeBanner,
+    isMergeBannerDismissed,
     uploadAnother,
     dismissAlert,
-    dismissPartialDataAlert
+    dismissPartialDataAlert,
+    dismissMergeBanner
   } = useDashboardStore(
     useShallow((state) => ({
       normalizedTransactions: state.normalizedTransactions,
@@ -49,9 +52,12 @@ export default function DashboardPage () {
       selectedTicker: state.selectedTicker,
       partialDataWarning: state.partialDataWarning,
       isPartialDataDismissed: state.isPartialDataDismissed,
+      mergeBanner: state.mergeBanner,
+      isMergeBannerDismissed: state.isMergeBannerDismissed,
       uploadAnother: state.uploadAnother,
       dismissAlert: state.dismissAlert,
-      dismissPartialDataAlert: state.dismissPartialDataAlert
+      dismissPartialDataAlert: state.dismissPartialDataAlert,
+      dismissMergeBanner: state.dismissMergeBanner
     }))
   )
 
@@ -139,6 +145,47 @@ export default function DashboardPage () {
                         Dismiss
                       </button>
                     </div>
+                  </div>
+                </Alert>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {mergeBanner && !isMergeBannerDismissed && hasData && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="border-b border-border border-l-4 border-l-sky-500 bg-sky-500/8 relative z-40"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <div className="container mx-auto px-4 sm:px-8 py-3">
+                <Alert className="border-0 bg-transparent">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
+                    <AlertDescription className="text-sm flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
+                        <span className="font-medium text-sky-700 dark:text-sky-400">
+                          Merged {mergeBanner.fileCount} {mergeBanner.fileCount === 1 ? 'file' : 'files'}
+                        </span>
+                        <span className="text-muted-foreground text-sm">
+                          {mergeBanner.duplicatesRemoved > 0
+                            ? `removed ${mergeBanner.duplicatesRemoved} duplicate ${mergeBanner.duplicatesRemoved === 1 ? 'transaction' : 'transactions'} · ${mergeBanner.totalRows} unique rows`
+                            : `${mergeBanner.totalRows} unique rows · no duplicates found`}
+                        </span>
+                      </div>
+                    </AlertDescription>
+                    <button
+                      onClick={dismissMergeBanner}
+                      className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
+                      aria-label="Dismiss merge summary"
+                    >
+                      Dismiss
+                    </button>
                   </div>
                 </Alert>
               </div>

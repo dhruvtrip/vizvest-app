@@ -119,15 +119,18 @@ export function normalizeToBaseCurrency(
  * // Each transaction now has totalInBaseCurrency and detectedBaseCurrency fields
  */
 export function normalizeAllTransactions(
-  transactions: Trading212Transaction[]
+  transactions: Trading212Transaction[],
+  forcedBaseCurrency?: string
 ): NormalizedTransaction[] {
   // Handle empty array edge case
   if (!transactions || transactions.length === 0) {
     return []
   }
 
-  // Detect the base currency once for all transactions
-  const baseCurrency = detectBaseCurrency(transactions)
+  // Use the caller-specified base currency when provided, otherwise auto-detect
+  const baseCurrency = forcedBaseCurrency
+    ? forcedBaseCurrency.trim().toUpperCase()
+    : detectBaseCurrency(transactions)
 
   // Normalize each transaction
   return transactions.map(transaction => ({

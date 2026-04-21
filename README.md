@@ -16,6 +16,7 @@ So I built Vizvest: the dashboard I wished Trading 212 had. Drop in your CSV exp
 - **Per-stock drill-down** — realized/unrealized P&L, cost basis, and transaction history per ticker
 - **Dividend dashboard** — payments over time, per-ticker yields, and reinvestment tracking
 - **Trading activity dashboard** — trade frequency, volume, behavioral patterns, plus fun insights like your most-traded ticker, busiest trading day, and a year-in-the-market heatmap
+- **Multi-file uploads** — drop multiple CSVs at once (Trading 212 caps exports at 12 months per file) and Vizvest merges them, de-duplicates overlapping transactions, and prompts you to pick a base currency if the exports mix currencies
 - **Multi-currency normalization** — auto-detects your base currency and converts every row using the FX rate already in the CSV
 - **Partial-export detection** — warns you when sells outrun buys (a common gotcha with short export windows)
 - **Privacy by design** — everything runs client-side; no uploads, no storage, no backend. Refresh the page and the data is gone.
@@ -49,16 +50,16 @@ npm run test     # Vitest
 
 ## Usage
 
-1. Export your Trading 212 transaction history as CSV
+1. Export your Trading 212 transaction history as CSV (export as many date ranges as you need — 12 months per file is the Trading 212 cap)
 2. Go to `/dashboard`
-3. Drop in the CSV
+3. Drop in one or more CSVs, review the staged list, add more or remove any, then hit **Continue**
 4. Explore your portfolio, dividends, and trading activity
 
 ## CSV Format
 
 Required columns: `Action`, `Ticker`, `No. of shares`, `Price / share`, `Total`, `Currency (Total)`, `Exchange rate`.
 
-Max file size: 5 MB. CSV only.
+Max file size: 5 MB per file. CSV only. Multiple files allowed — duplicate transactions across files are detected and removed automatically.
 
 ## Disclaimer
 
