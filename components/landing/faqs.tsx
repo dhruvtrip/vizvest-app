@@ -16,12 +16,17 @@ const FAQS = [
   {
     id: 'files',
     question: 'Can I upload multiple CSV files at once?',
-    answer: 'Currently, you can only upload one CSV file at a time. Multiple supports are coming soon.'
+    answer: 'Yes. Drop in as many Trading 212 exports as you want — Vizvest will merge them, strip duplicate transactions, and review the full set together. You can also add files one at a time and remove any before confirming.'
   },
   {
     id: 'csv-length',
     question: 'What is the maximum duration of data I can upload?',
-    answer: 'Currently, Trading212 only supports data for the last 12 months. However, you can consolidate multiple CSVs into one before uploading.'
+    answer: 'Trading 212 only lets you export up to 12 months per file, but there is no limit on Vizvest. Export several date ranges, upload them all, and we will stitch them into one continuous history for you.'
+  },
+  {
+    id: 'currency-mixed',
+    question: 'What if my exports use different base currencies?',
+    answer: 'If the files you upload cover more than one base currency, Vizvest will ask which one you want to convert everything to before showing the dashboard.'
   },
   {
     id: 'privacy',
