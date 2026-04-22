@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -14,7 +15,11 @@ import {
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockMetrics } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
-import { DividendSection } from './dividend-section'
+
+const DividendSection = dynamic(
+  () => import('./dividend-section').then(m => m.DividendSection),
+  { ssr: false }
+)
 import { isTickerPartialData, getTickerPartialDataExplanation } from '@/lib/partial-data-detector'
 import { isBuyAction, isSellAction, isTradeAction } from '@/lib/transaction-utils'
 

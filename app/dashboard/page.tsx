@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
 import { useShallow } from 'zustand/react/shallow'
@@ -8,8 +9,12 @@ import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
 import { PortfolioMetrics } from '@/components/features/portfolio-metrics'
 import { StockDetail } from '@/components/features/stock-detail'
-import { DividendsDashboard } from '@/components/features/dividends-dashboard'
 import { TradingActivityDashboard } from '@/components/features/trading-activity-dashboard'
+
+const DividendsDashboard = dynamic(
+  () => import('@/components/features/dividends-dashboard').then(m => m.DividendsDashboard),
+  { ssr: false }
+)
 import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { DashboardPills } from '@/components/features/dashboard-pills'
 import { ErrorBoundary } from '@/components/error-boundary'

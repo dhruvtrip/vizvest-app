@@ -28,7 +28,7 @@ import {
   AreaChart,
   CartesianGrid
 } from 'recharts'
-import * as _ from 'lodash'
+import groupBy from 'lodash/groupBy'
 import { isDividendAction } from '@/lib/transaction-utils'
 
 /**
@@ -189,7 +189,7 @@ function calculateGlobalDividendMetrics(
 
   // Group by stock
   const byStock = new Map<string, StockDividendData>()
-  const stockGroups = _.groupBy(dividends, 'ticker')
+  const stockGroups = groupBy(dividends, 'ticker')
   
   for (const [ticker, stockDividends] of Object.entries(stockGroups)) {
     if (!Array.isArray(stockDividends)) continue
