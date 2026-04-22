@@ -196,6 +196,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     setErrors([])
     setStagingRejects([])
     setUploadState('parsing')
+    const parsingStartedAt = Date.now()
     posthog.capture('csv_upload_started', { file_count: fileList.length })
 
     const checked = preflight(fileList)
@@ -240,6 +241,12 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
       total: valid.length,
       status: 'Merging transactions…'
     })
+
+    const MIN_LOADER_MS = 1200
+    const elapsed = Date.now() - parsingStartedAt
+    if (elapsed < MIN_LOADER_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_LOADER_MS - elapsed))
+    }
 
     // Legacy single-file callback path (tests, embedded usage) — stays backwards compatible.
     if (onDataParsed && parsed.length === 1) {
