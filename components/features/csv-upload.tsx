@@ -541,7 +541,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
           )}
 
           {uploadState === 'error' && (
-            <div className="p-6 bg-card/50 rounded-2xl border-l-4 border-destructive border border-destructive/30">
+            <div className="p-6 bg-card/50 rounded-2xl border-l-4 border border-destructive/30">
               <div className="flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-destructive mb-2">Upload Failed</p>
