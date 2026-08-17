@@ -8,23 +8,37 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getConsentStatus, setConsentStatus } from '@/lib/posthog-privacy'
+import { OPEN_CONSENT_EVENT } from '@/components/manage-analytics-button'
 
 export function PostHogConsentBanner() {
   const [showBanner, setShowBanner] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [currentConsent, setCurrentConsent] = useState<'accepted' | 'rejected' | null>(null)
 
   useEffect(() => {
     setMounted(true)
     // Check if user has already given consent
     const consent = getConsentStatus()
+    setCurrentConsent(consent)
     if (consent === null) {
-      // Show banner if no consent has been given
+      // First visit: show banner until a choice is made
       setShowBanner(true)
     }
+
+    // Allow the banner to be re-opened later (e.g. from the "Manage analytics"
+    // control in the footer / privacy page) so consent can be withdrawn or
+    // changed as easily as it was given — GDPR Art. 7(3).
+    const handleOpenRequest = () => {
+      setCurrentConsent(getConsentStatus())
+      setShowBanner(true)
+    }
+    window.addEventListener(OPEN_CONSENT_EVENT, handleOpenRequest)
+    return () => window.removeEventListener(OPEN_CONSENT_EVENT, handleOpenRequest)
   }, [])
 
   const handleAccept = () => {
     setConsentStatus(true)
+    setCurrentConsent('accepted')
     setShowBanner(false)
 
     // Opt in and upgrade to persistent storage now that user has consented (GDPR)
@@ -41,6 +55,7 @@ export function PostHogConsentBanner() {
 
   const handleReject = () => {
     setConsentStatus(false)
+    setCurrentConsent('rejected')
     setShowBanner(false)
 
     // Opt out of PostHog (safe to call even if not fully loaded yet)
@@ -53,6 +68,12 @@ export function PostHogConsentBanner() {
       }
     }
   }
+
+  // Closing without choosing is only offered once a decision already exists
+  // (i.e. the banner was re-opened via "Manage analytics"). On first visit the
+  // user must make an explicit choice.
+  const handleDismiss = () => setShowBanner(false)
+  const hasExistingChoice = currentConsent !== null
 
   if (!mounted || !showBanner) {
     return null
@@ -80,11 +101,20 @@ export function PostHogConsentBanner() {
 
                 <div className="flex-1 space-y-2">
                   <AlertDescription className="text-sm">
-                    <p className="font-medium mb-1">Privacy & Analytics</p>
+                    <p className="font-medium mb-1">Privacy &amp; Analytics</p>
                     <p className="text-muted-foreground">
                       We use analytics to improve your experience. We <strong>never</strong> collect
                       sensitive portfolio data like stock tickers, amounts, or financial information.
                     </p>
+                    {hasExistingChoice && (
+                      <p className="text-muted-foreground mt-1">
+                        Current setting:{' '}
+                        <strong>
+                          {currentConsent === 'accepted' ? 'Analytics on' : 'Analytics off'}
+                        </strong>
+                        . You can change it below.
+                      </p>
+                    )}
                   </AlertDescription>
                 </div>
 
@@ -95,15 +125,26 @@ export function PostHogConsentBanner() {
                     onClick={handleReject}
                     className="flex-1 sm:flex-none hover:bg-transparent hover:text-foreground hover:border-input"
                   >
-                    Decline
+                    {currentConsent === 'rejected' ? 'Keep off' : 'Decline'}
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleAccept}
                     className="flex-1 sm:flex-none"
                   >
-                    Accept
+                    {currentConsent === 'accepted' ? 'Keep on' : 'Accept'}
                   </Button>
+                  {hasExistingChoice && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleDismiss}
+                      aria-label="Close without changing analytics settings"
+                      className="flex-none"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </Alert>

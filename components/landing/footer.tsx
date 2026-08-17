@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { FooterSignup } from './footer-signup'
+import { ManageAnalyticsButton } from '@/components/manage-analytics-button'
 
 const footerLinks = {
   product: [
@@ -106,6 +107,11 @@ export function Footer() {
                     </Link>
                   </li>
                 ))}
+                <li>
+                  <ManageAnalyticsButton
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm text-left"
+                  />
+                </li>
               </ul>
             </nav>
           </div>

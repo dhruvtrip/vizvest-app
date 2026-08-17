@@ -94,7 +94,7 @@ export default function DashboardPage () {
   }, [uploadInfo, normalizedTransactions.length, isAlertDismissed, dismissAlert])
 
   const handleUploadAnother = useCallback(() => {
-    posthog.capture('upload_another_file_clicked')
+    posthog.capture('upload_another_file_clicked', { location: 'dashboard_banner' })
     uploadAnother()
   }, [uploadAnother])
 
@@ -278,7 +278,7 @@ export default function DashboardPage () {
         </AnimatePresence>
 
         {showWelcome && (
-          <ErrorBoundary>
+          <ErrorBoundary area="csv_upload">
             <CSVUpload isHidden={false} />
           </ErrorBoundary>
         )}
@@ -293,7 +293,7 @@ export default function DashboardPage () {
               className="min-w-0"
               ref={dividendsRef}
             >
-              <ErrorBoundary>
+              <ErrorBoundary area="dividends_dashboard">
                 <DividendsDashboard />
               </ErrorBoundary>
             </motion.div>
@@ -310,7 +310,7 @@ export default function DashboardPage () {
               className="min-w-0"
               ref={activityRef}
             >
-              <ErrorBoundary>
+              <ErrorBoundary area="trading_activity_dashboard">
                 <TradingActivityDashboard />
               </ErrorBoundary>
             </motion.div>
@@ -326,7 +326,7 @@ export default function DashboardPage () {
               exit={{ opacity: 0 }}
               className="container mx-auto px-8 py-6 min-w-0"
             >
-              <ErrorBoundary>
+              <ErrorBoundary area="stock_detail">
                 <StockDetail />
               </ErrorBoundary>
             </motion.div>
@@ -343,12 +343,12 @@ export default function DashboardPage () {
               className="container mx-auto px-8 py-6 space-y-10 min-w-0"
             >
               <div ref={analyticsRef}>
-                <ErrorBoundary>
+                <ErrorBoundary area="portfolio_metrics">
                   <PortfolioMetrics />
                 </ErrorBoundary>
               </div>
               <div ref={portfolioRef}>
-                <ErrorBoundary>
+                <ErrorBoundary area="portfolio_overview">
                   <PortfolioOverview />
                 </ErrorBoundary>
               </div>

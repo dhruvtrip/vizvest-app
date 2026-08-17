@@ -204,7 +204,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     if (preflightErrors.length > 0) {
       setUploadState('error')
       setErrors(preflightErrors)
-      posthog.capture('csv_upload_failed-preflight', { error_count: preflightErrors.length })
+      posthog.capture('csv_upload_failed', { reason: 'preflight', error_count: preflightErrors.length })
       return
     }
 
@@ -232,7 +232,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     if (allErrors.length > 0) {
       setUploadState('error')
       setErrors(allErrors.slice(0, 10))
-      posthog.capture('csv_upload_failed-validation')
+      posthog.capture('csv_upload_failed', { reason: 'validation', error_count: allErrors.length })
       return
     }
 

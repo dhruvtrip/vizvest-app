@@ -10,6 +10,12 @@ import { sanitizeError } from '@/lib/posthog-privacy'
 interface Props {
   children: ReactNode
   fallback?: ReactNode
+  /**
+   * Non-sensitive label for where this boundary sits (e.g. "dividends_dashboard").
+   * Sent with the error event so failures can be grouped by area without
+   * exposing any message or stack trace.
+   */
+  area?: string
 }
 
 interface State {
@@ -33,10 +39,14 @@ export class ErrorBoundary extends Component<Props, State> {
     // Sanitize error data to prevent sensitive information from being captured
     const sanitized = sanitizeError(error)
 
-    // Track error with PostHog (only error type/name, not full message)
+    // Track error with PostHog (only error type/name, not full message).
+    // `area` + `route` are non-PII grouping context so we can still tell WHERE
+    // errors happen without capturing WHAT the user's data was.
     posthog.capture('error_boundary_triggered', {
       error_type: sanitized.error_type,
       error_name: sanitized.error_name,
+      area: this.props.area ?? 'unknown',
+      route: typeof window !== 'undefined' ? window.location.pathname : undefined,
       // Explicitly do NOT include error.message to avoid capturing sensitive data
     })
   }

@@ -1,5 +1,5 @@
 import posthog from 'posthog-js'
-import { filterSensitiveProperties, validateEvent, getConsentStatus } from '@/lib/posthog-privacy'
+import { filterSensitiveProperties, validateEvent, scrubExceptionProperties, getConsentStatus } from '@/lib/posthog-privacy'
 
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   const isLocalhost = window.location.hostname === 'localhost' ||
@@ -35,19 +35,28 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       debug: false,
 
       before_send: (event) => {
-        if (!validateEvent(event)) {
-          return null
+        if (!event) {
+          return event
         }
 
         const hasConsented = getConsentStatus() === 'accepted'
 
-        const sanitized = filterSensitiveProperties(event, hasConsented)
+        // 1. Strip exception messages/stack traces (keep only the error type).
+        // 2. Strip sensitive property keys + mask financial-looking values.
+        // 3. Remove IP.
+        // 4. Final guard: drop only if a sensitive key somehow survived.
+        let processed = scrubExceptionProperties(event)
+        processed = filterSensitiveProperties(processed, hasConsented)
 
-        if (sanitized.properties) {
-          delete sanitized.properties.$ip
+        if (processed.properties) {
+          delete processed.properties.$ip
         }
 
-        return sanitized
+        if (!validateEvent(processed)) {
+          return null
+        }
+
+        return processed
       },
 
       // After PostHog is loaded, apply saved consent decision

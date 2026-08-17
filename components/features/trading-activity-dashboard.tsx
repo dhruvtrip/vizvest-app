@@ -311,7 +311,10 @@ export function TradingActivityDashboard ({
   // Toggle year selection
   const toggleYear = (year: number) => {
     const wasSelected = selectedYears.has(year)
-    posthog.capture('trading_year_filter_changed')
+    posthog.capture('trading_year_filter_changed', {
+      action: wasSelected ? 'deselected' : 'selected',
+      year,
+    })
 
     setSelectedYears((prev) => {
       const next = new Set(prev)

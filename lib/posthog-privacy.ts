@@ -23,6 +23,25 @@ const SENSITIVE_KEYWORDS = [
   'quantity'
 ]
 
+// Patterns that indicate a value is monetary/financial and must never be sent.
+// Hoisted here so both filterSensitiveProperties (masking) and validateEvent
+// (final guard) use the exact same definition.
+const CURRENCY_SYMBOL_PATTERN = /[\$£€¥₹₽₩₪₨₦₫₱₴₵₺₼₾₿]|C\$/
+const CURRENCY_CODE_PATTERN =
+  /\b(USD|EUR|GBP|CHF|CAD|JPY|CNY|INR|RUB|KRW|ILS|AUD|NZD|SGD|HKD|SEK|NOK|DKK|PLN|CZK|HUF|RON|BGN|HRK|TRY|MXN|BRL|ZAR|AED|SAR|QAR|KWD|BHD|OMR|JOD|EGP|MAD|TND|DZD|LYD|GBX)\b/i
+const AMOUNT_PATTERN = /^\d+[.,]\d{2}$/
+
+const REDACTED = '[Content filtered for privacy]'
+
+// True when a string looks like a monetary amount or currency reference.
+function looksFinancial(value: string): boolean {
+  return (
+    CURRENCY_SYMBOL_PATTERN.test(value) ||
+    CURRENCY_CODE_PATTERN.test(value) ||
+    AMOUNT_PATTERN.test(value.trim())
+  )
+}
+
 // Sanitizes a string by removing or masking sensitive information
 
 export function sanitizeString(value: string): string {
@@ -56,6 +75,46 @@ export function sanitizeError(error: Error): {
   }
 }
 
+
+/**
+ * Strips exception messages and stack traces from PostHog's autocaptured
+ * `$exception` events, keeping ONLY the exception type.
+ *
+ * PostHog flattens exception data onto `$exception_message` / `$exception_values`
+ * and nests it in `$exception_list[]` (each entry has `value` and `stacktrace`).
+ * These `$`-prefixed keys are deliberately exempt from the generic property
+ * sanitizer below, so — for a financial app that must never leak portfolio data
+ * through a stack trace — they are scrubbed here explicitly. This matches the
+ * product's "error type/name only" policy: enough to group and count errors,
+ * never enough to expose a user's data.
+ */
+export function scrubExceptionProperties(event: any): any {
+  if (!event || event.event !== '$exception' || !event.properties) {
+    return event
+  }
+
+  const props = event.properties
+
+  // Flattened, human-readable fields that can contain arbitrary error text.
+  delete props.$exception_message
+  delete props.$exception_values
+
+  // Per-exception entries: keep only the type (+ safe mechanism metadata),
+  // drop the message value, the stack trace, and any module/source path.
+  if (Array.isArray(props.$exception_list)) {
+    props.$exception_list = props.$exception_list.map((ex: any) => {
+      if (!ex || typeof ex !== 'object') {
+        return ex
+      }
+      const scrubbed: any = {}
+      if (ex.type !== undefined) scrubbed.type = ex.type
+      if (ex.mechanism !== undefined) scrubbed.mechanism = ex.mechanism
+      return scrubbed
+    })
+  }
+
+  return event
+}
 
 export function filterSensitiveProperties(event: any, hasConsented: boolean = false): any {
   if (!event || typeof event !== 'object') {
@@ -102,7 +161,15 @@ export function filterSensitiveProperties(event: any, hasConsented: boolean = fa
       }
 
       if (typeof value === 'string') {
-        filtered.properties[key] = sanitizeString(value)
+        // Mask keyword-sensitive strings, and — for non-PostHog-internal keys —
+        // mask anything that looks like a monetary amount. Masking the single
+        // property (rather than dropping the whole event, as validateEvent used
+        // to) keeps the event's other analytics value intact.
+        let next = sanitizeString(value)
+        if (!key.startsWith('$') && next !== REDACTED && looksFinancial(next)) {
+          next = REDACTED
+        }
+        filtered.properties[key] = next
       }
 
       if (typeof value === 'object' && value !== null) {
@@ -115,6 +182,17 @@ export function filterSensitiveProperties(event: any, hasConsented: boolean = fa
 }
 
 
+/**
+ * Final safety net, run AFTER filterSensitiveProperties/scrubExceptionProperties.
+ *
+ * Previously this also dropped the ENTIRE event whenever any property value
+ * looked like a currency amount — which silently discarded legitimate events
+ * (e.g. a harmless "12.00"). That value-level filtering now lives in
+ * filterSensitiveProperties, which masks the offending property instead. Here we
+ * only hard-block if a clearly sensitive property KEY somehow survived filtering,
+ * which should never happen in practice — it's defense in depth, not the primary
+ * filter.
+ */
 export function validateEvent(event: any): boolean {
   if (!event) {
     return false
@@ -127,30 +205,7 @@ export function validateEvent(event: any): boolean {
     )
 
     if (hasSensitiveKey) {
-      console.warn('[PostHog Privacy] Event properties contain sensitive keywords:', propertyKeys)
-      return false
-    }
-
-    const hasSensitiveValue = Object.entries(event.properties).some(([key, value]) => {
-      // Allow PostHog's own numeric properties (screen size, viewport, timestamps, etc.)
-      if (key.startsWith('$')) {
-        return false
-      }
-      if (typeof value === 'string') {
-        const currencySymbolPattern = /[\$£€¥₹₽₩₪₨₦₫₱₴₵₺₼₾₿]|C\$/
-        const currencyCodePattern = /\b(USD|EUR|GBP|CHF|CAD|JPY|CNY|INR|RUB|KRW|ILS|AUD|NZD|SGD|HKD|SEK|NOK|DKK|PLN|CZK|HUF|RON|BGN|HRK|TRY|MXN|BRL|ZAR|AED|SAR|QAR|KWD|BHD|OMR|JOD|EGP|MAD|TND|DZD|LYD|GBX)\b/i
-        const amountPattern = /^\d+[.,]\d{2}$/
-
-        if (currencySymbolPattern.test(value) ||
-          currencyCodePattern.test(value) ||
-          amountPattern.test(value.trim())) {
-          return true
-        }
-      }
-      return false
-    })
-
-    if (hasSensitiveValue) {
+      console.warn('[PostHog Privacy] Event dropped — sensitive property key survived filtering:', propertyKeys)
       return false
     }
   }

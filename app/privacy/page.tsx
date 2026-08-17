@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Navbar, Footer } from '@/components/landing'
+import { ManageAnalyticsButton } from '@/components/manage-analytics-button'
 import { Shield } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -38,7 +39,7 @@ export default function PrivacyPage() {
                 </div>
               </div>
               <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-4">Privacy Policy</h1>
-              <p className="text-sm text-muted-foreground">Last updated: April 2026</p>
+              <p className="text-sm text-muted-foreground">Last updated: August 2026</p>
             </div>
 
             {/* Short version callout */}
@@ -55,7 +56,7 @@ export default function PrivacyPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-0.5">✓</span>
-                  <span>We do collect basic, anonymous analytics — but only with your permission, and your financial data is never part of it.</span>
+                  <span>We collect basic, anonymous analytics to improve Vizvest — never your financial data. It&apos;s cookie-free until you accept, and you can switch it off at any time.</span>
                 </li>
               </ul>
             </div>
@@ -79,26 +80,42 @@ export default function PrivacyPage() {
 
               {/* Section 2 */}
               <div>
-                <h2 className="text-xl font-normal mb-3">Analytics (opt-in)</h2>
+                <h2 className="text-xl font-normal mb-3">Analytics &amp; cookies</h2>
                 <p className="text-muted-foreground leading-relaxed">
-                  We use <strong>PostHog</strong> to understand how people use Vizvest — which features are used, where people drop off, and whether new features are working. This helps us improve the product.
+                  We use <strong>PostHog</strong> to understand how people use Vizvest — which features are used, where people drop off, and whether new features are working. This helps us improve the product. PostHog is hosted in the EU, and we route its requests through our own domain.
                 </p>
                 <p className="text-muted-foreground leading-relaxed mt-3">
-                  PostHog analytics is <strong>opt-in</strong>. When you first visit Vizvest, you&apos;ll see a consent banner. Analytics only runs if you accept. If you decline or ignore the banner, no PostHog data is collected.
+                  When you first visit, you&apos;ll see a consent banner with three possible states:
                 </p>
+                <ul className="mt-2 space-y-1 text-muted-foreground text-sm list-disc list-inside">
+                  <li>
+                    <strong>Before you choose</strong> — we collect a small amount of <strong>anonymous, cookie-free</strong> analytics held only in memory. No cookies or other identifiers are stored on your device, your IP address and location are stripped before the data is sent, and there is no way to recognise you across visits.
+                  </li>
+                  <li>
+                    <strong>If you accept</strong> — analytics continues and we store a first-party identifier (in local storage and a cookie) so we can recognise a returning session and build more accurate usage insights.
+                  </li>
+                  <li>
+                    <strong>If you decline</strong> — analytics is switched off entirely and nothing further is collected.
+                  </li>
+                </ul>
                 <p className="text-muted-foreground leading-relaxed mt-3">
-                  What PostHog tracks (if you consent):
+                  What PostHog tracks (unless you decline):
                 </p>
                 <ul className="mt-2 space-y-1 text-muted-foreground text-sm list-disc list-inside">
                   <li>Page views and navigation paths</li>
                   <li>Feature interactions (e.g. which dashboard tab you viewed)</li>
-                  <li>General session data (browser type, screen size, country)</li>
+                  <li>General session data (browser type, screen size — and, once you accept, coarse country-level location)</li>
+                  <li>Error types when something breaks (the kind of error only — never the message or your data)</li>
                 </ul>
                 <p className="text-muted-foreground leading-relaxed mt-3">
-                  PostHog does <strong>not</strong> receive any of your financial data. Events are generic (e.g. &quot;viewed dividends tab&quot;) — they contain no values, tickers, or portfolio details.
+                  PostHog does <strong>not</strong> receive any of your financial data. Events are generic (e.g. &quot;viewed dividends tab&quot;) — they contain no values, tickers, or portfolio details, and any value that looks financial is stripped before it leaves your browser.
                 </p>
                 <p className="text-muted-foreground leading-relaxed mt-3">
-                  You can opt out at any time by clearing your browser cookies or adjusting your browser&apos;s privacy settings.
+                  You can change or withdraw your choice at any time using{' '}
+                  <ManageAnalyticsButton className="underline underline-offset-4 hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm">
+                    Manage analytics
+                  </ManageAnalyticsButton>{' '}
+                  (also linked in the footer of every page). Declining immediately opts you out and removes any stored analytics identifier.
                 </p>
               </div>
 

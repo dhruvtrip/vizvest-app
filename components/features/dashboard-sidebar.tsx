@@ -82,7 +82,7 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
   }
 
   const handleUploadClick = () => {
-    posthog.capture('upload_another_file_clicked')
+    posthog.capture('upload_another_file_clicked', { location: 'sidebar' })
     uploadAnother()
   }
 

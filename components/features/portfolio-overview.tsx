@@ -387,7 +387,7 @@ export function PortfolioOverview ({
                     position={position}
                     isPartialData={isPartialData}
                     onClick={() => {
-                      posthog.capture('stock_selected_holding')
+                      posthog.capture('stock_selected', { source: 'holding' })
                       onSelectTicker(position.ticker)
                     }}
                   />
@@ -431,7 +431,7 @@ export function PortfolioOverview ({
                 <SoldPositionTile
                   position={position}
                   onClick={() => {
-                    posthog.capture('stock_selected_sold')
+                    posthog.capture('stock_selected', { source: 'sold' })
                     onSelectTicker(position.ticker)
                   }}
                 />
