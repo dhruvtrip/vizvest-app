@@ -46,6 +46,7 @@ export function PostHogConsentBanner() {
       try {
         posthog.set_config({ persistence: 'localStorage+cookie' })
         posthog.opt_in_capturing()
+        posthog.register({ consent_state: 'accepted' })
       } catch (error) {
         // PostHog might not be fully initialized yet, but consent is saved
         console.debug('PostHog opt-in called before initialization')

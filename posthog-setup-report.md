@@ -42,6 +42,8 @@ _Vizvest (Next.js 16 App Router, fully client-side). PostHog was already install
 - **Decline:** `opt_out_capturing()` — nothing collected.
 - **Withdraw/change:** "Manage analytics" (footer + privacy page) re-opens the banner anytime.
 - Errors are captured as **type only** — no message, no stack trace.
+- **Acquisition attribution (pre-consent):** the full `$referrer` URL is stripped before consent (can carry PII in query strings), but `$referring_domain` + `utm_*` are **kept** — they're non-personal and cookieless, and are what PostHog needs to attribute the channel. Without this, anonymous visitors show up as channel "Unknown".
+- **`consent_state` super-property** is registered on every event: `anonymous` (cookieless, pre-decision) or `accepted`. Use it to segment the "Unknown" channel and measure consent-acceptance rate.
 
 ## Env vars (set in hosting — Vercel)
 

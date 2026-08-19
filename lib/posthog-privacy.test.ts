@@ -74,19 +74,46 @@ describe('filterSensitiveProperties', () => {
     expect(filtered.properties.view_mode).toBe('month')
   })
 
-  it('drops all location + referrer data when the user has not consented', () => {
+  it('drops country geo + full referrer URL when unconsented, but KEEPS the referring domain + UTM for channel attribution', () => {
     const event = {
       event: 'x',
       properties: {
         $geoip_country_name: 'Germany',
-        $referrer: 'https://example.com',
+        $referrer: 'https://google.com/search?q=some+private+query',
+        $referring_domain: 'google.com',
+        utm_source: 'reddit',
         $screen_height: 1080,
       },
     }
     const filtered = filterSensitiveProperties(event, false)
+    // Country geo + the full referrer URL (can carry PII in the query) are dropped
     expect(filtered.properties.$geoip_country_name).toBeUndefined()
     expect(filtered.properties.$referrer).toBeUndefined()
+    // Non-personal acquisition signals are kept so the channel isn't "Unknown"
+    expect(filtered.properties.$referring_domain).toBe('google.com')
+    expect(filtered.properties.utm_source).toBe('reddit')
     expect(filtered.properties.$screen_height).toBe(1080)
+  })
+
+  it('keeps referrer + country geo when the user HAS consented', () => {
+    const event = {
+      event: 'x',
+      properties: {
+        $geoip_country_name: 'Germany',
+        $referrer: 'https://google.com/search',
+        $referring_domain: 'google.com',
+      },
+    }
+    const filtered = filterSensitiveProperties(event, true)
+    expect(filtered.properties.$geoip_country_name).toBe('Germany')
+    expect(filtered.properties.$referrer).toBe('https://google.com/search')
+    expect(filtered.properties.$referring_domain).toBe('google.com')
+  })
+
+  it('does not strip the consent_state property', () => {
+    const event = { event: 'x', properties: { consent_state: 'anonymous' } }
+    expect(filterSensitiveProperties(event, false).properties.consent_state).toBe('anonymous')
+    expect(validateEvent({ event: 'x', properties: { consent_state: 'anonymous' } })).toBe(true)
   })
 })
 

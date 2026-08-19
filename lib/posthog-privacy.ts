@@ -140,14 +140,21 @@ export function filterSensitiveProperties(event: any, hasConsented: boolean = fa
     delete filtered.properties.$geoip_subdivision_2_name
     delete filtered.properties.$geoip_postal_code
 
-    // If user has NOT consented, remove ALL location data (including country-level)
+    // Before consent we still drop precise location, country-level geo, and the
+    // full referrer URL (which can carry PII in its query string). But we KEEP
+    // the referring DOMAIN and UTM campaign tags: a domain like "google.com" or
+    // "reddit.com" is not personal data, sets no cookie/identifier, and is what
+    // PostHog needs to attribute the acquisition channel — so channel reporting
+    // works even for anonymous, pre-consent visitors, while staying cookieless.
     if (!hasConsented) {
       delete filtered.properties.$geoip_country_code
       delete filtered.properties.$geoip_country_name
       delete filtered.properties.$geoip_continent_code
       delete filtered.properties.$geoip_continent_name
       delete filtered.properties.$referrer
-      delete filtered.properties.$referring_domain
+      delete filtered.properties.$initial_referrer
+      // Intentionally kept pre-consent: $referring_domain, $initial_referring_domain,
+      // and utm_* params (non-personal acquisition/campaign signals).
     }
 
     // Remove any properties that might contain sensitive portfolio data

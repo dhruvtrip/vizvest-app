@@ -61,9 +61,13 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 
       // After PostHog is loaded, apply saved consent decision
       loaded: (posthog) => {
-        // Tag every event with environment so traffic can be distinguished
+        // Tag every event with environment + consent state so traffic can be
+        // segmented. `consent_state: 'anonymous'` marks the cookieless,
+        // pre-decision events (which otherwise show up as an unattributable
+        // "Unknown" channel); it flips to 'accepted' when the user opts in.
         posthog.register({
           environment: isLocalhost ? 'localhost' : 'production',
+          consent_state: savedConsent === 'accepted' ? 'accepted' : 'anonymous',
         })
 
         if (savedConsent === 'rejected') {

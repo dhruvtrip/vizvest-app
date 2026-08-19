@@ -89,7 +89,7 @@ export default function PrivacyPage() {
                 </p>
                 <ul className="mt-2 space-y-1 text-muted-foreground text-sm list-disc list-inside">
                   <li>
-                    <strong>Before you choose</strong> — we collect a small amount of <strong>anonymous, cookie-free</strong> analytics held only in memory. No cookies or other identifiers are stored on your device, your IP address and location are stripped before the data is sent, and there is no way to recognise you across visits.
+                    <strong>Before you choose</strong> — we collect a small amount of <strong>anonymous, cookie-free</strong> analytics held only in memory. No cookies or other identifiers are stored on your device, your IP address and precise location are stripped before the data is sent, and there is no way to recognise you across visits. We do record which site referred you — the <strong>domain only</strong> (e.g. a search engine or social site), never the full link — and any campaign tags in the URL, so we can understand where visitors come from.
                   </li>
                   <li>
                     <strong>If you accept</strong> — analytics continues and we store a first-party identifier (in local storage and a cookie) so we can recognise a returning session and build more accurate usage insights.
@@ -104,6 +104,7 @@ export default function PrivacyPage() {
                 <ul className="mt-2 space-y-1 text-muted-foreground text-sm list-disc list-inside">
                   <li>Page views and navigation paths</li>
                   <li>Feature interactions (e.g. which dashboard tab you viewed)</li>
+                  <li>Referring site (domain only) and any campaign tags, to understand where visitors come from</li>
                   <li>General session data (browser type, screen size — and, once you accept, coarse country-level location)</li>
                   <li>Error types when something breaks (the kind of error only — never the message or your data)</li>
                 </ul>
