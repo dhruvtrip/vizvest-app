@@ -2,7 +2,14 @@
 
 Portfolio analytics for Trading 212. Upload a CSV export to see your holdings, performance, dividends, and trading activity — all processed locally in your browser.
 
-<img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/573f1e46-6719-4330-ba81-8c41fc8b8006" />
+
+
+
+https://github.com/user-attachments/assets/956788bf-9cb5-4781-98d6-ffcf84eeda38
+
+
+
+
 
 ## Why I built this
 
