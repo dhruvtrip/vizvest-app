@@ -63,7 +63,15 @@ No API routes exist. If adding one, create `app/api/<route>/route.ts`.
 
 shadcn/ui components live in `components/ui/` — **never modify these files directly**. Install new ones via the shadcn MCP server tool (`add-component`), not the CLI. Feature components go in `components/features/`, landing page components in `components/landing/`.
 
-Fonts: **Funnel Sans** (`--font-heading`) for headings, **Geist** (`--font-sans`) for body, **Geist Mono** (`--font-mono`).
+### Design System
+
+The product is **dark-only** (no theme toggle, no `dark:` variants) and uses **one typeface: Inter** (`--font-sans`). Never add `font-mono`, `font-heading` or another family; numbers use the `tabular` class.
+
+- **Tokens** live in `app/globals.css` and are mapped in `tailwind.config.ts`: surfaces `bg-surface-1…5`, one hairline `border-border`, text steps `text-foreground` / `text-fg-secondary` / `text-fg-gray` / `text-fg-tertiary`, status `positive` / `negative` / `warning` / `info`, brand green `brand`, charts `chart-ink` (single series) and `chart-1…8` (multi-series, fixed order). No hex values or Tailwind palette classes in components.
+- **Type scale**: `text-h1…h5`, `text-p-lg`, `text-p`, `text-p-sm`, `text-small`, `text-label`. Weights 400 and 500 only. New custom classes must be registered in `lib/utils.ts` so `cn()` merges them correctly.
+- **Layout**: `Container` + `GridGuides` + `SectionHeader` (`components/layout/`), 1056px hairline grid, cells share borders (`.cell-grid`) instead of floating cards, no drop shadows.
+- **Motion**: blur is the house transition. Use `BlurReveal` / `StaggerIn` / `WordRotator` (`components/motion/`) and the constants in `lib/motion.ts`. Transitions for interactive state, named properties (never `transition-all`), press scale 0.97, reduced motion respected globally.
+- **Dashboard**: figures use `MetricCell` / `MetricGrid`, charts use `CHART` + `ChartTooltip` (`components/features/chart-tooltip.tsx`).
 
 ### Analytics & Consent
 

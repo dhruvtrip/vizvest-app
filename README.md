@@ -37,7 +37,7 @@ So I built Vizvest: the dashboard I wished Trading 212 had. Drop in your CSV exp
 - **Styling**: Tailwind CSS
 - **Data**: PapaParse (CSV), Recharts (visualization)
 - **Animations**: Framer Motion
-- **Theming**: next-themes
+- **Design**: dark-only, hairline grid, Inter as the single typeface (tokens in `app/globals.css`)
 - **Testing**: Vitest
 
 ## Getting Started
