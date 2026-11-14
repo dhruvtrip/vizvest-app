@@ -1,10 +1,8 @@
 'use client'
 
 import { useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
 import { AnimatedCurrency } from '@/components/ui/animated-number'
-import { cn } from '@/lib/utils'
+import { MetricCell, MetricGrid, type MetricTone } from '@/components/features/metric-cell'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { isBuyAction, isSellAction, isDividendAction, isDepositAction } from '@/lib/transaction-utils'
@@ -38,6 +36,10 @@ function formatCurrency(amount: number, currency: string): string {
   return `${sign}${symbol}${formatted}`
 }
 
+function formatSignedCurrency(amount: number, currency: string): string {
+  return `${amount > 0 ? '+' : ''}${formatCurrency(amount, currency)}`
+}
+
 interface PortfolioMetricsProps {
   transactions?: NormalizedTransaction[]
   className?: string
@@ -49,7 +51,9 @@ interface MetricData {
   rawValue: number
   currency: string
   subValue?: string
-  valueColor?: string
+  tone?: MetricTone
+  /** Show a leading + for gains */
+  signed?: boolean
 }
 
 /**
@@ -145,47 +149,6 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
   }
 }
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-}
-
-function MetricCard({
-  metric,
-  index
-}: {
-  metric: MetricData
-  index: number
-}) {
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={fadeInUp}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-    >
-      <Card className={cn(
-        'relative overflow-hidden transition-all duration-300',
-        'border-border/50 hover:border-border',
-        'hover:shadow-lg hover:shadow-primary/5'
-      )}>
-        <CardContent className="relative z-10 p-5">
-          <p className="metric-label text-muted-foreground mb-2">{metric.label}</p>
-          <p className={cn(
-            'metric-value',
-            metric.valueColor || 'text-foreground'
-          )}>
-            <AnimatedCurrency amount={metric.rawValue} currency={metric.currency} formatFn={formatCurrency} />
-          </p>
-          {metric.subValue && (
-            <p className="text-p-sm text-muted-foreground mt-1">{metric.subValue}</p>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  )
-}
-
 export function PortfolioMetrics ({ transactions: transactionsProp, className }: PortfolioMetricsProps) {
   const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
   const transactions = transactionsProp ?? storeTransactions
@@ -198,14 +161,14 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
 
   const metricCards: MetricData[] = [
     {
-      label: 'Buy Volume',
+      label: 'Buy volume',
       value: formatCurrency(metrics.totalInvested, metrics.baseCurrency),
       rawValue: metrics.totalInvested,
       currency: metrics.baseCurrency,
       subValue: 'Total bought',
     },
     {
-      label: 'Sell Volume',
+      label: 'Sell volume',
       value: formatCurrency(metrics.totalSold, metrics.baseCurrency),
       rawValue: metrics.totalSold,
       currency: metrics.baseCurrency,
@@ -217,25 +180,25 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
       rawValue: metrics.realizedPnL,
       currency: metrics.baseCurrency,
       subValue: `${metrics.soldCount} position${metrics.soldCount !== 1 ? 's' : ''} closed`,
-      valueColor: isRealizedPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400',
+      tone: metrics.realizedPnL === 0 ? 'default' : isRealizedPositive ? 'positive' : 'negative',
+      signed: true,
     },
     {
-      label: 'Total Dividends',
+      label: 'Total dividends',
       value: formatCurrency(metrics.totalDividends, metrics.baseCurrency),
       rawValue: metrics.totalDividends,
       currency: metrics.baseCurrency,
       subValue: 'Dividend income',
-      valueColor: metrics.totalDividends > 0 ? 'text-emerald-600 dark:text-emerald-400' : undefined,
     },
     {
-      label: 'Currency Fees',
+      label: 'Currency fees',
       value: formatCurrency(metrics.totalFees, metrics.baseCurrency),
       rawValue: metrics.totalFees,
       currency: metrics.baseCurrency,
       subValue: 'Conversion costs',
     },
     {
-      label: 'Total Deposits',
+      label: 'Total deposits',
       value: formatCurrency(metrics.totalDeposit, metrics.baseCurrency),
       rawValue: metrics.totalDeposit,
       currency: metrics.baseCurrency,
@@ -244,19 +207,31 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
   ]
 
   return (
-    <div className={cn('space-y-4', className)}>
-      <div>
-        <h1 className="text-h4 text-foreground">Portfolio Overview</h1>
-        <p className="text-p-sm text-muted-foreground mt-1">
-          Your portfolio overview in the above timeframe
+    <section className={className} aria-labelledby="portfolio-overview-title">
+      <div className="mb-8">
+        <h1 id="portfolio-overview-title" className="text-h4 text-foreground md:text-h3">Portfolio overview</h1>
+        <p className="mt-1 text-p-sm text-fg-secondary">
+          Totals across the date range of your upload
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {metricCards.map((metric, index) => (
-          <MetricCard key={metric.label} metric={metric} index={index} />
+      <MetricGrid columns={3}>
+        {metricCards.map((metric) => (
+          <MetricCell
+            key={metric.label}
+            label={metric.label}
+            tone={metric.tone}
+            sub={metric.subValue}
+            value={
+              <AnimatedCurrency
+                amount={metric.rawValue}
+                currency={metric.currency}
+                formatFn={metric.signed ? formatSignedCurrency : formatCurrency}
+              />
+            }
+          />
         ))}
-      </div>
-    </div>
+      </MetricGrid>
+    </section>
   )
 }

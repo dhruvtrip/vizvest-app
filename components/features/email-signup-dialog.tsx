@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import posthog from 'posthog-js'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Mail } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -62,58 +62,56 @@ export function EmailSignupDialog({ show }: { show: boolean }) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-        <div className="h-[2px] bg-[hsl(var(--brand))]" />
+      <DialogContent className="gap-0 sm:max-w-[440px]">
+        <span
+          className="grid h-10 w-10 place-items-center rounded-lg bg-surface-2 text-foreground shadow-demo-surface"
+          aria-hidden="true"
+        >
+          <Mail className="h-4 w-4" strokeWidth={1.5} />
+        </span>
 
-        <div className="px-8 pt-8 pb-10">
-          <div className="mb-8">
-            <p className="label-uppercase-sm text-[hsl(var(--brand))] mb-4">
-              Vizvest Updates
+        <DialogTitle className="mt-5 text-h4">Be first to know</DialogTitle>
+        <DialogDescription className="mt-2 text-pretty text-p-sm text-fg-secondary">
+          New features, portfolio insights and updates, delivered to your inbox.
+        </DialogDescription>
+
+        {status === 'success' ? (
+          <div className="mt-6 flex h-10 items-center gap-2" role="status">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-positive" strokeWidth={1.5} aria-hidden="true" />
+            <p className="text-p-sm text-foreground">
+              You&apos;re on the list.
             </p>
-            <DialogTitle className="font-heading text-[2rem] font-light tracking-[-0.025em] leading-[1.15] text-foreground mb-3">
-              Be first to know
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              New features, portfolio insights, and updates - delivered to your inbox.
-            </DialogDescription>
           </div>
-
-          {status === 'success' ? (
-            <div className="flex items-center gap-3 py-2">
-              <CheckCircle2
-                className="h-5 w-5 shrink-0 text-[hsl(var(--brand))]"
-              />
-              <p className="text-sm font-medium text-foreground">
-                You&apos;re on the list.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        ) : (
+          <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 type="email"
                 placeholder="your@email.com"
+                aria-label="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={status === 'loading'}
                 autoFocus
-                className="h-11"
+                className="sm:flex-1"
               />
-              {status === 'error' && (
-                <p className="text-xs text-destructive">
-                  Something went wrong. Please try again.
-                </p>
-              )}
               <Button
                 type="submit"
+                size="lg"
                 disabled={status === 'loading'}
-                className="w-full h-11 bg-[hsl(var(--brand))] text-white hover:bg-[hsl(var(--brand))]/90 font-medium cursor-pointer"
+                className="sm:shrink-0"
               >
                 {status === 'loading' ? 'Subscribing…' : 'Notify me'}
               </Button>
-            </form>
-          )}
-        </div>
+            </div>
+            {status === 'error' && (
+              <p className="text-p-sm text-negative" role="alert">
+                Something went wrong. Please try again.
+              </p>
+            )}
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

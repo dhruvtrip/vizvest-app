@@ -268,9 +268,9 @@ export function PnlVisual() {
 /* -------------------------------------------------------------------------- */
 
 const COSTS = [
-  { label: 'Transaction fees', value: 47.82, swatch: 'bg-foreground' },
-  { label: 'FX conversion', value: 12.14, swatch: 'bg-fg-secondary' },
-  { label: 'Withholding tax', value: 8.21, swatch: 'bg-fg-tertiary' },
+  { label: 'Currency conversion fees', value: 47.82, swatch: 'bg-foreground' },
+  { label: 'Withholding tax, US dividends', value: 15.6, swatch: 'bg-fg-secondary' },
+  { label: 'Withholding tax, EU dividends', value: 4.75, swatch: 'bg-fg-tertiary' },
 ]
 const COST_TOTAL = COSTS.reduce((a, c) => a + c.value, 0)
 

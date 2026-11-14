@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { Check } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { PerFileBaseCurrency } from '@/lib/csv-merger'
 
@@ -57,8 +59,8 @@ export function CurrencyPickerDialog({
         if (!value) onCancel()
       }}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="gap-6 sm:max-w-[440px]">
+        <DialogHeader className="pr-8">
           <DialogTitle>Choose a base currency</DialogTitle>
           <DialogDescription>
             Your uploads use more than one base currency. Pick the one we should
@@ -66,8 +68,8 @@ export function CurrencyPickerDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2 pt-2">
-          {currencies.map((currency) => {
+        <div className="overflow-hidden rounded-lg border border-border" role="group" aria-label="Base currencies">
+          {currencies.map((currency, i) => {
             const files = filesForCurrency(currency)
             const isSelected = selected === currency
             const isRecommended = currency === recommended
@@ -77,49 +79,41 @@ export function CurrencyPickerDialog({
                 type="button"
                 onClick={() => setSelected(currency)}
                 className={cn(
-                  'w-full text-left rounded-xl border p-4 transition-all',
-                  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                  isSelected
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border/60 hover:border-primary/40 hover:bg-muted/40'
+                  'flex w-full items-center gap-3 px-4 py-3 text-left',
+                  'transition-[background-color] duration-150 ease-out',
+                  'focus-visible:outline-offset-[-2px]',
+                  i > 0 && 'border-t border-border',
+                  isSelected ? 'bg-accent' : 'hover:bg-white/5'
                 )}
                 aria-pressed={isSelected}
               >
-                <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        'inline-flex h-4 w-4 items-center justify-center rounded-full border',
-                        isSelected ? 'border-primary' : 'border-muted-foreground/40'
-                      )}
-                      aria-hidden
-                    >
-                      {isSelected && (
-                        <span className="h-2 w-2 rounded-full bg-primary" />
-                      )}
-                    </span>
-                    <span className="font-semibold text-base tracking-tight">
-                      {currency}
-                    </span>
-                    {isRecommended && (
-                      <span className="text-[10px] font-medium uppercase tracking-wide text-primary bg-primary/12 border border-primary/20 rounded-full px-2 py-0.5">
-                        Recommended
-                      </span>
-                    )}
+                    <span className="text-p font-medium text-foreground">{currency}</span>
+                    {isRecommended && <Badge variant="brand">Recommended</Badge>}
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {files.length} {files.length === 1 ? 'file' : 'files'}
-                  </span>
+                  <p className="mt-0.5 truncate text-label text-fg-secondary">
+                    {files.map(f => f.fileName).join(', ')}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {files.map(f => f.fileName).join(', ')}
-                </p>
+                <span className="tabular shrink-0 text-label text-fg-gray">
+                  {files.length} {files.length === 1 ? 'file' : 'files'}
+                </span>
+                <span className="grid h-4 w-4 shrink-0 place-items-center" aria-hidden="true">
+                  <Check
+                    className={cn(
+                      'h-4 w-4 text-foreground transition-opacity duration-150',
+                      isSelected ? 'opacity-100' : 'opacity-0'
+                    )}
+                    strokeWidth={1.5}
+                  />
+                </span>
               </button>
             )
           })}
         </div>
 
-        <DialogFooter className="pt-2">
+        <DialogFooter>
           <Button variant="ghost" onClick={onCancel}>
             Cancel
           </Button>

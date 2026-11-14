@@ -1,11 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
-import { Menu } from 'lucide-react'
-import { useDashboardStore } from '@/stores/useDashboardStore'
+import { Menu, X } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
+import { Wordmark } from '@/components/layout/wordmark'
+import { Button } from '@/components/ui/button'
+import { useDashboardStore } from '@/stores/useDashboardStore'
+import { cn } from '@/lib/utils'
 
+/**
+ * App header: 56px, sticky, 85% black with an 8px backdrop blur and one
+ * hairline below. Same bar as the landing navbar, with quiet meta on the right.
+ */
 export function DashboardHeader() {
   const { normalizedTransactions, isMobileSidebarOpen, setMobileSidebarOpen } = useDashboardStore(
     useShallow((state) => ({
@@ -18,45 +24,46 @@ export function DashboardHeader() {
   const hasData = normalizedTransactions.length > 0
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background">
-      <div className="container mx-auto px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-50 h-header border-b border-border bg-background/85 backdrop-blur-[8px]">
+      <nav className="flex h-full items-center justify-between gap-4 pl-4 pr-2 sm:px-6" aria-label="Dashboard">
         <Link
           href="/"
-          className="flex items-center hover:opacity-80 transition-opacity"
+          aria-label="Vizvest home"
+          className="-mx-1 flex items-center rounded-md px-1 py-1 transition-opacity duration-200 hover:opacity-70"
         >
-          <Image
-            src="/assets/logo-full-light-nobg.png"
-            alt="Vizvest"
-            width={150}
-            height={34}
-            className="h-20 w-auto dark:hidden"
-            priority
-          />
-          <Image
-            src="/assets/logo-full-dark-nobg.png"
-            alt="Vizvest"
-            width={150}
-            height={34}
-            className="hidden h-20 w-auto dark:block"
-            priority
-          />
+          <Wordmark />
         </Link>
+
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            Dashboard
+          <span className="hidden items-center gap-2 text-p-sm text-fg-gray sm:inline-flex">
+            <span className={cn('status-dot', !hasData && 'bg-fg-tertiary')} aria-hidden="true" />
+            {hasData ? (
+              <span>
+                <span className="tabular text-fg-secondary">{normalizedTransactions.length.toLocaleString('en-US')}</span>{' '}
+                transactions, in memory only
+              </span>
+            ) : (
+              'No data loaded'
+            )}
           </span>
           {hasData && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileSidebarOpen(!isMobileSidebarOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="h-10 w-10 text-fg-secondary lg:hidden"
               aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileSidebarOpen}
             >
-              <Menu className="h-5 w-5 text-foreground" />
-            </button>
+              {isMobileSidebarOpen ? (
+                <X strokeWidth={1.5} aria-hidden="true" />
+              ) : (
+                <Menu strokeWidth={1.5} aria-hidden="true" />
+              )}
+            </Button>
           )}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   )
 }

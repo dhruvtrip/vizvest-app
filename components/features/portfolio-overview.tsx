@@ -3,7 +3,8 @@
 import { useMemo } from 'react'
 import groupBy from 'lodash/groupBy'
 import posthog from 'posthog-js'
-import { Card, CardContent } from '@/components/ui/card'
+import { ArrowUpRight } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
@@ -137,6 +138,41 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
   })
 }
 
+/** Shared tile chrome: a hairline cell that lightens on hover and shows an arrow */
+const tileClass = cn(
+  'group relative flex h-full cursor-pointer flex-col gap-4 bg-background p-4 md:gap-6 md:p-5',
+  'transition-[background-color] duration-150 ease-out hover:bg-white/[0.03]',
+  'focus-visible:bg-white/[0.03] focus-visible:outline-offset-[-2px]'
+)
+
+function TileArrow() {
+  return (
+    <ArrowUpRight
+      className="absolute right-4 top-4 h-4 w-4 text-fg-secondary opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-visible:opacity-100 md:right-5 md:top-5"
+      strokeWidth={1.5}
+      aria-hidden="true"
+    />
+  )
+}
+
+function TileRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <dt className="text-label text-fg-secondary">{label}</dt>
+      <dd className="flex min-w-0 items-center gap-1.5">{children}</dd>
+    </div>
+  )
+}
+
+function activateOnKey(onClick: () => void) {
+  return (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick()
+    }
+  }
+}
+
 /**
  * Individual stock position tile component for current holdings
  */
@@ -153,82 +189,45 @@ function StockPositionTile({
   const hasNegativeInvested = position.netCashFlow < 0
 
   return (
-    <Card
-      className={cn(
-        'cursor-pointer transition-all duration-200 group',
-        'hover:shadow-md hover:-translate-y-0.5',
-        'hover:border-primary/50 hover:bg-primary/5',
-        'active:scale-[0.99]',
-        'h-full flex flex-col',
-        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2',
-        isPartialData && 'border-amber-500/20'
-      )}
+    <div
+      className={tileClass}
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick()
-        }
-      }}
+      onKeyDown={activateOnKey(onClick)}
       role="button"
       tabIndex={0}
       aria-label={`View details for ${position.ticker} - ${position.name}`}
     >
-      <CardContent className="p-5 flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <h3 className="ticker text-base text-foreground truncate group-hover:text-primary transition-colors">
-                {position.ticker}
-              </h3>
-              {isPartialData && (
-                <span className="px-1.5 py-0.5 text-label font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded" aria-label="Partial data">
-                  Partial
-                </span>
-              )}
-            </div>
-            <p className="text-p-sm text-muted-foreground truncate">
-              {position.name}
-            </p>
-          </div>
+      <TileArrow />
+      <div className="min-w-0 pr-6">
+        <div className="flex items-center gap-2">
+          <h3 className="truncate text-p font-medium text-foreground">
+            {position.ticker}
+          </h3>
+          {isPartialData && (
+            <Badge variant="warning" aria-label="Partial data">
+              Partial
+            </Badge>
+          )}
         </div>
+        <p className="mt-0.5 truncate text-p-sm text-fg-secondary">
+          {position.name}
+        </p>
+      </div>
 
-        <div className="mt-auto space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-p-sm text-muted-foreground">
-              {isNetSelling ? 'Net Flow' : 'Shares'}
-            </span>
-            <div className="flex items-center gap-1">
-              <span className={cn(
-                'text-p-sm font-medium font-tabular',
-                isNetSelling ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
-              )}>
-               {formatShares(position.totalShares)}
-              </span>
-              {isNetSelling && (
-                <span className="px-1 py-0.5 text-label font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
-                  Selling
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-p-sm text-muted-foreground">
-              {hasNegativeInvested ? 'Net Cash' : 'Net Invested'}
-            </span>
-            <span className={cn(
-              'text-p-sm font-medium currency',
-              hasNegativeInvested
-                ? 'change-positive'
-                : 'text-foreground'
-            )}>
-              {formatCurrency(position.netCashFlow, position.baseCurrency)}
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      <dl className="mt-auto space-y-2">
+        <TileRow label={isNetSelling ? 'Net flow' : 'Shares'}>
+          {isNetSelling && <Badge variant="destructive">Selling</Badge>}
+          <span className={cn('tabular text-p-sm', isNetSelling ? 'text-negative' : 'text-foreground')}>
+            {formatShares(position.totalShares)}
+          </span>
+        </TileRow>
+        <TileRow label={hasNegativeInvested ? 'Net cash' : 'Net invested'}>
+          <span className={cn('tabular text-p-sm', hasNegativeInvested ? 'text-positive' : 'text-foreground')}>
+            {formatCurrency(position.netCashFlow, position.baseCurrency)}
+          </span>
+        </TileRow>
+      </dl>
+    </div>
   )
 }
 
@@ -246,57 +245,35 @@ function SoldPositionTile({
   const isProfit = position.realizedResult >= 0
 
   return (
-    <Card
-      className={cn(
-        'cursor-pointer transition-all duration-200 group',
-        'hover:shadow-md hover:-translate-y-0.5',
-        'hover:border-primary/50 hover:bg-primary/5',
-        'active:scale-[0.99]',
-        'bg-muted/30',
-        'h-full flex flex-col',
-        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2'
-      )}
+    <div
+      className={tileClass}
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick()
-        }
-      }}
+      onKeyDown={activateOnKey(onClick)}
       role="button"
       tabIndex={0}
       aria-label={`View transaction history for ${position.ticker} - ${position.name}`}
     >
-      <CardContent className="p-5 flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="ticker text-base text-muted-foreground truncate group-hover:text-primary transition-colors">
-              {position.ticker}
-            </h3>
-            <p className="text-p-sm text-muted-foreground/70 truncate mt-0.5">
-              {position.name}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-label px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-              Sold
-            </span>
-          </div>
+      <TileArrow />
+      <div className="min-w-0 pr-6">
+        <div className="flex items-center gap-2">
+          <h3 className="truncate text-p font-medium text-foreground">
+            {position.ticker}
+          </h3>
+          <Badge variant="secondary">Sold</Badge>
         </div>
+        <p className="mt-0.5 truncate text-p-sm text-fg-secondary">
+          {position.name}
+        </p>
+      </div>
 
-        <div className="mt-auto space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-p-sm text-muted-foreground">Result</span>
-            <span className={cn(
-              'text-p-sm font-medium currency',
-              isProfit ? 'change-positive' : 'change-negative'
-            )}>
-              {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      <dl className="mt-auto space-y-2">
+        <TileRow label="Result">
+          <span className={cn('tabular text-p-sm', isProfit ? 'text-positive' : 'text-negative')}>
+            {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
+          </span>
+        </TileRow>
+      </dl>
+    </div>
   )
 }
 
@@ -305,14 +282,21 @@ function SoldPositionTile({
  */
 function EmptyState() {
   return (
-    <Card className="p-8 text-center border-dashed">
-      <p className="text-sm text-muted-foreground">No stocks found</p>
-      <p className="text-xs text-muted-foreground mt-1">
+    <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
+      <p className="text-p-sm text-foreground">No stocks found</p>
+      <p className="mt-1 text-p-sm text-fg-secondary">
         Upload a CSV file to see your portfolio
       </p>
-    </Card>
+    </div>
   )
 }
+
+// Cells share hairlines (each cell is bordered and pulled 1px over its
+// neighbours), so a partly filled last row draws no line over empty slots.
+const TILE_GRID = cn(
+  'grid grid-cols-1 pl-px pt-px sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+  '[&>*]:-ml-px [&>*]:-mt-px [&>*]:min-w-0 [&>*]:border [&>*]:border-border'
+)
 
 /**
  * Portfolio Overview Component
@@ -360,27 +344,25 @@ export function PortfolioOverview ({
   const baseCurrency = positions[0]?.baseCurrency || 'USD'
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-12', className)}>
       {/* Current Holdings Section */}
       {currentHoldings.length > 0 && (
-        <section className="space-y-3" aria-labelledby="portfolio-heading">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 id="portfolio-heading" className="text-h5 text-foreground">
-                Current Holdings
-              </h2>
-            </div>
-            <span className="text-p-sm text-muted-foreground font-tabular" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
+        <section aria-labelledby="portfolio-heading">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <h2 id="portfolio-heading" className="text-h5 text-foreground">
+              Current holdings
+            </h2>
+            <span className="tabular text-p-sm text-fg-secondary" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" role="list" aria-label="Current stock holdings">
+          <div className={TILE_GRID} role="list" aria-label="Current stock holdings">
             {currentHoldings.map(position => {
-              const isPartialData = partialDataWarning 
+              const isPartialData = partialDataWarning
                 ? isTickerPartialData(position.ticker, partialDataWarning)
                 : false
-              
+
               return (
                 <div key={position.ticker} role="listitem">
                   <StockPositionTile
@@ -400,32 +382,29 @@ export function PortfolioOverview ({
 
       {/* Sold Positions Section */}
       {soldPositions.length > 0 && (
-        <section className="space-y-3" aria-labelledby="sold-positions-heading">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 id="sold-positions-heading" className="text-h5 font-medium text-muted-foreground">
-                Closed Positions
-              </h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-p-sm text-muted-foreground font-tabular" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
+        <section aria-labelledby="sold-positions-heading">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <h2 id="sold-positions-heading" className="text-h5 text-foreground">
+              Closed positions
+            </h2>
+            <div className="flex items-center gap-3 text-p-sm">
+              <span className="tabular text-fg-secondary" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>
+              <span className="h-3 w-px bg-border" aria-hidden="true" />
               <span
-                className={cn(
-                  'text-p-sm font-medium currency',
-                  totalRealizedResult >= 0
-                    ? 'change-positive'
-                    : 'change-negative'
-                )}
+                className="tabular text-fg-secondary"
                 aria-label={`Total realized ${totalRealizedResult >= 0 ? 'profit' : 'loss'}: ${totalRealizedResult >= 0 ? '+' : ''}${formatCurrency(totalRealizedResult, baseCurrency)}`}
               >
-                Total: {totalRealizedResult >= 0 ? '+' : ''}{formatCurrency(totalRealizedResult, baseCurrency)}
+                Total{' '}
+                <span className={totalRealizedResult >= 0 ? 'text-positive' : 'text-negative'}>
+                  {totalRealizedResult >= 0 ? '+' : ''}{formatCurrency(totalRealizedResult, baseCurrency)}
+                </span>
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" role="list" aria-label="Sold stock positions">
+          <div className={TILE_GRID} role="list" aria-label="Sold stock positions">
             {soldPositions.map(position => (
               <div key={position.ticker} role="listitem">
                 <SoldPositionTile
@@ -443,9 +422,9 @@ export function PortfolioOverview ({
 
       {/* Edge case: Only sold positions, no current holdings */}
       {currentHoldings.length === 0 && soldPositions.length > 0 && (
-        <div className="text-center py-3 text-xs text-muted-foreground">
+        <p className="text-center text-label text-fg-secondary">
           No current holdings. All positions shown above have been sold.
-        </div>
+        </p>
       )}
     </div>
   )

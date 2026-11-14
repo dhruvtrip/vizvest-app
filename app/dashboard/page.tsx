@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import posthog from 'posthog-js'
+import { Upload } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { CSVUpload } from '@/components/features/csv-upload'
 import { PortfolioOverview } from '@/components/features/portfolio-overview'
@@ -19,11 +20,72 @@ import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { DashboardPills } from '@/components/features/dashboard-pills'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { getPartialDataExplanation } from '@/lib/partial-data-detector'
 import { EmailSignupDialog } from '@/components/features/email-signup-dialog'
 import { Footer } from '@/components/landing/footer'
+import { DUR, EASE } from '@/lib/motion'
+import { cn } from '@/lib/utils'
+
+/** Page frame shared by every dashboard view */
+const FRAME = 'mx-auto w-full max-w-[1200px] px-4 md:px-8'
+
+type Tone = 'positive' | 'info' | 'warning'
+
+const MARK: Record<Tone, string> = {
+  positive: 'bg-positive',
+  info: 'bg-info',
+  warning: 'bg-warning'
+}
+
+/**
+ * A quiet status row: hairline below, a 6px square mark, one line of text and
+ * optional controls on the right. Height opens and closes with a blur fade.
+ */
+function StatusRow ({
+  tone,
+  children,
+  actions,
+  align = 'center'
+}: {
+  tone: Tone
+  children: React.ReactNode
+  actions?: React.ReactNode
+  align?: 'center' | 'start'
+}) {
+  const reduce = useReducedMotion()
+  return (
+    <motion.div
+      initial={reduce ? { opacity: 0 } : { opacity: 0, height: 0, filter: 'blur(4px)' }}
+      animate={
+        reduce
+          ? { opacity: 1, transition: { duration: DUR.fast } }
+          : { opacity: 1, height: 'auto', filter: 'blur(0px)', transition: { duration: DUR.fast, ease: EASE.smoothOut } }
+      }
+      exit={
+        reduce
+          ? { opacity: 0, transition: { duration: DUR.quick } }
+          : { opacity: 0, height: 0, filter: 'blur(4px)', transition: { duration: DUR.quick, ease: EASE.smoothOut } }
+      }
+      className="overflow-hidden border-b border-border"
+    >
+      <div
+        className={cn(
+          FRAME,
+          'flex justify-between gap-3 py-2.5 sm:gap-4',
+          align === 'center' ? 'items-start sm:items-center' : 'items-start'
+        )}
+      >
+        <div className="flex min-w-0 flex-1 items-start gap-3 py-1">
+          <span className={cn('mt-[7px] h-1.5 w-1.5 shrink-0 rounded-[1px]', MARK[tone])} aria-hidden="true" />
+          <div className="min-w-0 flex-1 text-p-sm">{children}</div>
+        </div>
+        {actions ? <div className="flex shrink-0 items-center gap-1">{actions}</div> : null}
+      </div>
+    </motion.div>
+  )
+}
 
 export default function DashboardPage () {
   const {
@@ -66,6 +128,8 @@ export default function DashboardPage () {
     }))
   )
 
+  const reduce = useReducedMotion()
+
   const portfolioRef = useRef<HTMLDivElement>(null)
   const analyticsRef = useRef<HTMLDivElement>(null)
   const activityRef = useRef<HTMLDivElement>(null)
@@ -98,272 +162,233 @@ export default function DashboardPage () {
     uploadAnother()
   }, [uploadAnother])
 
+  // House view transition: blur + small rise in, quicker blur fade out
+  const viewMotion = reduce
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1, transition: { duration: DUR.fast } },
+        exit: { opacity: 0, transition: { duration: DUR.quick } }
+      }
+    : {
+        initial: { opacity: 0, y: 10, filter: 'blur(5px)' },
+        animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: DUR.fast, ease: EASE.smoothOut } },
+        exit: { opacity: 0, y: -4, filter: 'blur(5px)', transition: { duration: DUR.quick, ease: EASE.inQuad } }
+      }
+
+  const viewKey = showDividendsDashboard
+    ? 'dividends-dashboard'
+    : showTradingActivityDashboard
+      ? 'trading-activity-dashboard'
+      : showDetail && selectedTicker
+        ? 'detail'
+        : showOverview
+          ? 'overview'
+          : null
+
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-    <div className="flex flex-1 relative">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col">
+      <div className="relative flex flex-1">
+        {hasData && <DashboardSidebar />}
 
-      {hasData && <DashboardSidebar />}
+        <main className="w-full min-w-0 flex-1">
+          <EmailSignupDialog show={showSignupDialog} />
+          {hasData && <DashboardPills />}
 
-      <main className="flex-1 min-w-0 w-full lg:w-auto">
-        <EmailSignupDialog show={showSignupDialog} />
-        {hasData && <DashboardPills />}
-        <AnimatePresence>
-          {uploadInfo && hasData && !isAlertDismissed && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="border-b border-border border-l-4 border-l-emerald-500 bg-emerald-500/8 relative z-40"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <div className="container mx-auto px-4 sm:px-8 py-3">
-                <Alert className="border-0 bg-transparent">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
-                    <AlertDescription className="text-sm flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          Successfully loaded {uploadInfo.rowCount} transactions
-                        </span>
-                        <span className="text-muted-foreground text-sm">
-                          from {uploadInfo.fileName}
-                        </span>
-                      </div>
-                    </AlertDescription>
-                    <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+          <AnimatePresence initial={false}>
+            {uploadInfo && hasData && !isAlertDismissed && (
+              <div key="upload-success" role="status" aria-live="polite" aria-atomic="true">
+                <StatusRow
+                  tone="positive"
+                  actions={
+                    <>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleUploadAnother}
-                        className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
+                        className="text-fg-secondary"
                         aria-label="Upload a different CSV file"
                       >
-                        <span className="hidden sm:inline">Upload Different File</span>
+                        <Upload strokeWidth={1.5} aria-hidden="true" />
+                        <span className="hidden sm:inline">Upload different file</span>
                       </Button>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={dismissAlert}
-                        className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
+                        className="text-fg-secondary"
                         aria-label="Dismiss success message"
                       >
                         Dismiss
-                      </button>
-                    </div>
-                  </div>
-                </Alert>
+                      </Button>
+                    </>
+                  }
+                >
+                  <span className="text-foreground">
+                    Loaded <span className="tabular">{uploadInfo.rowCount}</span> transactions
+                  </span>{' '}
+                  <span className="text-fg-secondary">from {uploadInfo.fileName}</span>
+                </StatusRow>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
 
-        <AnimatePresence>
-          {mergeBanner && !isMergeBannerDismissed && hasData && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="border-b border-border border-l-4 border-l-sky-500 bg-sky-500/8 relative z-40"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <div className="container mx-auto px-4 sm:px-8 py-3">
-                <Alert className="border-0 bg-transparent">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
-                    <AlertDescription className="text-sm flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
-                        <span className="font-medium text-sky-700 dark:text-sky-400">
-                          Merged {mergeBanner.fileCount} {mergeBanner.fileCount === 1 ? 'file' : 'files'}
-                        </span>
-                        <span className="text-muted-foreground text-sm">
-                          {mergeBanner.duplicatesRemoved > 0
-                            ? `removed ${mergeBanner.duplicatesRemoved} duplicate ${mergeBanner.duplicatesRemoved === 1 ? 'transaction' : 'transactions'} · ${mergeBanner.totalRows} unique rows`
-                            : `${mergeBanner.totalRows} unique rows · no duplicates found`}
-                        </span>
-                      </div>
-                    </AlertDescription>
-                    <button
+          <AnimatePresence initial={false}>
+            {mergeBanner && !isMergeBannerDismissed && hasData && (
+              <div key="merge" role="status" aria-live="polite" aria-atomic="true">
+                <StatusRow
+                  tone="info"
+                  actions={
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={dismissMergeBanner}
-                      className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
+                      className="text-fg-secondary"
                       aria-label="Dismiss merge summary"
                     >
                       Dismiss
-                    </button>
-                  </div>
-                </Alert>
+                    </Button>
+                  }
+                >
+                  <span className="text-foreground">
+                    Merged <span className="tabular">{mergeBanner.fileCount}</span>{' '}
+                    {mergeBanner.fileCount === 1 ? 'file' : 'files'}
+                  </span>{' '}
+                  <span className="tabular text-fg-secondary">
+                    {mergeBanner.duplicatesRemoved > 0
+                      ? `removed ${mergeBanner.duplicatesRemoved} duplicate ${mergeBanner.duplicatesRemoved === 1 ? 'transaction' : 'transactions'} · ${mergeBanner.totalRows} unique rows`
+                      : `${mergeBanner.totalRows} unique rows · no duplicates found`}
+                  </span>
+                </StatusRow>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
 
-        <AnimatePresence>
-          {isNormalizing && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-16"
-              role="status"
-              aria-live="polite"
-              aria-label="Processing transactions"
-            >
-              <div className="flex flex-col items-center justify-center gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold tracking-tight text-primary animate-pulse">...</p>
-                  <p className="text-sm font-medium mt-2">Processing transactions</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Normalizing currencies and calculating positions...
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {partialDataWarning?.isPartialData && !isPartialDataDismissed && showOverview && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="border-b border-border border-l-4 border-l-amber-500 bg-amber-500/8 relative z-40"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <div className="container mx-auto px-4 sm:px-8 py-3">
-                <Alert className="border-0 bg-transparent">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between w-full gap-3">
-                    <div className="flex-1 min-w-0">
-                      <AlertTitle className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
-                        Partial Transaction Data Detected
-                      </AlertTitle>
-                      <AlertDescription className="text-sm text-muted-foreground">
-                        {getPartialDataExplanation(partialDataWarning)}
-                      </AlertDescription>
-                    </div>
-                    <button
+          <AnimatePresence initial={false}>
+            {partialDataWarning?.isPartialData && !isPartialDataDismissed && showOverview && (
+              <div key="partial" role="status" aria-live="polite" aria-atomic="true">
+                <StatusRow
+                  tone="warning"
+                  align="start"
+                  actions={
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={dismissPartialDataAlert}
-                      className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
+                      className="text-fg-secondary"
                       aria-label="Dismiss partial data warning"
                     >
                       Dismiss
-                    </button>
-                  </div>
+                    </Button>
+                  }
+                >
+                  <p className="text-foreground">Partial transaction data detected</p>
+                  <p className="mt-0.5 max-w-[720px] text-pretty text-fg-secondary">
+                    {getPartialDataExplanation(partialDataWarning)}
+                  </p>
+                </StatusRow>
+              </div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isNormalizing && (
+              <motion.div
+                key="normalizing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: DUR.fast } }}
+                exit={{ opacity: 0, transition: { duration: DUR.quick } }}
+                className={cn(FRAME, 'py-24')}
+                role="status"
+                aria-live="polite"
+                aria-label="Processing transactions"
+              >
+                <div className="flex flex-col items-center gap-1 text-center">
+                  <p className="working-shimmer text-p">Processing transactions</p>
+                  <p className="text-p-sm text-fg-secondary">
+                    Normalizing currencies and calculating positions
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: DUR.fast } }}
+                exit={{ opacity: 0, transition: { duration: DUR.quick } }}
+                className={cn(FRAME, 'pt-8')}
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+              >
+                <Alert variant="destructive">
+                  <AlertDescription className="text-p-sm text-negative">{error}</AlertDescription>
                 </Alert>
-              </div>
-            </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {showWelcome && (
+            <ErrorBoundary area="csv_upload">
+              <CSVUpload isHidden={false} />
+            </ErrorBoundary>
           )}
-        </AnimatePresence>
 
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-6"
-              role="alert"
-              aria-live="assertive"
-              aria-atomic="true"
-            >
-              <Alert variant="destructive">
-                <AlertDescription className="text-sm">{error}</AlertDescription>
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {showWelcome && (
-          <ErrorBoundary area="csv_upload">
-            <CSVUpload isHidden={false} />
-          </ErrorBoundary>
-        )}
-
-        <AnimatePresence mode="wait">
-          {showDividendsDashboard && (
-            <motion.div
-              key="dividends-dashboard"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="min-w-0"
-              ref={dividendsRef}
-            >
-              <ErrorBoundary area="dividends_dashboard">
-                <DividendsDashboard />
-              </ErrorBoundary>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence mode="wait">
-          {showTradingActivityDashboard && (
-            <motion.div
-              key="trading-activity-dashboard"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="min-w-0"
-              ref={activityRef}
-            >
-              <ErrorBoundary area="trading_activity_dashboard">
-                <TradingActivityDashboard />
-              </ErrorBoundary>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence mode="wait">
-          {showDetail && selectedTicker && (
-            <motion.div
-              key="detail"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-6 min-w-0"
-            >
-              <ErrorBoundary area="stock_detail">
-                <StockDetail />
-              </ErrorBoundary>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence mode="wait">
-          {showOverview && (
-            <motion.div
-              key="overview"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-6 space-y-10 min-w-0"
-            >
-              <div ref={analyticsRef}>
-                <ErrorBoundary area="portfolio_metrics">
-                  <PortfolioMetrics />
+          <AnimatePresence mode="wait" initial={false}>
+            {viewKey === 'dividends-dashboard' && (
+              <motion.div key={viewKey} {...viewMotion} className={cn(FRAME, 'min-w-0 py-8 md:py-10')} ref={dividendsRef}>
+                <ErrorBoundary area="dividends_dashboard">
+                  <DividendsDashboard />
                 </ErrorBoundary>
-              </div>
-              <div ref={portfolioRef}>
-                <ErrorBoundary area="portfolio_overview">
-                  <PortfolioOverview />
+              </motion.div>
+            )}
+
+            {viewKey === 'trading-activity-dashboard' && (
+              <motion.div key={viewKey} {...viewMotion} className={cn(FRAME, 'min-w-0 py-8 md:py-10')} ref={activityRef}>
+                <ErrorBoundary area="trading_activity_dashboard">
+                  <TradingActivityDashboard />
                 </ErrorBoundary>
-              </div>
-            </motion.div>
+              </motion.div>
+            )}
+
+            {viewKey === 'detail' && (
+              <motion.div key={viewKey} {...viewMotion} className={cn(FRAME, 'min-w-0 py-8 md:py-10')}>
+                <ErrorBoundary area="stock_detail">
+                  <StockDetail />
+                </ErrorBoundary>
+              </motion.div>
+            )}
+
+            {viewKey === 'overview' && (
+              <motion.div
+                key={viewKey}
+                {...viewMotion}
+                className={cn(FRAME, 'min-w-0 space-y-12 py-8 md:py-10')}
+              >
+                <div ref={analyticsRef}>
+                  <ErrorBoundary area="portfolio_metrics">
+                    <PortfolioMetrics />
+                  </ErrorBoundary>
+                </div>
+                <div ref={portfolioRef}>
+                  <ErrorBoundary area="portfolio_overview">
+                    <PortfolioOverview />
+                  </ErrorBoundary>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {!showWelcome && !hasData && showUpload && (
+            <ErrorBoundary>
+              <CSVUpload isHidden={false} />
+            </ErrorBoundary>
           )}
-        </AnimatePresence>
-
-        {!showWelcome && !hasData && showUpload && (
-          <ErrorBoundary>
-            <CSVUpload isHidden={false} />
-          </ErrorBoundary>
-        )}
-      </main>
-
-    </div>
+        </main>
+      </div>
       {showWelcome && <Footer />}
     </div>
   )

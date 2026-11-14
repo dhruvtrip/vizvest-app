@@ -1,33 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
 import {
   Upload,
   LayoutDashboard,
-  DollarSign,
-  Activity
+  Coins,
+  Activity,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DUR, EASE } from '@/lib/motion'
 import { useDashboardStore } from '@/stores/useDashboardStore'
-
-// Hook to detect if we're on desktop
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(false)
-
-  useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth >= 1024)
-    }
-
-    checkDesktop()
-    window.addEventListener('resize', checkDesktop)
-    return () => window.removeEventListener('resize', checkDesktop)
-  }, [])
-
-  return isDesktop
-}
 
 function scrollToTop () {
   const mainElement = document.querySelector('main')
@@ -40,7 +26,7 @@ function scrollToTop () {
 const NAV_ICONS: Record<string, React.ElementType> = {
   upload: Upload,
   portfolio: LayoutDashboard,
-  dividends: DollarSign,
+  dividends: Coins,
   activity: Activity
 }
 
@@ -55,15 +41,72 @@ interface DashboardSidebarProps {
   className?: string
 }
 
+/** One sidebar row: 36px, 8px radius, 16px icon, 14px label */
+function SidebarItem ({
+  icon: Icon,
+  label,
+  isActive = false,
+  expanded,
+  onClick,
+  ariaLabel,
+  ariaExpanded
+}: {
+  icon: React.ElementType
+  label: string
+  isActive?: boolean
+  expanded: boolean
+  onClick: () => void
+  ariaLabel: string
+  ariaExpanded?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex h-9 w-full items-center gap-3 overflow-hidden rounded-lg px-3 text-left text-p-sm',
+        'transition-[color,background-color] duration-150 ease-out',
+        isActive
+          ? 'bg-accent text-foreground'
+          : 'text-fg-secondary hover:bg-white/5 hover:text-foreground'
+      )}
+      aria-label={ariaLabel}
+      aria-current={isActive ? 'page' : undefined}
+      aria-expanded={ariaExpanded}
+      title={expanded ? undefined : label}
+    >
+      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+      <span
+        className={cn(
+          'truncate whitespace-nowrap transition-opacity duration-150 ease-out',
+          // Desktop collapsed: the label fades out while the width closes
+          !expanded && 'lg:opacity-0'
+        )}
+      >
+        {label}
+      </span>
+    </button>
+  )
+}
+
 export function DashboardSidebar (props: DashboardSidebarProps = {}) {
   const { className } = props
   const [isOpen, setIsOpen] = useState(true)
-  const isDesktop = useIsDesktop()
   const currentView = useDashboardStore((state) => state.currentView)
   const isMobileOpen = useDashboardStore((state) => state.isMobileSidebarOpen)
   const navigate = useDashboardStore((state) => state.navigate)
   const uploadAnother = useDashboardStore((state) => state.uploadAnother)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
+
+  // Escape closes the mobile drawer
+  useEffect(() => {
+    if (!isMobileOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileSidebarOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [isMobileOpen, setMobileSidebarOpen])
 
   const handleOptionClick = (onClick: () => void) => {
     onClick()
@@ -86,12 +129,7 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
     uploadAnother()
   }
 
-  const options: SidebarOption[] = [
-    {
-      id: 'upload',
-      label: 'Upload',
-      onClick: () => handleOptionClick(handleUploadClick)
-    },
+  const views: SidebarOption[] = [
     {
       id: 'portfolio',
       label: 'Portfolio',
@@ -112,133 +150,82 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
     }
   ]
 
+  const upload: SidebarOption = {
+    id: 'upload',
+    label: 'Upload',
+    onClick: () => handleOptionClick(handleUploadClick)
+  }
+
+  // Labels are always visible in the mobile drawer
+  const expanded = isOpen
+
   return (
     <>
-      {/* Mobile backdrop */}
+      {/* Mobile scrim */}
       <AnimatePresence>
         {isMobileOpen && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            animate={{ opacity: 1, transition: { duration: DUR.fast, ease: EASE.smoothOut } }}
+            exit={{ opacity: 0, transition: { duration: DUR.quick, ease: EASE.smoothOut } }}
+            className="fixed inset-0 top-header z-40 overscroll-contain bg-black/70 backdrop-blur-sm lg:hidden"
             onClick={() => setMobileSidebarOpen(false)}
             aria-hidden="true"
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
-      <motion.nav
-        initial={false}
-        animate={{
-          width: isDesktop ? (isOpen ? 256 : 64) : 256 // Only animate width on desktop
-        }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      <nav
+        aria-label="Dashboard views"
         className={cn(
-          // Mobile: fixed overlay, always full width (256px) when open
-          'fixed inset-y-0 left-0 z-50',
-          'w-64', // Fixed width on mobile
-          'transform transition-transform duration-300',
+          // Mobile: drawer under the header, slides in from the left
+          'fixed bottom-0 left-0 top-header z-50 flex w-64 flex-col overflow-hidden overscroll-contain',
+          'border-r border-border bg-background',
+          'transition-[transform,width] duration-[250ms] ease-smooth-out',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full',
-          // Disable pointer events when closed on mobile
           isMobileOpen ? 'pointer-events-auto' : 'pointer-events-none lg:pointer-events-auto',
-          // Desktop: sticky positioning, always visible, animated width
-          'lg:sticky lg:top-[4rem] lg:z-auto lg:translate-x-0 lg:w-auto',
-          // Desktop: always visible
-          'lg:flex',
-          // Common styles
-          'top-[4rem] h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)]',
-          'shrink-0 border-r border-border bg-background',
-          'flex flex-col',
-          'lg:self-start',
+          // Desktop: sticky column with an animated width
+          'lg:sticky lg:top-header lg:z-auto lg:h-[calc(100dvh-3.5rem)] lg:shrink-0 lg:translate-x-0 lg:self-start',
+          expanded ? 'lg:w-60' : 'lg:w-16',
           className
         )}
       >
-        {/* Mobile close button */}
-        <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
-          <span className="text-sm font-semibold text-foreground">Menu</span>
-          <button
-            onClick={() => setMobileSidebarOpen(false)}
-            className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            aria-label="Close menu"
-          >
-            Close
-          </button>
-        </div>
-      {/* Navigation Options */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {options.map((option) => {
-          const isActive = option.isActive || false
-          const Icon = NAV_ICONS[option.id]
-
-          return (
-            <button
+        {/* Views */}
+        <div className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
+          {views.map((option) => (
+            <SidebarItem
               key={option.id}
+              icon={NAV_ICONS[option.id]}
+              label={option.label}
+              isActive={option.isActive}
+              expanded={expanded}
               onClick={option.onClick}
-              className={cn(
-                'relative flex h-11 w-full items-center rounded-lg transition-all duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                isActive
-                  ? 'border-l-[3px] border-primary bg-primary/8 font-semibold text-foreground'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-              )}
-              aria-label={option.label}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <div className="grid h-full w-12 place-content-center flex-shrink-0">
-                {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
-              </div>
-              <AnimatePresence mode="wait">
-                {(isOpen || isMobileOpen) && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-sm font-medium whitespace-nowrap"
-                  >
-                    {option.label}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </button>
-          )
-        })}
-      </div>
-
-        {/* Toggle Button - Desktop only */}
-        <div className="border-t border-border p-2 hidden lg:block">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className={cn(
-              'flex h-11 w-full items-center rounded-lg transition-colors',
-              'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
-            )}
-            aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-            aria-expanded={isOpen}
-          >
-            <div className="grid h-full w-12 place-content-center flex-shrink-0">
-              <span className="text-sm" aria-hidden="true">{isOpen ? '\u2039' : '\u203A'}</span>
-            </div>
-            <AnimatePresence mode="wait">
-              {isOpen && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-sm font-medium whitespace-nowrap"
-                >
-                  Collapse
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
+              ariaLabel={option.label}
+            />
+          ))}
         </div>
-      </motion.nav>
+
+        {/* Actions */}
+        <div className="flex shrink-0 flex-col gap-1 border-t border-border p-3">
+          <SidebarItem
+            icon={NAV_ICONS.upload}
+            label="Upload"
+            expanded={expanded}
+            onClick={upload.onClick}
+            ariaLabel={upload.label}
+          />
+          <div className="hidden lg:block">
+            <SidebarItem
+              icon={isOpen ? PanelLeftClose : PanelLeftOpen}
+              label="Collapse"
+              expanded={expanded}
+              onClick={() => setIsOpen(!isOpen)}
+              ariaLabel={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+              ariaExpanded={isOpen}
+            />
+          </div>
+        </div>
+      </nav>
     </>
   )
 }

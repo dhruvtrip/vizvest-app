@@ -24,7 +24,7 @@ const features = [
   {
     title: 'See what trading actually costs',
     description:
-      'Every commission, FX spread and withholding tax tallied automatically, so you know your real return, not the headline one.',
+      'Currency conversion fees and withholding tax, tallied automatically, so you know your real return, not the headline one.',
     Visual: FeesVisual,
   },
   {

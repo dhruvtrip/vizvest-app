@@ -3,12 +3,28 @@
 import { useRef, useState } from 'react'
 import Papa from 'papaparse'
 import posthog from 'posthog-js'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import {
+  AlertCircle,
+  ChevronRight,
+  FileSpreadsheet,
+  FileText,
+  Plus,
+  RotateCcw,
+  ShieldCheck,
+  Upload,
+  X
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DUR, EASE } from '@/lib/motion'
 import { validateCSVColumns, validateTransactions } from '@/lib/csv-validator'
 import type { Trading212Transaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { useShallow } from 'zustand/react/shallow'
+import { Container, GridGuides } from '@/components/layout/container'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { BlurReveal } from '@/components/motion/blur-reveal'
 import { CurrencyPickerDialog } from './currency-picker-dialog'
 
 interface UploadResult {
@@ -35,22 +51,6 @@ function fileKey(file: File): string {
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
-
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-}
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1
-    }
-  }
-}
 
 interface ParsedFile {
   fileName: string
@@ -115,6 +115,39 @@ function parseOne(file: File): Promise<{ fileName: string; data: Trading212Trans
   })
 }
 
+/** 40px icon box on surface-2 with the demo-surface ring */
+function IconBox({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span
+      className={cn(
+        'grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-2 text-foreground shadow-demo-surface',
+        className
+      )}
+      aria-hidden="true"
+    >
+      {children}
+    </span>
+  )
+}
+
+const REASSURANCE = [
+  {
+    title: 'Private by default',
+    body: 'Your data is processed locally in your browser. Nothing is uploaded or stored.',
+    icon: ShieldCheck
+  },
+  {
+    title: 'Runs in your browser',
+    body: 'No account and no server. Refresh the page and everything is cleared.',
+    dot: true
+  },
+  {
+    title: 'How to export',
+    steps: ['Trading 212', 'History', 'Export'],
+    icon: FileSpreadsheet
+  }
+] as const
+
 export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUploadProps) {
   const [uploadState, setUploadState] = useState<UploadState>('idle')
   const [errors, setErrors] = useState<string[]>([])
@@ -127,6 +160,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     status: ''
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const reduce = useReducedMotion()
 
   const { pendingMerge, commitMerge, cancelPendingMerge } = useDashboardStore(
     useShallow((state) => ({
@@ -317,30 +351,34 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     ? Math.min(100, Math.round((progress.done / progress.total) * 100))
     : 0
 
-  return (
-    <section className={cn('relative py-16 lg:py-24', className)}>
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(120,119,198,0.1),transparent)] dark:bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(120,119,198,0.15),transparent)]" />
-      </div>
+  // State swaps cross-fade through a light blur
+  const swap = reduce
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1, transition: { duration: DUR.fast } },
+        exit: { opacity: 0, transition: { duration: DUR.quick } }
+      }
+    : {
+        initial: { opacity: 0, y: 8, filter: 'blur(4px)' },
+        animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: DUR.fast, ease: EASE.smoothOut } },
+        exit: { opacity: 0, filter: 'blur(4px)', transition: { duration: DUR.quick, ease: EASE.smoothOut } }
+      }
 
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="container mx-auto px-6 max-w-2xl"
-      >
-        <motion.div variants={fadeInUp} className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/12 border border-primary/20 text-sm font-medium text-primary mb-4">
-            Trading 212 CSV Import
-          </div>
-          <h2 className="text-h3 mb-3">
+  const stagedBytes = stagedFiles.reduce((sum, f) => sum + f.size, 0)
+
+  return (
+    <section className={cn('relative pb-20 md:pb-28', className)} aria-labelledby="csv-upload-title">
+      <GridGuides />
+
+      <Container>
+        <BlurReveal immediate className="flex flex-col items-center px-2 pb-10 pt-16 text-center md:px-6 md:pb-14 md:pt-24">
+          <h1 id="csv-upload-title" className="max-w-[672px] text-h3 text-foreground md:text-h2">
             Upload your transaction history
-          </h2>
-          <p className="text-p-sm text-muted-foreground max-w-md mx-auto">
-            Drop one or more Trading 212 exports. We&apos;ll merge them, strip duplicates, and visualize your portfolio.
+          </h1>
+          <p className="mt-4 max-w-[520px] text-pretty text-p text-fg-secondary md:text-p-lg">
+            Drop one or more Trading 212 exports. We&apos;ll merge them, strip duplicates and chart your portfolio.
           </p>
-        </motion.div>
+        </BlurReveal>
 
         <input
           ref={fileInputRef}
@@ -354,220 +392,298 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
           aria-describedby="file-upload-description"
         />
 
-        <motion.div variants={fadeInUp}>
-          {uploadState === 'idle' && (
-            <div
-              className={cn(
-                'relative flex flex-col items-center justify-center',
-                'border-2 border-dashed rounded-2xl',
-                'p-12 cursor-pointer transition-all duration-300',
-                'bg-card/50 backdrop-blur-sm',
-                isDragging
-                  ? 'border-primary bg-primary/5 scale-[1.02]'
-                  : 'border-border/50 hover:border-primary/50 hover:bg-muted/30'
-              )}
-              onClick={handleButtonClick}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  handleButtonClick()
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label="Click to upload CSV files or drag and drop"
-              aria-describedby="file-upload-description"
-            >
-              <motion.div
-                className={cn(
-                  'w-16 h-16 rounded-2xl flex items-center justify-center mb-5',
-                  'bg-gradient-to-br from-primary/10 to-accent/10',
-                  'border border-primary/20'
-                )}
-                animate={isDragging ? { scale: 1.1, y: -5 } : { scale: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              >
-                <span className={cn(
-                  'text-3xl font-light transition-colors',
-                  isDragging ? 'text-primary' : 'text-muted-foreground'
-                )}>+</span>
-              </motion.div>
-
-              <p className="text-sm font-medium mb-1">
-                {isDragging ? 'Drop your files here' : 'Click to upload or drag and drop'}
-              </p>
-              <p id="file-upload-description" className="text-xs text-muted-foreground">
-                One or more CSV files, max 5MB each
-              </p>
-
-              <div className="mt-6 pt-6 border-t border-border/50 w-full max-w-xs">
-                <p className="text-xs text-muted-foreground text-center">
-                  <span className="font-medium text-foreground">How to export:</span>
-                  {' '}Trading 212 → History → Export
-                </p>
-              </div>
-            </div>
-          )}
-
-          {uploadState === 'staging' && (
-            <div
-              className={cn(
-                'flex flex-col gap-4 p-6 rounded-2xl border border-border/50',
-                'bg-card/50 backdrop-blur-sm',
-                isDragging && 'border-primary bg-primary/5'
-              )}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              role="region"
-              aria-label="Files ready to upload"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">
-                    {stagedFiles.length} file{stagedFiles.length === 1 ? '' : 's'} ready
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Review your selection, then continue to process.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddMoreClick}
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  + Add more files
-                </button>
-              </div>
-
-              {stagingRejects.length > 0 && (
-                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
-                  <p className="text-xs font-medium text-destructive mb-1">
-                    {stagingRejects.length} file{stagingRejects.length === 1 ? '' : 's'} skipped
-                  </p>
-                  <ul className="space-y-0.5">
-                    {stagingRejects.map((msg, i) => (
-                      <li key={i} className="text-[11px] text-destructive/80">{msg}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <ul className="flex flex-col gap-2" aria-label="Staged files">
-                {stagedFiles.map((file) => {
-                  const key = fileKey(file)
-                  return (
-                    <li
-                      key={key}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-background/60 px-3 py-2"
+        <BlurReveal immediate delay={0.1}>
+          {/* Main cell: the drop zone and every upload state */}
+          <div className="border-y border-border md:border-x">
+            <div className="p-3 md:p-6">
+              <AnimatePresence mode="wait" initial={false}>
+                {uploadState === 'idle' && (
+                  <motion.div key="idle" {...swap}>
+                    <div
+                      className={cn(
+                        'group relative flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center md:min-h-[340px]',
+                        'transition-[border-color,background-color] duration-200 ease-in-out',
+                        isDragging
+                          ? 'border-border-hover bg-white/[0.03]'
+                          : 'border-border-strong hover:border-border-hover hover:bg-white/[0.03]'
+                      )}
+                      onClick={handleButtonClick}
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleButtonClick()
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Click to upload CSV files or drag and drop"
+                      aria-describedby="file-upload-description"
+                      data-dragging={isDragging || undefined}
                     >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{file.name}</p>
-                        <p className="text-[11px] text-muted-foreground tabular-nums">
-                          {formatBytes(file.size)}
+                      {/* Children ignore pointer events so drag-leave does not flicker */}
+                      <div className="pointer-events-none flex flex-col items-center">
+                        <IconBox
+                          className={cn(
+                            'transition-[color,background-color] duration-200',
+                            isDragging ? 'bg-surface-4 text-white' : 'group-hover:bg-surface-3'
+                          )}
+                        >
+                          <Upload className="h-4 w-4" strokeWidth={1.5} />
+                        </IconBox>
+
+                        <p className="mt-6 text-p text-foreground">
+                          {isDragging ? 'Release to add your files' : 'Drop your Trading 212 CSV here'}
+                        </p>
+                        <p className="mt-1 text-p-sm text-fg-secondary">or click to browse</p>
+
+                        <span
+                          className={cn(buttonVariants({ variant: 'default' }), 'mt-6 group-active:scale-[0.97]')}
+                          aria-hidden="true"
+                        >
+                          Choose files
+                        </span>
+
+                        <p id="file-upload-description" className="mt-6 text-label text-fg-gray">
+                          CSV only, up to 5 MB each. Add several files to merge them.
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveStaged(key)}
-                        className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        aria-label={`Remove ${file.name}`}
-                      >
-                        <span className="text-lg leading-none">×</span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="text-sm font-medium px-4 py-2 rounded-lg text-muted-foreground hover:bg-muted/60 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleContinue}
-                  disabled={stagedFiles.length === 0}
-                  className="text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          )}
-
-          {uploadState === 'parsing' && (
-            <div
-              className="flex flex-col items-center gap-5 p-12 bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50"
-              role="status"
-              aria-live="polite"
-              aria-label="Processing files"
-            >
-              <div
-                className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center"
-                aria-hidden="true"
-              >
-                <span className="text-2xl font-bold text-primary animate-pulse">...</span>
-              </div>
-              <div className="text-center w-full max-w-xs">
-                <p className="text-sm font-medium mb-1">Processing your files</p>
-                <p className="text-xs text-muted-foreground truncate">{progress.status}</p>
-                {progress.total > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                      <motion.div
-                        className="h-full bg-primary"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPct}%` }}
-                        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                      />
                     </div>
-                    <p className="text-[11px] text-muted-foreground tabular-nums">
-                      {progress.done} / {progress.total} files
-                    </p>
-                  </div>
+                  </motion.div>
                 )}
-              </div>
-            </div>
-          )}
 
-          {uploadState === 'error' && (
-            <div className="p-6 bg-card/50 rounded-2xl border-l-4 border border-destructive/30">
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-destructive mb-2">Upload Failed</p>
-                  <ul className="space-y-1">
-                    {errors.map((error, index) => (
-                      <li key={index} className="text-xs text-destructive/80">
-                        {error}
-                      </li>
+                {uploadState === 'staging' && (
+                  <motion.div key="staging" {...swap}>
+                    <div
+                      className={cn(
+                        'flex min-h-[300px] flex-col overflow-hidden rounded-xl border bg-surface-1 md:min-h-[340px]',
+                        'transition-[border-color,background-color] duration-200 ease-in-out',
+                        isDragging ? 'border-border-hover bg-surface-2' : 'border-border'
+                      )}
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      role="region"
+                      aria-label="Files ready to upload"
+                    >
+                      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 md:px-5">
+                        <div className="min-w-0">
+                          <p className="text-p-sm text-foreground">
+                            <span className="tabular">{stagedFiles.length}</span> file{stagedFiles.length === 1 ? '' : 's'} ready
+                            <span className="text-fg-gray"> · <span className="tabular">{formatBytes(stagedBytes)}</span></span>
+                          </p>
+                          <p className="mt-0.5 text-label text-fg-secondary">
+                            Review your selection, then continue to process.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleAddMoreClick}
+                          className="text-fg-secondary"
+                        >
+                          <Plus strokeWidth={1.5} aria-hidden="true" />
+                          Add more files
+                        </Button>
+                      </div>
+
+                      {stagingRejects.length > 0 && (
+                        <div className="flex gap-3 border-b border-border bg-negative/[0.04] px-4 py-3 md:px-5" role="alert">
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-negative" strokeWidth={1.5} aria-hidden="true" />
+                          <div className="min-w-0">
+                            <p className="text-p-sm text-negative">
+                              <span className="tabular">{stagingRejects.length}</span> file{stagingRejects.length === 1 ? '' : 's'} skipped
+                            </p>
+                            <ul className="mt-1 space-y-0.5">
+                              {stagingRejects.map((msg, i) => (
+                                <li key={i} className="break-words text-label text-fg-secondary">{msg}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      <ul aria-label="Staged files">
+                        <AnimatePresence initial={false}>
+                          {stagedFiles.map((file) => {
+                            const key = fileKey(file)
+                            return (
+                              <motion.li
+                                key={key}
+                                layout={!reduce}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1, transition: { duration: DUR.quick } }}
+                                exit={{ opacity: 0, transition: { duration: DUR.quick } }}
+                                className="flex h-14 items-center gap-3 border-b border-border px-4 md:px-5"
+                              >
+                                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-surface-3 text-fg-secondary" aria-hidden="true">
+                                  <FileText className="h-4 w-4" strokeWidth={1.5} />
+                                </span>
+                                <p className="min-w-0 flex-1 truncate text-p-sm text-foreground">{file.name}</p>
+                                <span className="tabular shrink-0 text-label text-fg-gray">
+                                  {formatBytes(file.size)}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveStaged(key)}
+                                  className="-mr-2 grid h-8 w-8 shrink-0 place-items-center rounded-md text-fg-gray transition-[color,background-color] duration-150 hover:bg-white/5 hover:text-white"
+                                  aria-label={`Remove ${file.name}`}
+                                >
+                                  <X className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                                </button>
+                              </motion.li>
+                            )
+                          })}
+                        </AnimatePresence>
+                      </ul>
+
+                      {/* Remaining space doubles as a drop target for more files */}
+                      <div className="flex flex-1 p-3" aria-hidden="true">
+                        <div
+                          className={cn(
+                            'pointer-events-none flex min-h-16 flex-1 items-center justify-center gap-2 rounded-lg border border-dashed text-label',
+                            'transition-[border-color,color] duration-200 ease-in-out',
+                            isDragging ? 'border-border-hover text-foreground' : 'border-border-strong text-fg-gray'
+                          )}
+                        >
+                          <Upload className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          {isDragging ? 'Release to add these files' : 'Drop more files here'}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 border-t border-border px-4 py-3 md:px-5">
+                        <div className="flex items-center gap-2">
+                          <Button type="button" variant="ghost" onClick={handleReset}>
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleContinue}
+                            disabled={stagedFiles.length === 0}
+                          >
+                            Continue
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {uploadState === 'parsing' && (
+                  <motion.div key="parsing" {...swap}>
+                    <div
+                      className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-border bg-surface-1 px-6 py-12 text-center md:min-h-[340px]"
+                      role="status"
+                      aria-live="polite"
+                      aria-label="Processing files"
+                    >
+                      <IconBox>
+                        <FileSpreadsheet className="h-4 w-4" strokeWidth={1.5} />
+                      </IconBox>
+                      <p className="working-shimmer mt-6 text-p">Processing your files</p>
+                      <p className="mt-1 max-w-full truncate text-p-sm text-fg-secondary">{progress.status}</p>
+                      {progress.total > 0 && (
+                        <div className="mt-6 w-full max-w-[320px]">
+                          <div
+                            className="h-0.5 w-full overflow-hidden rounded-full bg-surface-3"
+                            role="progressbar"
+                            aria-label="Files processed"
+                            aria-valuemin={0}
+                            aria-valuemax={progress.total}
+                            aria-valuenow={progress.done}
+                          >
+                            <motion.div
+                              className="h-full rounded-full bg-foreground"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progressPct}%` }}
+                              transition={{ duration: DUR.medium, ease: EASE.smoothOut }}
+                            />
+                          </div>
+                          <p className="tabular mt-2 text-label text-fg-gray">
+                            {progress.done} / {progress.total} files
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {uploadState === 'error' && (
+                  <motion.div key="error" {...swap}>
+                    <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-border px-3 py-10 md:min-h-[340px] md:px-6">
+                      <div className="w-full max-w-[600px]">
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
+                          <AlertTitle>Upload failed</AlertTitle>
+                          <AlertDescription>
+                            <ul className="space-y-1">
+                              {errors.map((error, index) => (
+                                <li key={index} className="break-words text-p-sm text-fg-secondary">
+                                  {error}
+                                </li>
+                              ))}
+                            </ul>
+                          </AlertDescription>
+                        </Alert>
+                        <div className="mt-4 flex justify-center">
+                          <Button variant="outline" onClick={handleReset}>
+                            <RotateCcw strokeWidth={1.5} aria-hidden="true" />
+                            Try again
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Reassurance: three cells sharing hairlines with the drop zone cell */}
+          <ul className="grid grid-cols-1 border-b border-border md:grid-cols-3 md:border-x">
+            {REASSURANCE.map((item, i) => (
+              <li
+                key={item.title}
+                className={cn(
+                  'flex flex-col gap-2 px-4 py-5 md:p-6',
+                  i > 0 && 'border-t border-border md:border-l md:border-t-0'
+                )}
+              >
+                <p className="flex items-center gap-2 text-p-sm text-foreground">
+                  {'dot' in item ? (
+                    <span className="status-dot" aria-hidden="true" />
+                  ) : (
+                    <item.icon className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} aria-hidden="true" />
+                  )}
+                  {item.title}
+                </p>
+                {'steps' in item ? (
+                  <p className="flex flex-wrap items-center gap-1 text-p-sm text-fg-secondary">
+                    {item.steps.map((step, s) => (
+                      <span key={step} className="inline-flex items-center gap-1">
+                        {s > 0 && (
+                          <>
+                            <ChevronRight className="h-3.5 w-3.5 text-fg-gray" strokeWidth={1.5} aria-hidden="true" />
+                            <span className="sr-only">then</span>
+                          </>
+                        )}
+                        {step}
+                      </span>
                     ))}
-                  </ul>
-                  <button
-                    onClick={handleReset}
-                    className="mt-4 text-xs font-medium text-primary hover:underline"
-                  >
-                    Try again
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div variants={fadeInUp} className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <span><strong className="text-foreground">Private.</strong> Your data is processed locally in your browser.</span>
-        </motion.div>
-      </motion.div>
+                  </p>
+                ) : (
+                  <p className="text-pretty text-p-sm text-fg-secondary">{item.body}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </BlurReveal>
+      </Container>
 
       {pendingMerge && (
         <CurrencyPickerDialog
