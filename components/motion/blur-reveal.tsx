@@ -1,7 +1,27 @@
 'use client'
 
-import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion'
+import { useSyncExternalStore } from 'react'
+import { motion, type HTMLMotionProps } from 'framer-motion'
 import { DUR, EASE, STAGGER } from '@/lib/motion'
+
+const QUERY = '(prefers-reduced-motion: reduce)'
+const subscribe = (cb: () => void) => {
+  const mq = window.matchMedia(QUERY)
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
+}
+
+/**
+ * Reduced-motion preference that is always `false` on the server and during
+ * hydration, so the server and client render the same initial styles.
+ */
+export function useReducedMotionSafe() {
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(QUERY).matches,
+    () => false
+  )
+}
 
 type RevealProps = Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'whileInView'> & {
   /** Delay in seconds */
@@ -17,12 +37,14 @@ type RevealProps = Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'whileIn
  * With reduced motion only opacity cross-fades.
  */
 export function BlurReveal({ delay = 0, soft = false, immediate = false, children, ...props }: RevealProps) {
-  const reduce = useReducedMotion()
-  const hidden = reduce
-    ? { opacity: 0 }
-    : { opacity: 0, y: soft ? 12 : 24, filter: soft ? 'blur(3px)' : 'blur(8px)' }
-  const shown = reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }
-  const transition = { duration: soft ? 0.9 : DUR.reveal, delay, ease: EASE.house }
+  const reduce = useReducedMotionSafe()
+  // Same start and end styles in every mode (no hydration mismatch). With
+  // reduced motion the blur and rise resolve instantly and only opacity fades.
+  const hidden = { opacity: 0, y: soft ? 12 : 24, filter: soft ? 'blur(3px)' : 'blur(8px)' }
+  const shown = { opacity: 1, y: 0, filter: 'blur(0px)' }
+  const transition = reduce
+    ? { duration: DUR.quick, delay, y: { duration: 0 }, filter: { duration: 0 } }
+    : { duration: soft ? 0.9 : DUR.reveal, delay, ease: EASE.house }
 
   return (
     <motion.div
@@ -62,14 +84,19 @@ export function StaggerIn({ stagger = STAGGER.base, delay = 0, immediate = false
 }
 
 export function StaggerItem({ children, ...props }: Omit<HTMLMotionProps<'div'>, 'variants'>) {
-  const reduce = useReducedMotion()
+  const reduce = useReducedMotionSafe()
   return (
     <motion.div
       variants={{
-        hidden: reduce ? { opacity: 0 } : { opacity: 0, y: 24, filter: 'blur(8px)' },
-        shown: reduce
-          ? { opacity: 1, transition: { duration: DUR.quick } }
-          : { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: DUR.reveal, ease: EASE.house } },
+        hidden: { opacity: 0, y: 24, filter: 'blur(8px)' },
+        shown: {
+          opacity: 1,
+          y: 0,
+          filter: 'blur(0px)',
+          transition: reduce
+            ? { duration: DUR.quick, y: { duration: 0 }, filter: { duration: 0 } }
+            : { duration: DUR.reveal, ease: EASE.house },
+        },
       }}
       {...props}
     >
