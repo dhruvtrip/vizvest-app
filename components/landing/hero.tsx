@@ -1,140 +1,56 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
-import { RotatingText } from '@/components/ui/rotating-text'
-import { ArrowRight, Shield, Zap, Lock, HandCoins } from 'lucide-react'
+import { Container, GridGuides } from '@/components/layout/container'
+import { WordRotator } from '@/components/motion/word-rotator'
+import { HeroLight } from './hero-light'
+import { HeroProductFrame } from './hero-product-frame'
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-}
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1
-    }
-  }
-}
+const ROTATING_WORDS = [
+  'complete portfolio',
+  'dividend income',
+  'trading performance',
+  'stock positions',
+  'market winners',
+] as const
 
 export function Hero() {
-  const [isLoaded, setIsLoaded] = useState(false)
-
-  useEffect(() => {
-    setIsLoaded(true)
-  }, [])
+  const sectionRef = useRef<HTMLElement>(null)
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
-      {/* Enhanced Background for Dark Mode */}
-      <div className="absolute inset-0 -z-10">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
+    <section ref={sectionRef} className="relative isolate overflow-clip border-b border-border">
+      <HeroLight trackRef={sectionRef} />
+      <GridGuides />
 
-        {/* Radial gradient spotlight */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),transparent)]" />
+      <Container className="pb-24 pt-20 text-center md:pb-[136px] md:pt-28">
+        <h1 className="blur-in flex flex-col items-center gap-2 px-2 text-h2-m text-foreground md:px-6 md:text-h2">
+          <span>Visualize your Trading 212</span>
+          <WordRotator words={ROTATING_WORDS} className="w-full justify-items-center" />
+        </h1>
 
-        {/* Animated glow orbs */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 2 }}
-          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/20 dark:bg-primary/10 rounded-full blur-[120px]"
-        />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 2, delay: 0.5 }}
-          className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/20 dark:bg-accent/10 rounded-full blur-[100px]"
-        />
-      </div>
+        <p className="blur-in blur-in-1 mx-auto mt-4 max-w-[704px] text-pretty px-2 text-p-lg text-foreground/60 md:px-6">
+          Transform your Trading 212 exports into powerful insights. Track dividends, analyze performance and make
+          smarter investment decisions.
+        </p>
 
-      <div className="container mx-auto px-6 relative z-10 py-14 lg:py-32">
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate={isLoaded ? 'visible' : 'hidden'}
-          className="max-w-4xl mx-auto text-center space-y-8"
-        >
-          {/* Badge */}
-          <motion.div variants={fadeInUp}>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand/10 border border-brand/25 text-xs font-medium text-brand backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand" />
-              </span>
-              Trading Portfolio Analytics
-            </span>
-          </motion.div>
+        <div className="blur-in blur-in-2 mt-8 flex justify-center gap-3">
+          <Button asChild onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}>
+            <Link href="/dashboard" aria-label="Open dashboard to analyze your portfolio">
+              Open dashboard
+            </Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href="#how-it-works" aria-label="Learn how Vizvest works">
+              See how it works
+            </Link>
+          </Button>
+        </div>
 
-          {/* Heading */}
-          <motion.div variants={fadeInUp} className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-light tracking-tight leading-[1.05]">
-              Visualize Your{' '}
-              <span className="block">
-                <RotatingText
-                  words={[
-                    'Complete Portfolio',
-                    'Dividend Income',
-                    'Trading Performance',
-                    'Stock Positions',
-                    'Market Winners'
-                  ]}
-                  className="text-foreground"
-                />
-              </span>
-            </h1>
-            <p className="text-base sm:text-lg text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
-              Transform your Trading 212 exports into powerful insights. Track dividends, analyze performance, and make smarter investment decisions
-            </p>
-          </motion.div>
-
-          {/* CTAs */}
-          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button
-              asChild
-              size="lg"
-              className="text-sm h-11 px-8 gap-2 bg-brand text-white hover:bg-brand"
-              onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
-            >
-              <Link href="/dashboard" aria-label="Open dashboard to analyze your portfolio">
-                Open Dashboard
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="text-sm h-11 px-8 hover:bg-muted/50 transition-colors border-border/50 backdrop-blur-sm">
-              <Link href="#how-it-works" aria-label="Learn how Vizvest works">
-                Learn how it works
-              </Link>
-            </Button>
-          </motion.div>
-
-          {/* Trust Indicators */}
-          <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-8 pt-8" role="list" aria-label="Key features">
-            {[
-              { icon: Zap, text: 'Instant analysis' },
-              { icon: Lock, text: 'Privacy first' },
-              { icon: HandCoins, text: 'Free to use' }
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground" role="listitem">
-                <div className="w-8 h-8 rounded-lg bg-muted/50 dark:bg-muted/30 flex items-center justify-center" aria-hidden="true">
-                  <Icon className="w-4 h-4 text-primary" />
-                </div>
-                <span>{text}</span>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Soft bottom fade for seamless product shot transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background/80 to-transparent" />
+        <HeroProductFrame className="mt-14 md:ml-[50%] md:mt-20 md:w-[min(1309px,calc(100vw-120px))] md:-translate-x-1/2" />
+      </Container>
     </section>
   )
 }

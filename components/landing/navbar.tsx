@@ -1,171 +1,250 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { usePathname } from 'next/navigation'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { ArrowRight, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Container } from '@/components/layout/container'
+import { Wordmark } from '@/components/layout/wordmark'
+import { EASE } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { Menu, X, ChevronRight } from 'lucide-react'
 
 const navLinks = [
   { label: 'Features', href: '/#features' },
   { label: 'How it works', href: '/#how-it-works' },
+  { label: 'FAQ', href: '/#faqs' },
   { label: 'Articles', href: '/articles' },
 ]
 
-export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false)
+/**
+ * Site header: a 56px sticky bar (black at 85% with an 8px backdrop blur and a
+ * hairline), links centred on desktop, one primary action on the right.
+ * With `banner`, a 48px privacy banner sits in the page flow under the bar.
+ */
+export function Navbar({ banner = false }: { banner?: boolean }) {
+  const pathname = usePathname()
+  const reduce = useReducedMotion()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const firstMenuItemRef = useRef<HTMLAnchorElement>(null)
+  const wasOpen = useRef(false)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  const closeMenu = useCallback(() => setIsMobileMenuOpen(false), [])
 
-  // Focus management for mobile menu
+  // Focus management: first link on open, back to the menu button on close
   useEffect(() => {
-    if (isMobileMenuOpen && firstMenuItemRef.current) {
-      firstMenuItemRef.current.focus()
-    } else if (!isMobileMenuOpen && menuButtonRef.current) {
-      menuButtonRef.current.focus()
+    if (isMobileMenuOpen) {
+      firstMenuItemRef.current?.focus()
+    } else if (wasOpen.current) {
+      menuButtonRef.current?.focus()
     }
+    wasOpen.current = isMobileMenuOpen
   }, [isMobileMenuOpen])
 
-  // Close menu on Escape key
+  // Escape closes, Tab cycles between the menu button and the panel
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isMobileMenuOpen) {
+    if (!isMobileMenuOpen) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         setIsMobileMenuOpen(false)
         menuButtonRef.current?.focus()
+        return
+      }
+      if (e.key !== 'Tab' || !panelRef.current || !menuButtonRef.current) return
+      const items = [
+        menuButtonRef.current,
+        ...Array.from(panelRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')),
+      ]
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
       }
     }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
   }, [isMobileMenuOpen])
+
+  // The panel only exists below md: close it if the viewport grows past that
+  useEffect(() => {
+    if (!isMobileMenuOpen) return
+    const mq = window.matchMedia('(min-width: 768px)')
+    const onChange = () => mq.matches && setIsMobileMenuOpen(false)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [isMobileMenuOpen])
+
+  const isCurrent = (href: string) => !href.includes('#') && (pathname === href || pathname?.startsWith(`${href}/`))
 
   return (
     <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          isScrolled
-            ? 'bg-background/50 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/10 dark:border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
-            : 'bg-background/20 backdrop-blur-md backdrop-saturate-150'
-        )}
-      >
-        <nav className="container mx-auto px-6" aria-label="Main navigation">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <Link 
-              href="/" 
-              className="flex items-center hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
-              aria-label="Vizvest home"
-            >
-              <Image
-                src="/assets/logo-full-light-nobg.png"
-                alt="Vizvest"
-                width={150}
-                height={34}
-                className="h-20 w-auto dark:hidden"
-                priority
-              />
-              <Image
-                src="/assets/logo-full-dark-nobg.png"
-                alt="Vizvest"
-                width={150}
-                height={34}
-                className="hidden h-20 w-auto dark:block"
-                priority
-              />
-            </Link>
+      <header className="sticky top-0 z-50">
+        <div className="relative z-10 h-header border-b border-border bg-background/85 backdrop-blur-[8px]">
+          <Container className="h-full">
+            <nav aria-label="Main navigation" className="relative flex h-full items-center px-1 md:px-4">
+              <Link
+                href="/"
+                aria-label="Vizvest home"
+                className="flex h-8 items-center rounded-sm transition-opacity duration-200 ease-out hover:opacity-70"
+              >
+                <Wordmark />
+              </Link>
 
-            {/* Center: Desktop Navigation */}
-            <ul className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2" role="list">
-              {navLinks.map((link) => (
-                <li key={link.label} role="none">
-                  <Link
-                    href={link.href}
-                    className="px-3 py-2 text-xs sm:text-sm font-mono uppercase tracking-[1.2px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {/* Right: Desktop CTA */}
-            <div className="hidden md:flex items-center">
-              <Button asChild size="sm" className="text-xs h-8 gap-1 bg-brand text-white hover:bg-brand">
-                <Link href="/dashboard" aria-label="Open dashboard application">
-                  Open App
-                  <ChevronRight className="w-3 h-3" aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              ref={menuButtonRef}
-              className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="mobile-menu"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
-            </button>
-          </div>
-        </nav>
-      </motion.header>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-16 z-40 bg-background/60 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/10 dark:border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.08)] md:hidden"
-            id="mobile-menu"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Mobile navigation menu"
-          >
-            <nav className="container mx-auto px-6 py-4 space-y-2" aria-label="Mobile navigation">
-              <ul role="list">
-                {navLinks.map((link, index) => (
-                  <li key={link.label} role="none">
-                    <Link
-                      ref={index === 0 ? firstMenuItemRef : null}
-                      href={link.href}
-                      className="block px-3 py-2 text-xs font-mono uppercase tracking-[1.2px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+              <ul className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center md:flex">
+                {navLinks.map((link) => {
+                  const current = isCurrent(link.href)
+                  return (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        aria-current={current ? 'page' : undefined}
+                        className={cn(
+                          'flex h-8 items-center rounded-full px-3 text-p-sm font-medium',
+                          'transition-[color,background-color] duration-300 ease-out hover:text-white',
+                          current ? 'text-white' : 'text-fg-gray'
+                        )}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  )
+                })}
               </ul>
-              <div className="pt-2 border-t border-border">
-                <Button asChild className="w-full text-sm" size="sm">
-                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} aria-label="Open dashboard application">
-                    Open App
-                    <ChevronRight className="w-4 h-4 ml-1" aria-hidden="true" />
+
+              <div className="ml-auto flex items-center gap-2">
+                <Button asChild className="hidden md:inline-flex">
+                  <Link href="/dashboard" aria-label="Open dashboard application">
+                    Open dashboard
                   </Link>
                 </Button>
+
+                <button
+                  ref={menuButtonRef}
+                  type="button"
+                  className="-mr-1 grid size-10 place-items-center rounded-lg text-fg-secondary transition-[color,background-color] duration-200 ease-in-out hover:bg-white/5 hover:text-white active:scale-[0.97] md:hidden"
+                  onClick={() => setIsMobileMenuOpen((open) => !open)}
+                  aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isMobileMenuOpen}
+                  aria-controls="mobile-menu"
+                >
+                  <span className="relative size-5">
+                    <Menu
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                      className={cn(
+                        'absolute inset-0 size-5 transition-[opacity,transform] duration-200 ease-out',
+                        isMobileMenuOpen ? 'rotate-45 scale-50 opacity-0' : 'opacity-100'
+                      )}
+                    />
+                    <X
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                      className={cn(
+                        'absolute inset-0 size-5 transition-[opacity,transform] duration-200 ease-out',
+                        isMobileMenuOpen ? 'opacity-100' : '-rotate-45 scale-50 opacity-0'
+                      )}
+                    />
+                  </span>
+                </button>
               </div>
             </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </Container>
+        </div>
+
+        {/* Mobile menu: a full-width panel under the bar */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <>
+              <motion.div
+                key="scrim"
+                aria-hidden="true"
+                className="fixed inset-x-0 bottom-0 top-header bg-background/60 md:hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: EASE.out }}
+                onClick={closeMenu}
+              />
+              <motion.div
+                key="panel"
+                ref={panelRef}
+                id="mobile-menu"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Mobile navigation menu"
+                className="absolute inset-x-0 top-full max-h-[calc(100dvh-var(--header-h))] overflow-y-auto overscroll-contain border-b border-border bg-background/90 backdrop-blur-[12px] md:hidden"
+                initial={reduce ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(4px)' }}
+                animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
+                exit={
+                  reduce
+                    ? { opacity: 0, transition: { duration: 0.15 } }
+                    : { opacity: 0, y: -8, filter: 'blur(4px)', transition: { duration: 0.15, ease: EASE.out } }
+                }
+                transition={{ duration: 0.25, ease: EASE.smoothOut }}
+              >
+                <Container>
+                  <nav aria-label="Mobile navigation" className="pb-6">
+                    <ul>
+                      {navLinks.map((link, index) => {
+                        const current = isCurrent(link.href)
+                        return (
+                          <li key={link.label} className="border-b border-border">
+                            <Link
+                              ref={index === 0 ? firstMenuItemRef : null}
+                              href={link.href}
+                              aria-current={current ? 'page' : undefined}
+                              onClick={closeMenu}
+                              className={cn(
+                                'flex h-14 items-center justify-between px-1 text-p font-medium',
+                                'transition-colors duration-150 ease-out hover:text-white',
+                                current ? 'text-white' : 'text-foreground'
+                              )}
+                            >
+                              {link.label}
+                              <ArrowRight strokeWidth={1.5} className="size-4 text-fg-gray" aria-hidden="true" />
+                            </Link>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    <Button asChild size="lg" className="mt-6 w-full">
+                      <Link href="/dashboard" onClick={closeMenu} aria-label="Open dashboard application">
+                        Open dashboard
+                      </Link>
+                    </Button>
+                  </nav>
+                </Container>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {banner ? (
+        <div className="relative z-40 h-banner animate-banner-enter border-b border-border bg-background/85 backdrop-blur-[8px]">
+          <Container className="h-full">
+            <Link
+              href="/privacy"
+              className="flex h-full items-center justify-center gap-2 px-1 transition-opacity duration-200 ease-out hover:opacity-50 md:px-4"
+            >
+              <span className="shrink-0 rounded-sm bg-brand/15 px-2 py-1 text-small text-brand">
+                Private<span className="hidden sm:inline"> by design</span>
+              </span>
+              <span className="flex min-w-0 items-center gap-2 text-small text-foreground">
+                <span className="truncate">Your CSV never leaves your browser.</span>
+                <ArrowRight strokeWidth={1.5} className="size-3.5 shrink-0" aria-hidden="true" />
+              </span>
+            </Link>
+          </Container>
+        </div>
+      ) : null}
     </>
   )
 }
