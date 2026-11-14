@@ -453,7 +453,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
   )
 }
 
-export function FeaturesBento() {
+export function Features() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
