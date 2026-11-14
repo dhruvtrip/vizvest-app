@@ -2,58 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Vizvest design tokens (dark only)
+   Colours are HSL triplets so Tailwind opacity modifiers keep working:
+   hsl(var(--token) / <alpha>)
+   ========================================================================== */
+
 @layer base {
   :root {
-    --background: 40 30% 98%;
-    --foreground: 0 0% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
-    --primary: 0 0% 4%;
-    --primary-foreground: 40 30% 98%;
-    --secondary: 40 15% 95%;
-    --secondary-foreground: 0 0% 4%;
-    --muted: 40 15% 95%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 40 15% 95%;
-    --accent-foreground: 0 0% 4%;
-    --destructive: 0 60% 38%;
-    --destructive-foreground: 40 30% 98%;
-    --success: 150 55% 26%;
-    --success-foreground: 40 30% 98%;
-    --brand: 134 58% 47%;
-    --brand-foreground: 0 0% 100%;
-    --border: 38 15% 90%;
-    --input: 38 15% 90%;
-    --ring: 0 0% 4%;
-    --radius: 0.5rem;
+    color-scheme: dark;
+
+    /* shadcn roles */
+    --background: 0 0% 0%;            /* #000000 page */
+    --foreground: 203 29% 95%;        /* #EDF2F5 primary text */
+    --card: 0 0% 0%;
+    --card-foreground: 203 29% 95%;
+    --popover: 240 7% 6%;             /* #0E0E10 */
+    --popover-foreground: 203 29% 95%;
+    --primary: 0 0% 100%;             /* white primary button */
+    --primary-foreground: 0 0% 13%;   /* #222222 */
+    --secondary: 0 0% 20%;            /* #333333 secondary button */
+    --secondary-foreground: 203 29% 95%;
+    --muted: 0 0% 9%;                 /* #171717 */
+    --muted-foreground: 0 0% 62%;     /* #9F9F9F secondary text */
+    --accent: 0 0% 10.6%;             /* #1B1B1B hover */
+    --accent-foreground: 203 29% 95%;
+    --destructive: 0 100% 65%;        /* #FF4D4D */
+    --destructive-foreground: 0 0% 7%;
+    --border: 0 0% 13.7%;             /* #232323 every hairline */
+    --input: 0 0% 13.7%;
+    --ring: 0 0% 100%;
+    --radius: 0.5rem;                 /* 8px: buttons, menu items, frames */
+
+    /* surfaces, darkest to lightest */
+    --surface-1: 240 7% 6%;           /* #0E0E10 demo canvas, sidebar */
+    --surface-2: 240 5% 8.2%;         /* #141416 panels */
+    --surface-3: 240 4% 10.6%;        /* #1A1A1C fields */
+    --surface-4: 240 3% 14.5%;        /* #242426 chips */
+    --surface-5: 240 4% 19%;          /* #2E2E32 segmented active */
+
+    /* lines */
+    --border-strong: 0 0% 17%;        /* #2C2C2C */
+    --border-hover: 0 0% 31%;         /* #505050 */
+
+    /* text steps */
+    --fg-secondary: 0 0% 62%;         /* #9F9F9F */
+    --fg-gray: 0 0% 51%;              /* #828282 */
+    --fg-tertiary: 0 0% 31%;          /* #505050 */
+
+    /* brand + status (status colours are never used as chart series) */
+    --brand: 134 58% 47%;             /* Vizvest green */
+    --brand-foreground: 0 0% 4%;
+    --positive: 134 62% 56%;
+    --negative: 0 100% 65%;
+    --warning: 39 100% 57%;           /* #FFB224 */
+    --info: 213 100% 66%;             /* #54A2FF */
+    --success: 134 62% 56%;
+    --success-foreground: 0 0% 4%;
+
+    /* charts: single series uses --chart-ink, multi-series uses 1..8 in fixed order
+       (validated for colour-vision separation and contrast on #000) */
+    --chart-ink: 203 29% 95%;
+    --chart-1: 213 77% 56%;           /* #3987E5 blue */
+    --chart-2: 17 70% 50%;            /* #D95926 orange */
+    --chart-3: 159 73% 36%;           /* #199E70 aqua */
+    --chart-4: 40 100% 39%;           /* #C98500 yellow */
+    --chart-5: 338 61% 58%;           /* #D55181 magenta */
+    --chart-6: 120 86% 34%;           /* #0CA30C green */
+    --chart-7: 247 69% 72%;           /* #9085E9 violet */
+    --chart-8: 0 72% 65%;             /* #E66767 red */
+
+    /* layout */
+    --container: 1088px;
+    --header-h: 56px;
+    --banner-h: 48px;
+    --section-gap: 160px;
+
+    /* shadows: the page itself has none, only inset rings on product surfaces */
+    --shadow-demo-surface: inset 0 0 0 0.8px rgb(255 255 255 / 0.08),
+      0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --ring-frame: inset 0 0 0 1px hsl(var(--border));
+
+    /* motion */
+    --ease-house: cubic-bezier(0.25, 0.46, 0.45, 0.94);     /* ease-out-quad, the default */
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+    --ease-in-quad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+    --ease-smoothstep: cubic-bezier(0.33, 0, 0.67, 1);
+    --ease-swap: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .dark {
-    --background: 0 0% 4%;
-    --foreground: 40 15% 96%;
-    --card: 40 4% 8%;
-    --card-foreground: 40 15% 96%;
-    --popover: 40 4% 8%;
-    --popover-foreground: 40 15% 96%;
-    --primary: 40 15% 96%;
-    --primary-foreground: 0 0% 4%;
-    --secondary: 40 4% 11%;
-    --secondary-foreground: 40 15% 96%;
-    --muted: 40 4% 11%;
-    --muted-foreground: 40 3% 60%;
-    --accent: 40 4% 11%;
-    --accent-foreground: 40 15% 96%;
-    --destructive: 0 75% 68%;
-    --destructive-foreground: 0 0% 4%;
-    --success: 142 71% 58%;
-    --success-foreground: 0 0% 4%;
-    --brand: 134 58% 47%;
-    --brand-foreground: 0 0% 100%;
-    --border: 40 4% 15%;
-    --input: 40 4% 15%;
-    --ring: 40 15% 96%;
+  @media (max-width: 767px) {
+    :root {
+      --section-gap: 120px;
+    }
   }
 }
 
@@ -61,24 +106,43 @@
   * {
     @apply border-border;
   }
+  html {
+    background: hsl(var(--background));
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans), system-ui, sans-serif;
+    font-feature-settings: 'cv01', 'cv05', 'ss03', 'kern', 'calt';
+    font-optical-sizing: auto;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-size: 16px;
+    line-height: 24px;
+    overflow-x: clip;
   }
-  h1, h2, h3, h4, h5, h6,
-  .font-heading {
-    font-family: var(--font-heading), system-ui, sans-serif;
-    font-weight: 300;
-    letter-spacing: -0.02em;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 500;
+    text-wrap: balance;
+  }
+  ::selection {
+    background: rgb(255 255 255 / 0.18);
   }
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Focus: 2px white outline, 2px offset */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
-/* Reduced motion */
+/* Reduced motion: movement, scale and blur stop; state still changes */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -90,7 +154,7 @@ html {
   }
 }
 
-/* Screen reader only class */
+/* Screen reader only */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -104,17 +168,7 @@ html {
 }
 
 .sr-only:focus,
-.sr-only:focus-visible {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: inherit;
-  margin: inherit;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
-}
-
+.sr-only:focus-visible,
 .focus\:not-sr-only:focus {
   position: static;
   width: auto;
@@ -126,278 +180,217 @@ html {
   white-space: normal;
 }
 
-/* Focus visible styles */
-*:focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
-}
-
-/* GPU-accelerated animations */
-.transform-gpu {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Theme transition */
-html.dark {
-  color-scheme: dark;
-}
-
-/* Custom scrollbar */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: hsl(var(--border));
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
-}
-
-/* Dark mode scrollbar */
-.dark::-webkit-scrollbar-track {
-  background: hsl(var(--background));
-}
-
-.dark::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-}
-
-.dark::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: hsl(var(--border-hover));
 }
 
 /* ==========================================================================
-   Typography System - Financial Dashboard
+   Layout primitives
    ========================================================================== */
 
-/* Base typography improvements */
-body {
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+@layer components {
+  /* 1088px container with 16px gutters gives the 1056px hairline grid */
+  .site-container {
+    position: relative;
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: 16px;
+  }
+
+  /* Dashed column guides on the grid edges. Put inside a relative parent. */
+  .grid-guides {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+    mix-blend-mode: lighten;
+  }
+  .grid-guides > .site-container {
+    height: 100%;
+  }
+  .grid-guides > .site-container::before,
+  .grid-guides > .site-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-image: linear-gradient(to bottom, hsl(var(--border)) 50%, transparent 50%);
+    background-size: 1px 12px;
+  }
+  .grid-guides > .site-container::before {
+    left: 16px;
+  }
+  .grid-guides > .site-container::after {
+    right: 16px;
+  }
+
+  /* Cells that share hairlines: no gaps, no shadows, no radius */
+  .cell-grid {
+    display: grid;
+    border-top: 1px solid hsl(var(--border));
+    border-left: 1px solid hsl(var(--border));
+  }
+  .cell-grid > * {
+    min-width: 0;
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  /* Product-surface ring used inside mocks, fields and panels */
+  .demo-surface {
+    box-shadow: var(--shadow-demo-surface);
+  }
+
+  /* Frosted frame for the hero product shot */
+  .frame-ring {
+    box-shadow: var(--ring-frame);
+  }
+
+  /* Small square status dot */
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+    background: hsl(var(--brand));
+    flex: none;
+  }
+
+  /* "Working" shimmer: a white band sweeps across tertiary text */
+  .working-shimmer {
+    background-image: linear-gradient(
+        90deg,
+        transparent calc(50% - 14px),
+        hsl(var(--foreground)),
+        transparent calc(50% + 14px)
+      ),
+      linear-gradient(hsl(var(--fg-gray)), hsl(var(--fg-gray)));
+    background-size: 250% 100%, auto;
+    background-repeat: no-repeat;
+    background-position: 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: working-shimmer 1s linear infinite;
+  }
 }
 
-/* --------------------------------------------------------------------------
-   Metric & Data Display
-   -------------------------------------------------------------------------- */
-
-.metric-value {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 1.875rem;
-  line-height: 1.1;
-  font-weight: 300;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "kern" 1;
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* legacy alias, kept so numeric columns stay aligned */
+  .font-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
 }
 
-.metric-value-lg {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 2.5rem;
-  line-height: 1.05;
-  font-weight: 300;
-  letter-spacing: -0.035em;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "kern" 1;
+/* ==========================================================================
+   Keyframes (one-shot sequences only; interactive state uses transitions)
+   ========================================================================== */
+
+@property --reveal {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 120%;
 }
 
-.metric-label {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
+@keyframes working-shimmer {
+  to {
+    background-position: 0;
+  }
 }
 
-/* --------------------------------------------------------------------------
-   Tabular & Numeric Figures
-   -------------------------------------------------------------------------- */
-
-.font-tabular {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+@keyframes banner-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.font-oldstyle {
-  font-variant-numeric: oldstyle-nums;
-  font-feature-settings: "onum" 1;
+@keyframes diagonal-reveal {
+  from {
+    --reveal: -20%;
+  }
+  to {
+    --reveal: 120%;
+  }
 }
 
-.font-slashed-zero {
-  font-feature-settings: "zero" 1;
+@keyframes blur-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
 }
 
-.font-numeric {
-  font-family: var(--font-mono), 'Geist Mono', monospace;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/* --------------------------------------------------------------------------
-   Financial Data Utilities
-   -------------------------------------------------------------------------- */
-
-.ticker {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  font-feature-settings: "kern" 1;
+/* Diagonal mask wipe, top-left to bottom-right, with a soft 40% edge */
+.reveal-diagonal {
+  -webkit-mask-image: linear-gradient(
+    to bottom right,
+    #000 calc(var(--reveal) - 20%),
+    transparent calc(var(--reveal) + 20%)
+  );
+  mask-image: linear-gradient(
+    to bottom right,
+    #000 calc(var(--reveal) - 20%),
+    transparent calc(var(--reveal) + 20%)
+  );
+  animation: diagonal-reveal 850ms var(--ease-house) 250ms backwards;
 }
 
-.currency {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+/* CSS-only entrance for server components: hidden state lives in the keyframe */
+.blur-in {
+  animation: blur-in 600ms var(--ease-house) both;
 }
-
-.percentage {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+.blur-in-1 {
+  animation-delay: 100ms;
 }
-
-.change-positive {
-  color: hsl(var(--success));
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+.blur-in-2 {
+  animation-delay: 200ms;
 }
-
-.change-negative {
-  color: hsl(var(--destructive));
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.change-neutral {
-  color: hsl(var(--muted-foreground));
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-/* --------------------------------------------------------------------------
-   Heading Utilities
-   -------------------------------------------------------------------------- */
-
-.heading-display {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 3rem;
-  line-height: 1.05;
-  font-weight: 300;
-  letter-spacing: -0.025em;
-}
-
-.heading-1 {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 2.25rem;
-  line-height: 1.1;
-  font-weight: 300;
-  letter-spacing: -0.02em;
-}
-
-.heading-2 {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 1.5rem;
-  line-height: 1.2;
-  font-weight: 300;
-  letter-spacing: -0.015em;
-}
-
-.heading-3 {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 1.25rem;
-  line-height: 1.3;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-/* --------------------------------------------------------------------------
-   Label & Caption Utilities
-   -------------------------------------------------------------------------- */
-
-.label-uppercase {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
-}
-
-.label-uppercase-sm {
-  font-size: 0.6875rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 500;
-}
-
-.caption {
-  font-size: 0.75rem;
-  line-height: 1.5;
-  font-weight: 400;
-  color: hsl(var(--muted-foreground));
-}
-
-/* --------------------------------------------------------------------------
-   Data Table Typography
-   -------------------------------------------------------------------------- */
-
-.table-header {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 600;
-  color: hsl(var(--muted-foreground));
-}
-
-.table-cell {
-  font-size: 0.875rem;
-  line-height: 1.5;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.table-cell-mono {
-  font-family: var(--font-mono), 'Geist Mono', monospace;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1;
-}
-
-/* --------------------------------------------------------------------------
-   Chart & Visualization Typography
-   -------------------------------------------------------------------------- */
-
-.chart-label {
-  font-size: 0.6875rem;
-  line-height: 1.3;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  fill: hsl(var(--muted-foreground));
-}
-
-.chart-value {
-  font-size: 0.75rem;
-  line-height: 1.3;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.chart-axis {
-  font-family: var(--font-mono), 'Geist Mono', monospace;
-  font-size: 0.625rem;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+.blur-in-3 {
+  animation-delay: 300ms;
 }

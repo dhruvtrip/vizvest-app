@@ -69,9 +69,9 @@ export function Pagination({
     >
       {/* Previous */}
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className="text-fg-secondary"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         aria-label="Go to previous page"
@@ -85,7 +85,7 @@ export function Pagination({
         item === 'ellipsis' ? (
           <span
             key={`ellipsis-${index}`}
-            className="flex h-8 w-8 items-center justify-center text-xs text-muted-foreground"
+            className="flex h-8 w-8 items-center justify-center text-fg-tertiary"
             aria-hidden="true"
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -93,9 +93,9 @@ export function Pagination({
         ) : (
           <Button
             key={item}
-            variant={item === currentPage ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 w-8 p-0 text-xs"
+            variant={item === currentPage ? 'secondary' : 'ghost'}
+            size="icon"
+            className={cn('text-label tabular', item !== currentPage && 'text-fg-secondary')}
             onClick={() => onPageChange(item)}
             aria-label={`Go to page ${item}`}
             aria-current={item === currentPage ? 'page' : undefined}
@@ -107,9 +107,9 @@ export function Pagination({
 
       {/* Next */}
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className="text-fg-secondary"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         aria-label="Go to next page"

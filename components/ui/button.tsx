@@ -4,26 +4,36 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Buttons are small: 32px tall, 8px radius, 14/20 medium.
+ * Hover snaps opacity to 0.7 (opacity is deliberately not transitioned),
+ * press scales to 0.97, focus is a 2px white outline at 2px offset.
+ * On touch devices an invisible pad extends the hit area to 44px.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  [
+    "relative inline-flex shrink-0 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-lg text-small font-medium",
+    "transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-in-out",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+    "active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40",
+    "after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] [@media(pointer:fine)]:after:hidden",
+    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  ],
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-primary text-primary-foreground hover:opacity-70",
+        secondary: "bg-secondary text-secondary-foreground shadow-ring-secondary hover:opacity-70",
+        outline: "border border-border bg-transparent text-foreground hover:border-border-hover hover:bg-white/5",
+        ghost: "bg-transparent text-foreground hover:bg-white/5 hover:text-white",
+        destructive: "bg-destructive text-destructive-foreground hover:opacity-70",
+        link: "h-auto px-0 text-fg-secondary hover:text-foreground",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-8 px-3",
+        sm: "h-7 rounded-md px-2.5 text-label",
+        lg: "h-10 px-4",
+        icon: "h-8 w-8 px-0",
       },
     },
     defaultVariants: {

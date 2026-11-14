@@ -175,7 +175,7 @@ function MetricCard({
     <Card className={className}>
       <CardContent className="p-4">
         <p className="metric-label text-muted-foreground">{label}</p>
-        <p className="text-h3 text-foreground mt-0.5">{value}</p>
+        <p className="text-h5 text-foreground mt-0.5">{value}</p>
       </CardContent>
     </Card>
   )
@@ -258,15 +258,15 @@ export function StockDetail ({
 
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <h1 className="text-h2 text-foreground">
+            <h1 className="text-h4 text-foreground">
               {metrics.companyName}
             </h1>
-            <span className="ticker px-1.5 py-0.5 text-label-sm bg-primary/10 text-primary rounded">
+            <span className="ticker px-1.5 py-0.5 text-label bg-primary/10 text-primary rounded">
               {ticker}
             </span>
           </div>
           {metrics.isin && (
-            <p className="text-label-sm text-muted-foreground font-mono">
+            <p className="text-label text-muted-foreground font-mono">
               ISIN: {metrics.isin}
             </p>
           )}
@@ -321,16 +321,16 @@ export function StockDetail ({
           <CardContent className="p-4">
             <p className="metric-label text-muted-foreground">Net Share Flow</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-h3 text-foreground font-tabular">
+              <p className="text-h5 text-foreground font-tabular">
                 {metrics.netShareFlow >= 0 ? '+' : ''}{formatShares(metrics.netShareFlow)}
               </p>
               {metrics.positionStatus === 'net-buying' && (
-                <span className="px-1.5 py-0.5 text-label-sm bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
+                <span className="px-1.5 py-0.5 text-label bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
                   Buying
                 </span>
               )}
               {metrics.positionStatus === 'net-selling' && (
-                <span className="px-1.5 py-0.5 text-label-sm bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
+                <span className="px-1.5 py-0.5 text-label bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
                   Selling
                 </span>
               )}
@@ -345,10 +345,10 @@ export function StockDetail ({
           <CardContent className="p-4">
             <p className="metric-label text-muted-foreground">Buy Transactions</p>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-h3 text-foreground font-tabular">
+              <p className="text-h5 text-foreground font-tabular">
                 {metrics.buyTransactionCount}
               </p>
-              <p className="text-body-sm text-muted-foreground font-tabular">
+              <p className="text-p-sm text-muted-foreground font-tabular">
                 ({formatShares(metrics.buyShares)} shares)
               </p>
             </div>
@@ -358,10 +358,10 @@ export function StockDetail ({
           <CardContent className="p-4">
             <p className="metric-label text-muted-foreground">Sell Transactions</p>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-h3 text-foreground font-tabular">
+              <p className="text-h5 text-foreground font-tabular">
                 {metrics.sellTransactionCount}
               </p>
-              <p className="text-body-sm text-muted-foreground font-tabular">
+              <p className="text-p-sm text-muted-foreground font-tabular">
                 ({formatShares(metrics.sellShares)} shares)
               </p>
             </div>
@@ -371,7 +371,7 @@ export function StockDetail ({
 
       {/* Transaction History */}
       <div className="space-y-3">
-        <h2 className="text-h3 text-foreground">
+        <h2 className="text-h5 text-foreground">
           Transaction History
         </h2>
 

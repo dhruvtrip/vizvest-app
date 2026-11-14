@@ -250,9 +250,9 @@ function MetricCard({
             ) : value}
           </p>
           {subValue ? (
-            <p className="text-body-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
+            <p className="text-p-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
           ) : (
-            <div className="text-body-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
+            <div className="text-p-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
           )}
         </CardContent>
       </Card>
@@ -392,8 +392,8 @@ export function TradingActivityDashboard ({
     <div className={cn('container mx-auto px-6 py-6 space-y-8', className)}>
       {/* Header */}
       <div>
-        <h1 className="text-h2 text-foreground">Trading Activity Dashboard</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
+        <h1 className="text-h4 text-foreground">Trading Activity Dashboard</h1>
+        <p className="text-p-sm text-muted-foreground mt-1">
           Comprehensive view of all buy and sell transactions
         </p>
       </div>

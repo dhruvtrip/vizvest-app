@@ -178,7 +178,7 @@ function MetricCard({
             <AnimatedCurrency amount={metric.rawValue} currency={metric.currency} formatFn={formatCurrency} />
           </p>
           {metric.subValue && (
-            <p className="text-body-sm text-muted-foreground mt-1">{metric.subValue}</p>
+            <p className="text-p-sm text-muted-foreground mt-1">{metric.subValue}</p>
           )}
         </CardContent>
       </Card>
@@ -246,8 +246,8 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
   return (
     <div className={cn('space-y-4', className)}>
       <div>
-        <h1 className="text-h2 text-foreground">Portfolio Overview</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
+        <h1 className="text-h4 text-foreground">Portfolio Overview</h1>
+        <p className="text-p-sm text-muted-foreground mt-1">
           Your portfolio overview in the above timeframe
         </p>
       </div>

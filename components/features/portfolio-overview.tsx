@@ -182,12 +182,12 @@ function StockPositionTile({
                 {position.ticker}
               </h3>
               {isPartialData && (
-                <span className="px-1.5 py-0.5 text-label-sm font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded" aria-label="Partial data">
+                <span className="px-1.5 py-0.5 text-label font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded" aria-label="Partial data">
                   Partial
                 </span>
               )}
             </div>
-            <p className="text-body-sm text-muted-foreground truncate">
+            <p className="text-p-sm text-muted-foreground truncate">
               {position.name}
             </p>
           </div>
@@ -195,18 +195,18 @@ function StockPositionTile({
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-body-sm text-muted-foreground">
+            <span className="text-p-sm text-muted-foreground">
               {isNetSelling ? 'Net Flow' : 'Shares'}
             </span>
             <div className="flex items-center gap-1">
               <span className={cn(
-                'text-body-sm font-medium font-tabular',
+                'text-p-sm font-medium font-tabular',
                 isNetSelling ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
               )}>
                {formatShares(position.totalShares)}
               </span>
               {isNetSelling && (
-                <span className="px-1 py-0.5 text-label-sm font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
+                <span className="px-1 py-0.5 text-label font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
                   Selling
                 </span>
               )}
@@ -214,11 +214,11 @@ function StockPositionTile({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-body-sm text-muted-foreground">
+            <span className="text-p-sm text-muted-foreground">
               {hasNegativeInvested ? 'Net Cash' : 'Net Invested'}
             </span>
             <span className={cn(
-              'text-body-sm font-medium currency',
+              'text-p-sm font-medium currency',
               hasNegativeInvested
                 ? 'change-positive'
                 : 'text-foreground'
@@ -273,12 +273,12 @@ function SoldPositionTile({
             <h3 className="ticker text-base text-muted-foreground truncate group-hover:text-primary transition-colors">
               {position.ticker}
             </h3>
-            <p className="text-body-sm text-muted-foreground/70 truncate mt-0.5">
+            <p className="text-p-sm text-muted-foreground/70 truncate mt-0.5">
               {position.name}
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-label-sm px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+            <span className="text-label px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
               Sold
             </span>
           </div>
@@ -286,9 +286,9 @@ function SoldPositionTile({
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-body-sm text-muted-foreground">Result</span>
+            <span className="text-p-sm text-muted-foreground">Result</span>
             <span className={cn(
-              'text-body-sm font-medium currency',
+              'text-p-sm font-medium currency',
               isProfit ? 'change-positive' : 'change-negative'
             )}>
               {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
@@ -366,11 +366,11 @@ export function PortfolioOverview ({
         <section className="space-y-3" aria-labelledby="portfolio-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 id="portfolio-heading" className="text-h3 text-foreground">
+              <h2 id="portfolio-heading" className="text-h5 text-foreground">
                 Current Holdings
               </h2>
             </div>
-            <span className="text-body-sm text-muted-foreground font-tabular" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
+            <span className="text-p-sm text-muted-foreground font-tabular" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
               {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
             </span>
           </div>
@@ -403,17 +403,17 @@ export function PortfolioOverview ({
         <section className="space-y-3" aria-labelledby="sold-positions-heading">
           <div className="flex items-center justify-between">
             <div>
-              <h2 id="sold-positions-heading" className="text-h3 font-medium text-muted-foreground">
+              <h2 id="sold-positions-heading" className="text-h5 font-medium text-muted-foreground">
                 Closed Positions
               </h2>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-body-sm text-muted-foreground font-tabular" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
+              <span className="text-p-sm text-muted-foreground font-tabular" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>
               <span
                 className={cn(
-                  'text-body-sm font-medium currency',
+                  'text-p-sm font-medium currency',
                   totalRealizedResult >= 0
                     ? 'change-positive'
                     : 'change-negative'

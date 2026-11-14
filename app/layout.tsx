@@ -1,35 +1,26 @@
-import type { Metadata } from 'next'
-import { Funnel_Sans, Geist, Geist_Mono } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider } from '@/components/theme-provider'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { MotionProvider } from '@/components/motion/motion-provider'
 import { PostHogProvider } from '@/app/providers/ph-provider'
 import { PostHogConsentBanner } from '@/components/posthog-consent-banner'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
 
-const funnelSans = Funnel_Sans({
+// One family for the whole product. Variable font with the optical-size axis.
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500'],
-  variable: '--font-heading',
-  display: 'swap',
-})
-
-const geist = Geist({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  axes: ['opsz'],
   variable: '--font-sans',
   display: 'swap',
 })
 
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-mono',
-  display: 'swap',
-})
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vizvest.cc'
+
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  colorScheme: 'dark',
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -80,7 +71,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark">
       <head>
         <script
           type="application/ld+json"
@@ -91,21 +82,12 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body className={`${funnelSans.variable} ${geist.variable} ${geistMono.variable} font-sans`}>
+      <body className={`${inter.variable} font-sans`}>
         <PostHogProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <MotionProvider>
             {children}
-            {/* Sticky Theme Toggle */}
-            <div className="fixed bottom-6 right-6 z-50">
-              <ThemeToggle />
-            </div>
             <PostHogConsentBanner />
-          </ThemeProvider>
+          </MotionProvider>
           <SpeedInsights />
           <Analytics />
         </PostHogProvider>
