@@ -269,7 +269,7 @@ export function StockDetail ({
           <h1 className="min-w-0 text-h4 text-foreground md:text-h3">
             {metrics.companyName}
           </h1>
-          <Badge className="ticker">{ticker}</Badge>
+          <Badge>{ticker}</Badge>
         </div>
         {metrics.isin && (
           <p className="tabular mt-1 text-p-sm text-fg-gray">

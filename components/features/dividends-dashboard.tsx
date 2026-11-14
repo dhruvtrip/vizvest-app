@@ -454,10 +454,11 @@ export function DividendsDashboard ({
   }
 
   const handleViewMode = (mode: TrendMode) => {
+    // The event fires on every click, as before the redesign
+    posthog.capture('dividend_view_mode_changed', { view_mode: mode })
     if (mode === viewMode) return
     setTrendAnimated(false)
     setViewMode(mode)
-    posthog.capture('dividend_view_mode_changed', { view_mode: mode })
   }
 
   if (!hasDividends) {
