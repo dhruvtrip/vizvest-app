@@ -59,14 +59,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="p-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Something went wrong</AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p>{this.state.error?.message || 'An unexpected error occurred'}</p>
+          <Alert className="mx-auto max-w-[560px] rounded-xl p-5 [&>svg]:left-5 [&>svg]:top-[22px] [&>svg]:text-negative [&>svg~*]:pl-7">
+            <AlertCircle className="size-4" strokeWidth={1.5} aria-hidden="true" />
+            <AlertTitle className="mb-0">Something went wrong</AlertTitle>
+            <AlertDescription className="mt-1">
+              <p className="text-pretty">{this.state.error?.message || 'An unexpected error occurred'}</p>
               <Button
-                variant="outline"
-                size="sm"
+                variant="secondary"
+                className="mt-4"
                 onClick={() => this.setState({ hasError: false, error: undefined })}
               >
                 Try again

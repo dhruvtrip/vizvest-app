@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { Navbar, Footer } from '@/components/landing'
 import { ArticleCard } from '@/components/articles/article-card'
+import { Container, GridGuides } from '@/components/layout/container'
+import { SectionHeader } from '@/components/layout/section-header'
+import { StaggerIn } from '@/components/motion/blur-reveal'
 import { getArticles } from '@/lib/articles'
-import { FileText } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Trading 212 Guides & Portfolio Investing Articles | Vizvest',
@@ -21,47 +23,35 @@ export default function ArticlesPage() {
   const articles = getArticles()
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),transparent)]" />
-          <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-primary/20 dark:bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-1/3 right-1/3 w-[300px] h-[300px] bg-accent/20 dark:bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
-        </div>
-
-        <div className="container mx-auto px-6">
-          {/* Header */}
-          <div className="max-w-2xl mx-auto text-center mb-16">
-            <div className="flex justify-center mb-6">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/5 border border-primary/20 dark:border-primary/10 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-4">Trading 212 Guides & Portfolio Analysis</h1>
-            <p className="text-base text-muted-foreground/80 leading-relaxed">
-              Step-by-step guides on understanding your investment data and returns.
-            </p>
+      <section className="relative pb-24 md:pb-32">
+        <GridGuides />
+        <Container>
+          <div className="pt-12 md:pt-24">
+            <SectionHeader
+              as="h1"
+              className="blur-in"
+              title="Trading 212 Guides & Portfolio Analysis"
+              description="Step-by-step guides on understanding your investment data and returns."
+            />
           </div>
 
-          {/* Grid */}
           {articles.length > 0 ? (
-            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <StaggerIn immediate delay={0.1} className="cell-grid grid-cols-1 lg:grid-cols-3">
               {articles.map((article, i) => (
                 <ArticleCard key={article.slug} article={article} index={i} />
               ))}
-            </div>
+            </StaggerIn>
           ) : (
-            <div className="max-w-md mx-auto text-center py-20">
-              <p className="text-muted-foreground/60 text-sm">
-                No articles yet — check back soon.
-              </p>
+            <div className="cell-grid">
+              <div className="px-6 py-16">
+                <p className="text-p-sm text-fg-secondary">No articles yet. Check back soon.</p>
+              </div>
             </div>
           )}
-        </div>
+        </Container>
       </section>
 
       <Footer />

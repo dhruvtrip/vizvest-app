@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { EASE } from '@/lib/motion'
 import { getConsentStatus, setConsentStatus } from '@/lib/posthog-privacy'
 import { OPEN_CONSENT_EVENT } from '@/components/manage-analytics-button'
 
@@ -14,6 +14,7 @@ export function PostHogConsentBanner() {
   const [showBanner, setShowBanner] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [currentConsent, setCurrentConsent] = useState<'accepted' | 'rejected' | null>(null)
+  const reduceMotion = useReducedMotion()
 
   useEffect(() => {
     setMounted(true)
@@ -76,80 +77,86 @@ export function PostHogConsentBanner() {
   const handleDismiss = () => setShowBanner(false)
   const hasExistingChoice = currentConsent !== null
 
-  if (!mounted || !showBanner) {
+  // Only the mount guard returns early; AnimatePresence handles `showBanner`
+  // so the panel can play its exit before it unmounts.
+  if (!mounted) {
     return null
   }
+
+  // House transition: opacity + 4px blur + 12px rise in 300ms, out in 150ms.
+  // Reduced motion keeps only the opacity cross-fade.
+  const hidden = reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }
+  const shown = reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }
 
   return (
     <AnimatePresence>
       {showBanner && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed bottom-0 left-0 right-0 z-[100] p-4 sm:p-6 pointer-events-none"
+          key="consent-banner"
+          initial={hidden}
+          animate={{
+            ...shown,
+            // Drop the filter once settled so the panel's backdrop blur works
+            transitionEnd: reduceMotion ? undefined : { filter: 'none' },
+            transition: { duration: 0.3, ease: EASE.smoothOut },
+          }}
+          exit={{ ...hidden, transition: { duration: 0.15, ease: EASE.out } }}
+          className="fixed bottom-3 left-3 right-3 z-[100] sm:bottom-4 sm:left-4 sm:right-auto sm:w-[420px]"
         >
-          <div className="max-w-4xl mx-auto pointer-events-auto">
-            <Alert className={cn(
-              'shadow-lg border-2',
-              'bg-background/95 backdrop-blur-sm'
-            )}>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex-shrink-0">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
+          <Alert className="rounded-xl border-border bg-surface-1/95 p-4 backdrop-blur-md">
+            <div className="flex items-start gap-3">
+              <Shield
+                aria-hidden="true"
+                strokeWidth={1.5}
+                className="mt-0.5 size-4 shrink-0 text-fg-secondary"
+              />
 
-                <div className="flex-1 space-y-2">
-                  <AlertDescription className="text-sm">
-                    <p className="font-medium mb-1">Privacy &amp; Analytics</p>
-                    <p className="text-muted-foreground">
-                      We use analytics to improve your experience. We <strong>never</strong> collect
-                      sensitive portfolio data like stock tickers, amounts, or financial information.
+              <div className="min-w-0 flex-1">
+                <AlertDescription>
+                  <p className="font-medium text-foreground">Privacy &amp; analytics</p>
+                  <p className="mt-1 text-pretty">
+                    We use analytics to improve your experience. We{' '}
+                    <strong className="font-medium text-foreground">never</strong> collect sensitive
+                    portfolio data like stock tickers, amounts, or financial information.
+                  </p>
+                  {hasExistingChoice && (
+                    <p className="mt-2">
+                      Current setting:{' '}
+                      <strong className="font-medium text-foreground">
+                        {currentConsent === 'accepted' ? 'Analytics on' : 'Analytics off'}
+                      </strong>
+                      . You can change it below.
                     </p>
-                    {hasExistingChoice && (
-                      <p className="text-muted-foreground mt-1">
-                        Current setting:{' '}
-                        <strong>
-                          {currentConsent === 'accepted' ? 'Analytics on' : 'Analytics off'}
-                        </strong>
-                        . You can change it below.
-                      </p>
-                    )}
-                  </AlertDescription>
-                </div>
+                  )}
+                </AlertDescription>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="mt-4 flex items-center gap-2">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="secondary"
                     onClick={handleReject}
-                    className="flex-1 sm:flex-none hover:bg-transparent hover:text-foreground hover:border-input"
+                    className="flex-1 sm:flex-none"
                   >
                     {currentConsent === 'rejected' ? 'Keep off' : 'Decline'}
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleAccept}
-                    className="flex-1 sm:flex-none"
-                  >
+                  <Button onClick={handleAccept} className="flex-1 sm:flex-none">
                     {currentConsent === 'accepted' ? 'Keep on' : 'Accept'}
                   </Button>
-                  {hasExistingChoice && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleDismiss}
-                      aria-label="Close without changing analytics settings"
-                      className="flex-none"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
               </div>
-            </Alert>
-          </div>
+
+              {hasExistingChoice && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDismiss}
+                  aria-label="Close without changing analytics settings"
+                  className="-mr-1.5 -mt-1.5 size-7 shrink-0 text-fg-secondary"
+                >
+                  <X strokeWidth={1.5} />
+                </Button>
+              )}
+            </div>
+          </Alert>
         </motion.div>
       )}
     </AnimatePresence>

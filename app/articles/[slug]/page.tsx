@@ -2,9 +2,12 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { ArrowLeft, Clock, Calendar, User } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Navbar, Footer } from '@/components/landing'
-import { getMDXComponents } from '@/components/articles/mdx-components'
+import { getMDXComponents, withPipeTables } from '@/components/articles/mdx-components'
+import { ReadingBody, ReadingHeader, ReadingShell } from '@/components/articles/reading-layout'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { getArticleBySlug, getAllSlugs } from '@/lib/articles'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vizvest.cc'
@@ -110,7 +113,7 @@ export default async function ArticlePage({ params }: Props) {
   })
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -123,79 +126,71 @@ export default async function ArticlePage({ params }: Props) {
       )}
       <Navbar />
 
-        <div className="relative pt-28 pb-20 overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/10" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_-10%,rgba(120,119,198,0.1),transparent)] dark:bg-[radial-gradient(ellipse_60%_40%_at_50%_-10%,rgba(120,119,198,0.2),transparent)]" />
-          </div>
-
-          <div className="container mx-auto px-6">
-            <div className="max-w-3xl mx-auto">
-              {/* Back link */}
-              <Link
-                href="/articles"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground/60 hover:text-primary transition-colors mb-10 group"
-              >
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" />
-                Back to Articles
-              </Link>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-6">
+      <ReadingShell className="pb-24 md:pb-32">
+        <article>
+          <ReadingHeader
+            back={{ href: '/articles', label: 'All articles' }}
+            meta={
+              <p>
+                <time dateTime={meta.date}>{formattedDate}</time>
+                <span aria-hidden="true"> · </span>
+                {meta.readingTime}
+                {meta.author ? (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    {meta.author}, Founder of Vizvest
+                  </>
+                ) : null}
+              </p>
+            }
+            title={meta.title}
+            description={meta.description}
+          >
+            {meta.tags.length > 0 ? (
+              <ul className="mt-8 flex flex-wrap gap-1.5" aria-label="Tags">
                 {meta.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="font-mono text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full border border-border text-muted-foreground/60 bg-muted/50"
-                  >
-                    {tag}
-                  </span>
+                  <li key={tag}>
+                    <Badge variant="outline">{tag}</Badge>
+                  </li>
                 ))}
-              </div>
+              </ul>
+            ) : null}
+          </ReadingHeader>
 
-              {/* Title */}
-              <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-foreground leading-tight mb-6">
-                {meta.title}
-              </h1>
+          <ReadingBody>
+            <MDXRemote source={withPipeTables(content)} components={getMDXComponents()} />
+          </ReadingBody>
+        </article>
 
-              {/* Meta bar */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground/60 border-y border-border py-4 mb-10">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <time dateTime={meta.date}>{formattedDate}</time>
-                </span>
-                <span className="flex items-center gap-1.5 font-mono">
-                  <Clock className="w-3.5 h-3.5" />
-                  {meta.readingTime}
-                </span>
-                {meta.author && (
-                  <span className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" />
-                    {meta.author} · Founder, Vizvest
-                  </span>
-                )}
-              </div>
-
-              {/* MDX Content */}
-              <article className="prose-custom">
-                <MDXRemote source={content} components={getMDXComponents()} />
-              </article>
-
-              {/* Footer nav */}
-              <div className="mt-16 pt-8 border-t border-border">
-                <Link
-                  href="/articles"
-                  className="inline-flex items-center gap-2 text-sm text-muted-foreground/60 hover:text-primary transition-colors group"
-                >
-                  <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" />
-                  All Articles
-                </Link>
-              </div>
-            </div>
+        {/* Footer nav / CTA */}
+        <nav
+          aria-label="Article navigation"
+          className="flex flex-col gap-8 border border-border px-6 py-10 md:flex-row md:items-end md:justify-between md:py-12"
+        >
+          <div>
+            <h2 className="text-h4 text-foreground">See your own numbers</h2>
+            <p className="mt-2 max-w-[440px] text-pretty text-p text-fg-secondary">
+              Upload your Trading 212 CSV and get the full picture in seconds, processed in your browser.
+            </p>
           </div>
-        </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button asChild variant="secondary">
+              <Link href="/articles">
+                <ArrowLeft aria-hidden="true" strokeWidth={1.5} />
+                All articles
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/dashboard">
+                Open dashboard
+                <ArrowRight aria-hidden="true" strokeWidth={1.5} />
+              </Link>
+            </Button>
+          </div>
+        </nav>
+      </ReadingShell>
 
-        <Footer />
+      <Footer />
     </main>
   )
 }
