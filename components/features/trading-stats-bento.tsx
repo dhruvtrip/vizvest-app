@@ -1,9 +1,10 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
-import { motion, useInView, animate } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
+import { useInView, animate } from 'framer-motion'
 import { Flame, Zap, CalendarDays, TrendingUp, Activity } from 'lucide-react'
+import { StaggerIn, StaggerItem } from '@/components/motion/blur-reveal'
+import { SectionHeader } from '@/components/features/analysis-kit'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { isTradeAction } from '@/lib/transaction-utils'
 import { cn } from '@/lib/utils'
@@ -187,41 +188,29 @@ interface StatTileProps {
   label: string
   value: React.ReactNode
   subtext: string
-  index: number
-  highlight?: boolean
   className?: string
 }
 
-function StatTile({ icon, label, value, subtext, index, highlight = false, className }: StatTileProps) {
+function StatTile({ icon, label, value, subtext, className }: StatTileProps) {
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-10% 0px' }}
-      transition={{ delay: index * 0.06, duration: 0.4 }}
-    >
-      <Card className="relative overflow-hidden border-border/50 hover:border-border transition-colors h-full">
-        <CardContent className="p-4 sm:p-5 flex flex-col gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-            {icon}
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p
-              className={cn(
-                'text-2xl sm:text-3xl font-mono font-semibold tabular-nums tracking-tight',
-                highlight ? 'text-brand' : 'text-foreground'
-              )}
-            >
-              {value}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">{subtext}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <StaggerItem className={cn('flex min-h-[184px] flex-col justify-between gap-8 bg-background p-5 md:p-6', className)}>
+      <div
+        aria-hidden="true"
+        className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-2 text-fg-secondary shadow-demo-surface [&_svg]:h-4 [&_svg]:w-4"
+      >
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="tabular text-h4 text-foreground">{value}</p>
+        <p className="mt-1 text-p-sm text-fg-secondary">{label}</p>
+        <p className="mt-0.5 truncate text-label text-fg-gray">{subtext}</p>
+      </div>
+    </StaggerItem>
   )
+}
+
+function Unit({ children }: { children: React.ReactNode }) {
+  return <span className="text-p-sm text-fg-secondary">{children}</span>
 }
 
 export function TradingStatsBento({ transactions, className }: TradingStatsBentoProps) {
@@ -237,65 +226,58 @@ export function TradingStatsBento({ transactions, className }: TradingStatsBento
     : '—'
 
   return (
-    <div className={cn('space-y-4', className)} data-testid="trading-stats-bento">
-      <div>
-        <p className="text-[11px] font-mono font-medium uppercase tracking-[1.5px] text-muted-foreground">
-          All-Time Highlights
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Based on your full trade history, ignoring year filters
-        </p>
-      </div>
+    <section
+      className={cn('min-w-0', className)}
+      data-testid="trading-stats-bento"
+      aria-labelledby="trading-highlights-heading"
+    >
+      <SectionHeader
+        id="trading-highlights-heading"
+        title="All-time highlights"
+        meta="Full trade history, ignoring the year filter"
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <StaggerIn className="cell-grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
         <StatTile
-          index={0}
-          icon={<Flame className="w-4 h-4" />}
+          icon={<Flame strokeWidth={1.5} />}
           label="Longest streak"
           value={
             <>
-              <AnimatedNumber value={stats.longestStreak?.days ?? 0} />{' '}
-              <span className="text-sm font-normal text-muted-foreground">days</span>
+              <AnimatedNumber value={stats.longestStreak?.days ?? 0} /> <Unit>days</Unit>
             </>
           }
           subtext={dateRange}
-          highlight
         />
         <StatTile
-          index={1}
-          icon={<Zap className="w-4 h-4" />}
+          icon={<Zap strokeWidth={1.5} />}
           label="Busiest day"
           value={
             <>
-              <AnimatedNumber value={stats.busiestDay?.count ?? 0} />{' '}
-              <span className="text-sm font-normal text-muted-foreground">trades</span>
+              <AnimatedNumber value={stats.busiestDay?.count ?? 0} /> <Unit>trades</Unit>
             </>
           }
           subtext={busiestDateLabel}
         />
         <StatTile
-          index={2}
-          icon={<CalendarDays className="w-4 h-4" />}
+          icon={<CalendarDays strokeWidth={1.5} />}
           label="Favorite day"
           value={stats.favoriteDay?.day ?? '—'}
           subtext={stats.favoriteDay ? `${stats.favoriteDay.percentage}% of trades` : '—'}
         />
         <StatTile
-          index={3}
-          icon={<TrendingUp className="w-4 h-4" />}
+          icon={<TrendingUp strokeWidth={1.5} />}
           label="Most active month"
           value={stats.mostActiveMonth?.label ?? '—'}
           subtext={stats.mostActiveMonth ? `${stats.mostActiveMonth.count} trades` : '—'}
         />
         <StatTile
-          index={4}
-          className="sm:col-span-2 lg:col-span-1"
-          icon={<Activity className="w-4 h-4" />}
+          className="col-span-2 xl:col-span-1"
+          icon={<Activity strokeWidth={1.5} />}
           label="Trades per active day"
           value={<AnimatedNumber value={stats.tradesPerActiveDay} decimals={1} />}
-          subtext="avg on active days"
+          subtext="Average on days you traded"
         />
-      </div>
-    </div>
+      </StaggerIn>
+    </section>
   )
 }

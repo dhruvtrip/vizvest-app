@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
@@ -23,7 +22,21 @@ import {
   ResponsiveContainer,
   CartesianGrid
 } from 'recharts'
-import { AnimateOnView } from '@/components/features/dividends-dashboard'
+import { BlurReveal } from '@/components/motion/blur-reveal'
+import { MetricCell, MetricGrid } from '@/components/features/metric-cell'
+import { CHART, ChartTooltip } from '@/components/features/chart-tooltip'
+import {
+  AXIS_X,
+  AXIS_Y,
+  CHART_ANIMATION,
+  CHART_MARGIN,
+  ChartCell,
+  EmptyCell,
+  SectionHeader,
+  TableFrame,
+  formatAxisCurrency
+} from '@/components/features/analysis-kit'
+
 
 /**
  * Currency symbols for common currencies
@@ -116,8 +129,10 @@ function convertTaxToBaseCurrency(
   taxAmount: number | undefined,
   exchangeRate: number | undefined
 ): number {
-  const value = taxAmount || 0
-  const rate = exchangeRate || 1
+  // Dividend rows often carry "Not available" as the exchange rate; fall back to 1
+  // rather than producing NaN.
+  const value = Number.isFinite(taxAmount) ? (taxAmount as number) : 0
+  const rate = Number.isFinite(exchangeRate) && (exchangeRate as number) > 0 ? (exchangeRate as number) : 1
   return value / rate
 }
 
@@ -197,64 +212,6 @@ function prepareChartData(dividends: DividendTransaction[]): ChartDataPoint[] {
 }
 
 /**
- * Individual metric card component
- */
-function MetricCard({
-  label,
-  value,
-  className,
-  valueClassName,
-  rawValue,
-  currency
-}: {
-  label: string
-  value: string
-  className?: string
-  valueClassName?: string
-  rawValue?: number
-  currency?: string
-}) {
-  return (
-    <Card className={className}>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn('text-sm font-semibold text-foreground mt-0.5', valueClassName)}>
-          {rawValue !== undefined && currency ? (
-            <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
-          ) : value}
-        </p>
-      </CardContent>
-    </Card>
-  )
-}
-
-/**
- * Custom tooltip for the bar chart
- */
-function CustomTooltip({
-  active,
-  payload,
-  baseCurrency
-}: {
-  active?: boolean
-  payload?: Array<{ value: number }>
-  baseCurrency: string
-}) {
-  if (!active || !payload || payload.length === 0) return null
-
-  return (
-    <div className="bg-popover/90 backdrop-blur-md border border-border/50 rounded-lg shadow-xl shadow-black/10 px-3 py-2">
-      <div className="flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-        <p className="text-xs font-semibold text-foreground">
-          {formatCurrency(payload[0].value, baseCurrency)}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-/**
  * Dividend Section Component
  * Displays dividend income analytics for a single stock
  */
@@ -277,110 +234,97 @@ export function DividendSection({
   )
 
   const hasDividends = dividends.length > 0
+  const symbol = getCurrencySymbol(baseCurrency)
 
   return (
-    <section className={cn('space-y-3', className)} aria-labelledby="dividend-heading">
-      {/* Section Header */}
-      <h2 id="dividend-heading" className="text-sm font-semibold text-foreground">
-        Dividend Income
-      </h2>
+    <section className={cn('min-w-0', className)} aria-labelledby="dividend-heading">
+      <SectionHeader
+        id="dividend-heading"
+        title="Dividend income"
+        meta={hasDividends ? `${metrics.paymentCount} ${metrics.paymentCount === 1 ? 'payment' : 'payments'}` : undefined}
+      />
 
       {!hasDividends ? (
-        <Card className="p-6 text-center border-dashed">
-          <p className="text-xs text-muted-foreground">No dividends received</p>
-        </Card>
+        <EmptyCell title="No dividends received" description={`${ticker} has not paid you a dividend in this export`} />
       ) : (
-        <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <MetricCard
-              label="Total Dividends"
-              value={formatCurrency(metrics.totalGross, baseCurrency)}
-              rawValue={metrics.totalGross}
-              currency={baseCurrency}
+        <div className="space-y-4">
+          <MetricGrid columns={4}>
+            <MetricCell
+              size="md"
+              label="Total dividends"
+              value={<AnimatedCurrency amount={metrics.totalGross} currency={baseCurrency} formatFn={formatCurrency} />}
             />
-            <MetricCard
-              label="Withholding Tax"
-              value={formatCurrency(metrics.totalTax, baseCurrency)}
-              rawValue={metrics.totalTax}
-              currency={baseCurrency}
-              valueClassName="text-muted-foreground"
+            <MetricCell
+              size="md"
+              label="Withholding tax"
+              tone="muted"
+              value={<AnimatedCurrency amount={metrics.totalTax} currency={baseCurrency} formatFn={formatCurrency} />}
             />
-            <MetricCard
-              label="Net Dividends"
-              value={formatCurrency(metrics.totalNet, baseCurrency)}
-              rawValue={metrics.totalNet}
-              currency={baseCurrency}
-              valueClassName="text-emerald-600 dark:text-emerald-400"
+            <MetricCell
+              size="md"
+              label="Net dividends"
+              tone="positive"
+              value={<AnimatedCurrency amount={metrics.totalNet} currency={baseCurrency} formatFn={formatCurrency} />}
             />
-            <MetricCard
+            <MetricCell
+              size="md"
               label="Payments"
-              value={metrics.paymentCount.toString()}
+              value={<AnimatedCount value={metrics.paymentCount} />}
             />
-          </div>
+          </MetricGrid>
 
-          {/* Bar Chart */}
           {chartData.length > 1 && (
-            <AnimateOnView minHeight={240}>
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="text-xs text-muted-foreground mb-3">
-                    Dividend History
-                  </h3>
-                  <div className="h-44" role="img" aria-label={`Bar chart showing dividend income by month for ${ticker}. Total net dividends: ${formatCurrency(metrics.totalNet, baseCurrency)}`}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} aria-label={`Dividend income chart for ${ticker}`}>
-                        <defs>
-                          <linearGradient id="barGradientSection" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                        <XAxis
-                          dataKey="month"
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                          width={65}
-                        />
-                        <Tooltip
-                          content={<CustomTooltip baseCurrency={baseCurrency} />}
-                          cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
-                        />
-                        <Bar
-                          dataKey="amount"
-                          fill="url(#barGradientSection)"
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={36}
-                          animationDuration={800}
-                          animationEasing="ease-out"
-                          animationBegin={100}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </AnimateOnView>
+            <BlurReveal soft>
+              <div className="cell-grid grid-cols-1">
+                <ChartCell
+                  title="Dividend history"
+                  sub="Net income by month"
+                  height={200}
+                  label={`Bar chart showing dividend income by month for ${ticker}. Total net dividends: ${formatCurrency(metrics.totalNet, baseCurrency)}`}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={CHART_MARGIN}>
+                      <CartesianGrid {...CHART.grid} />
+                      <XAxis dataKey="month" {...AXIS_X} />
+                      <YAxis
+                        {...AXIS_Y}
+                        tickFormatter={(value: number) => formatAxisCurrency(value, symbol)}
+                      />
+                      <Tooltip
+                        cursor={CHART.cursorBar}
+                        animationDuration={150}
+                        content={({ active, payload, label }) =>
+                          active && payload?.length ? (
+                            <ChartTooltip
+                              title={label}
+                              rows={[{ name: 'Net income', value: formatCurrency(Number(payload[0].value), baseCurrency), color: CHART.ink }]}
+                            />
+                          ) : null
+                        }
+                      />
+                      <Bar
+                        dataKey="amount"
+                        fill={CHART.ink}
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={28}
+                        {...CHART_ANIMATION}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCell>
+              </div>
+            </BlurReveal>
           )}
 
-          {/* Dividend Table */}
-          <Card>
-            <div className="overflow-x-auto">
+          <BlurReveal soft>
+            <TableFrame>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs" scope="col">Date</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Gross</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Tax</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Net</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead scope="col">Date</TableHead>
+                    <TableHead className="text-right" scope="col">Gross</TableHead>
+                    <TableHead className="text-right" scope="col">Tax</TableHead>
+                    <TableHead className="text-right" scope="col">Net</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -389,19 +333,19 @@ export function DividendSection({
                     const gross = formatCurrency(dividend.gross, baseCurrency)
                     const tax = dividend.tax > 0 ? formatCurrency(dividend.tax, baseCurrency) : '—'
                     const net = formatCurrency(dividend.net, baseCurrency)
-                    
+
                     return (
                       <TableRow key={`${dividend.date}-${index}`}>
-                        <TableCell className="text-xs text-muted-foreground py-2">
+                        <TableCell className="whitespace-nowrap text-fg-secondary">
                           {dateStr}
                         </TableCell>
-                        <TableCell className="text-xs text-right py-2" aria-label={`Gross dividend: ${gross}`}>
+                        <TableCell className="text-right text-foreground" aria-label={`Gross dividend: ${gross}`}>
                           {gross}
                         </TableCell>
-                        <TableCell className="text-xs text-right text-muted-foreground py-2" aria-label={`Withholding tax: ${tax}`}>
+                        <TableCell className="text-right text-fg-secondary" aria-label={`Withholding tax: ${tax}`}>
                           {tax}
                         </TableCell>
-                        <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400 py-2" aria-label={`Net dividend: ${net}`}>
+                        <TableCell className="text-right text-foreground" aria-label={`Net dividend: ${net}`}>
                           {net}
                         </TableCell>
                       </TableRow>
@@ -409,9 +353,9 @@ export function DividendSection({
                   })}
                 </TableBody>
               </Table>
-            </div>
-          </Card>
-        </>
+            </TableFrame>
+          </BlurReveal>
+        </div>
       )}
     </section>
   )

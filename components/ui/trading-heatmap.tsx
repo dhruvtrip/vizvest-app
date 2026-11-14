@@ -1,11 +1,11 @@
 'use client'
 
-import { useMemo, useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { isTradeAction } from '@/lib/transaction-utils'
+import { ChartTooltip } from '@/components/features/chart-tooltip'
+import { Segmented } from '@/components/features/analysis-kit'
 
 interface TradingHeatmapProps {
   transactions: NormalizedTransaction[]
@@ -27,19 +27,24 @@ interface CellData {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+/** Width of the day-label column, in px */
+const DAY_LABEL_WIDTH = 28
+/** Gap between cells, in px */
+const CELL_GAP = 2
+
 // Color levels for activity intensity
 const getColorClass = (level: number) => {
   switch (level) {
     case 0:
       return 'bg-surface-3'
     case 1:
-      return 'bg-[hsl(var(--brand)/0.25)]'
+      return 'bg-brand/25'
     case 2:
-      return 'bg-[hsl(var(--brand)/0.5)]'
+      return 'bg-brand/50'
     case 3:
-      return 'bg-[hsl(var(--brand)/0.75)]'
+      return 'bg-brand/75'
     case 4:
-      return 'bg-[hsl(var(--brand))]'
+      return 'bg-brand'
     default:
       return 'bg-surface-3'
   }
@@ -188,26 +193,36 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
   const [selectedYear, setSelectedYear] = useState<number>(
     availableYears.length > 0 ? availableYears[0] : new Date().getFullYear()
   )
+  // If the parent's year filter removes the selected year, fall back to the most recent one
+  const activeYear = availableYears.includes(selectedYear)
+    ? selectedYear
+    : (availableYears[0] ?? selectedYear)
 
   // Process transactions for selected year
   const { cells, monthLabels } = useMemo(() => {
     if (availableYears.length === 0) {
       return { cells: [], monthLabels: [] }
     }
-    const activityMap = processTransactions(transactions, selectedYear)
-    return generateGrid(selectedYear, activityMap)
-  }, [transactions, selectedYear, availableYears.length])
+    const activityMap = processTransactions(transactions, activeYear)
+    return generateGrid(activeYear, activityMap)
+  }, [transactions, activeYear, availableYears.length])
 
   // Calculate total contributions for selected year
   const totalContributions = useMemo(() => {
     const trades = transactions.filter((t) => isTradeAction(t.Action))
     return trades.filter((t) => {
       const date = new Date(t.Time)
-      return date.getFullYear() === selectedYear
+      return date.getFullYear() === activeYear
     }).length
-  }, [transactions, selectedYear])
+  }, [transactions, activeYear])
 
-  // Hover state for tooltip
+  const activeDays = useMemo(
+    () => cells.reduce((sum, row) => sum + row.filter((c) => c.count > 0).length, 0),
+    [cells]
+  )
+
+  // Hover / focus state for the tooltip, positioned relative to the frame
+  const frameRef = useRef<HTMLDivElement>(null)
   const [hoveredCell, setHoveredCell] = useState<{
     date: Date
     count: number
@@ -215,183 +230,87 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
     y: number
   } | null>(null)
 
+  // On narrow screens the calendar scrolls; start at the most recent weeks
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = el.scrollWidth
+  }, [activeYear])
+
   if (availableYears.length === 0) {
     return null
   }
 
   const totalWeeks = cells.length > 0 ? cells[0].length : 0
-  
-  // Calculate fixed width for heatmap (cell width + gap) * number of weeks
-  const cellWidth = 11
-  const cellGap = 2
-  const weekWidth = cellWidth + cellGap
-  const heatmapWidth = totalWeeks * weekWidth
-  const dayLabelWidth = 20 // Width for day-of-week labels
+  const gridColumns = `${DAY_LABEL_WIDTH}px repeat(${totalWeeks}, minmax(0, 1fr))`
 
-  // #region agent log
-  // Instrumentation for debugging scroll issue
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const heatmapContentRef = useRef<HTMLDivElement>(null)
-  const parentContainerRef = useRef<HTMLDivElement>(null)
-  const [needsScroll, setNeedsScroll] = useState(false)
-  
-  const logDimensions = () => {
-    if (scrollContainerRef.current && heatmapContentRef.current && parentContainerRef.current) {
-      const containerRect = scrollContainerRef.current.getBoundingClientRect()
-      const contentRect = heatmapContentRef.current.getBoundingClientRect()
-      const parentRect = parentContainerRef.current.getBoundingClientRect()
-      const viewportWidth = window.innerWidth
-      const hasOverflow = contentRect.width > containerRect.width
-      const scrollWidth = scrollContainerRef.current.scrollWidth
-      const clientWidth = scrollContainerRef.current.clientWidth
-      const computedStyle = window.getComputedStyle(scrollContainerRef.current)
-      const overflowX = computedStyle.overflowX
-      const contentNeedsSpace = dayLabelWidth + heatmapWidth
-      const shouldShowScroll = scrollWidth > clientWidth && contentNeedsSpace > viewportWidth * 0.9
-      
-      setNeedsScroll(shouldShowScroll)
-      
-      fetch('http://127.0.0.1:7242/ingest/0c5783f2-38ee-4263-aa6c-488395854699', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'trading-heatmap.tsx:245',
-          message: 'Scroll container dimensions',
-          data: {
-            viewportWidth,
-            parentContainerWidth: parentRect.width,
-            containerWidth: containerRect.width,
-            contentWidth: contentRect.width,
-            calculatedHeatmapWidth: heatmapWidth,
-            calculatedTotalWidth: dayLabelWidth + heatmapWidth,
-            scrollWidth,
-            clientWidth,
-            hasOverflow,
-            overflowX,
-            totalWeeks,
-            weekWidth,
-            gap: 16,
-            shouldShowScroll,
-            contentNeedsSpace
-          },
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'post-fix',
-          hypothesisId: 'A'
-        })
-      }).catch(() => {})
-    }
-  }
-  
-  useEffect(() => {
-    logDimensions()
-    const resizeObserver = new ResizeObserver(() => {
-      logDimensions()
+  const showTooltip = (el: HTMLElement, cell: CellData) => {
+    if (!cell.date || !frameRef.current) return
+    const rect = el.getBoundingClientRect()
+    const frameRect = frameRef.current.getBoundingClientRect()
+    const half = 72
+    const x = Math.min(
+      Math.max(rect.left - frameRect.left + rect.width / 2, half),
+      frameRect.width - half
+    )
+    setHoveredCell({
+      date: cell.date,
+      count: cell.count,
+      x,
+      y: rect.top - frameRect.top
     })
-    
-    if (scrollContainerRef.current) {
-      resizeObserver.observe(scrollContainerRef.current)
-    }
-    if (parentContainerRef.current) {
-      resizeObserver.observe(parentContainerRef.current)
-    }
-    
-    window.addEventListener('resize', logDimensions)
-    
-    return () => {
-      resizeObserver.disconnect()
-      window.removeEventListener('resize', logDimensions)
-    }
-  }, [heatmapWidth, dayLabelWidth, totalWeeks, weekWidth, cells])
-  // #endregion
+  }
 
   return (
-    <Card className={cn('border-border/50 bg-card/50 backdrop-blur-sm', className)}>
-      <CardContent className="pt-6">
-        {/* Header aligned with heatmap */}
-        <div className="flex items-start gap-4 min-w-0 mb-4">
-          <div className="flex-1 min-w-0">
-            <div className="mx-auto" style={{ width: `${dayLabelWidth + heatmapWidth}px` }}>
-              <CardTitle className="text-sm font-semibold text-foreground">
-                Trading Activity
-              </CardTitle>
-              <CardDescription className="text-xs text-muted-foreground mt-1">
-                {totalContributions} {totalContributions === 1 ? 'trade' : 'trades'} in {selectedYear}
-              </CardDescription>
-            </div>
-          </div>
-          {/* Year selector spacer to match layout */}
-          <div className="flex-shrink-0" style={{ width: '0px' }} aria-hidden="true" />
+    <section className={cn('min-w-0', className)} aria-labelledby="activity-calendar-heading">
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 id="activity-calendar-heading" className="text-h5 text-foreground">
+          Activity calendar
+        </h2>
+        <p className="tabular text-p-sm text-fg-secondary">
+          {totalContributions} {totalContributions === 1 ? 'trade' : 'trades'} in {activeYear}
+        </p>
+      </div>
+
+      <div ref={frameRef} className="relative border border-border bg-background p-5 md:p-6">
+        {/* Year selector and legend */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Segmented
+            label="Select year"
+            value={activeYear}
+            onChange={setSelectedYear}
+            options={availableYears.map((year) => ({
+              value: year,
+              label: year,
+              ariaLabel: `View trading activity for ${year}`
+            }))}
+          />
+          <p className="tabular text-label text-fg-gray">
+            {activeDays} active {activeDays === 1 ? 'day' : 'days'}
+          </p>
         </div>
-        
-        {/* Centered container for heatmap and year selector */}
-        <div className="flex justify-center">
-          <div ref={parentContainerRef} className="flex items-start gap-2 min-w-0">
-            {/* Scrollable heatmap container */}
-            <div 
-              ref={scrollContainerRef}
-              className={cn(
-                "min-w-0",
-                needsScroll ? "overflow-x-auto" : "overflow-x-visible"
-              )}
-            onScroll={() => {
-              // #region agent log
-              if (scrollContainerRef.current) {
-                const scrollLeft = scrollContainerRef.current.scrollLeft
-                const scrollWidth = scrollContainerRef.current.scrollWidth
-                const clientWidth = scrollContainerRef.current.clientWidth
-                const maxScroll = scrollWidth - clientWidth
-                const isScrollable = scrollWidth > clientWidth
-                
-                fetch('http://127.0.0.1:7242/ingest/0c5783f2-38ee-4263-aa6c-488395854699', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    location: 'trading-heatmap.tsx:268',
-                    message: 'Scroll event detected',
-                    data: {
-                      scrollLeft,
-                      scrollWidth,
-                      clientWidth,
-                      maxScroll,
-                      isScrollable,
-                      hasScrollbar: isScrollable
-                    },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    runId: 'run1',
-                    hypothesisId: 'B'
-                  })
-                }).catch(() => {})
-              }
-              // #endregion
-            }}
-          >
-            {/* Main heatmap grid */}
-            <div 
-              ref={heatmapContentRef}
-              className="relative flex-shrink-0 mx-auto" 
-              id="heatmap-container"
-              style={{ width: `${dayLabelWidth + heatmapWidth}px` }}
-            >
+
+        {/* Scrolls sideways inside the frame on narrow screens */}
+        <div
+          ref={scrollRef}
+          className="-mx-5 overflow-x-auto overscroll-x-contain px-5 pb-1 md:mx-0 md:px-0"
+          onScroll={() => setHoveredCell(null)}
+        >
+          <div className="min-w-[720px]">
             {/* Month labels */}
-            <div 
-              className="relative mb-1" 
-              style={{ marginLeft: `${dayLabelWidth}px`, height: '14px' }}
+            <div
+              className="mb-2 grid"
+              style={{ gridTemplateColumns: gridColumns, columnGap: CELL_GAP }}
               role="row"
               aria-label="Month labels"
             >
               {monthLabels.map((label) => {
                 const monthName = MONTHS[label.month]
-                const leftPosition = label.week * weekWidth
-                
                 return (
                   <div
                     key={label.month}
-                    className="absolute text-[10px] text-muted-foreground whitespace-nowrap"
-                    style={{
-                      left: `${leftPosition}px`
-                    }}
+                    className="row-start-1 whitespace-nowrap text-label text-fg-gray"
+                    style={{ gridColumnStart: label.week + 2 }}
                     role="columnheader"
                     aria-label={monthName}
                   >
@@ -401,169 +320,106 @@ export function TradingHeatmap({ transactions, className }: TradingHeatmapProps)
               })}
             </div>
 
-            {/* Grid with day labels */}
-            <div className="flex gap-1">
-              {/* Day of week labels */}
-              <div className="flex flex-col gap-1 pt-0.5" role="rowgroup" aria-label="Day of week">
-                {DAYS.map((day, idx) => {
-                  // Only show Mon, Wed, Fri (indices 1, 3, 5)
-                  if (idx === 1 || idx === 3 || idx === 5) {
-                    return (
-                      <div
-                        key={day}
-                        className="text-[10px] text-muted-foreground h-[11px] leading-[11px]"
-                        role="rowheader"
-                        aria-label={day}
-                      >
-                        {day}
-                      </div>
-                    )
+            {/* Day labels + cells: 7 rows, one column per week */}
+            <div
+              className="grid grid-flow-col"
+              style={{
+                gridTemplateColumns: gridColumns,
+                gridTemplateRows: 'repeat(7, auto)',
+                gap: CELL_GAP
+              }}
+              role="grid"
+              aria-label={`Trading activity in ${activeYear}`}
+            >
+              {DAYS.map((day, idx) => (
+                <div key={day} className="relative" role="rowheader" aria-label={day}>
+                  {(idx === 1 || idx === 3 || idx === 5) && (
+                    <span className="absolute inset-y-0 left-0 flex items-center text-label text-fg-gray">
+                      {day}
+                    </span>
+                  )}
+                </div>
+              ))}
+
+              {cells[0]?.map((_, weekIdx) =>
+                cells.map((row, dayIdx) => {
+                  const cell = row[weekIdx]
+                  if (!cell || !cell.date) {
+                    return <div key={`${dayIdx}-${weekIdx}`} className="aspect-square" aria-hidden="true" />
                   }
-                  return <div key={day} className="h-[11px]" aria-hidden="true" />
-                })}
-              </div>
 
-              {/* Heatmap grid */}
-              <div className="flex-shrink-0" style={{ width: `${heatmapWidth}px` }}>
-                <div className="flex gap-[2px]">
-                  {cells[0]?.map((_, weekIdx) => (
-                    <div key={weekIdx} className="flex flex-col gap-[2px]">
-                      {cells.map((row, dayIdx) => {
-                        const cell = row[weekIdx]
-                        if (!cell || !cell.date) {
-                          return <div key={`${dayIdx}-${weekIdx}`} className="w-[11px] h-[11px]" />
-                        }
-
-                        const dateStr = cell.date.toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })
-                        const activityLevel = cell.count === 0 
-                          ? 'no trades' 
-                          : `${cell.count} ${cell.count === 1 ? 'trade' : 'trades'}`
-                        
-                        return (
-                          <motion.div
-                            key={`${dayIdx}-${weekIdx}`}
-                            className={cn(
-                              'w-[11px] h-[11px] rounded-[2px] transition-all relative',
-                              cell.count > 0 ? 'cursor-pointer' : 'cursor-default',
-                              getColorClass(cell.level),
-                              'hover:ring-2 hover:ring-primary/50 hover:ring-offset-1',
-                              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1'
-                            )}
-                            onMouseEnter={(e) => {
-                              if (cell.date) {
-                                const rect = e.currentTarget.getBoundingClientRect()
-                                const container = document.getElementById('heatmap-container')
-                                if (container) {
-                                  const containerRect = container.getBoundingClientRect()
-                                  setHoveredCell({
-                                    date: cell.date,
-                                    count: cell.count,
-                                    x: rect.left - containerRect.left + rect.width / 2,
-                                    y: rect.top - containerRect.top
-                                  })
-                                }
-                              }
-                            }}
-                            onMouseLeave={() => setHoveredCell(null)}
-                            onFocus={(e) => {
-                              if (cell.date) {
-                                const rect = e.currentTarget.getBoundingClientRect()
-                                const container = document.getElementById('heatmap-container')
-                                if (container) {
-                                  const containerRect = container.getBoundingClientRect()
-                                  setHoveredCell({
-                                    date: cell.date,
-                                    count: cell.count,
-                                    x: rect.left - containerRect.left + rect.width / 2,
-                                    y: rect.top - containerRect.top
-                                  })
-                                }
-                              }
-                            }}
-                            onBlur={() => setHoveredCell(null)}
-                            whileHover={{ scale: 1.2, zIndex: 10 }}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.2 }}
-                            role="gridcell"
-                            tabIndex={cell.count > 0 ? 0 : -1}
-                            aria-label={`${dateStr}: ${activityLevel}`}
-                          />
-                        )
-                      })}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Legend */}
-                <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-foreground" role="group" aria-label="Activity intensity legend">
-                  <span>Less</span>
-                  <div className="flex gap-[2px]" role="presentation" aria-hidden="true">
-                    {[0, 1, 2, 3, 4].map((level) => (
-                      <div
-                        key={level}
-                        className={cn('w-[11px] h-[11px] rounded-[2px]', getColorClass(level))}
-                      />
-                    ))}
-                  </div>
-                  <span>More</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Tooltip */}
-            {hoveredCell && (
-              <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="absolute z-50 px-2 py-1.5 text-xs bg-popover border border-border rounded-md shadow-lg pointer-events-none whitespace-nowrap"
-                style={{
-                  left: `${hoveredCell.x}px`,
-                  top: `${hoveredCell.y - 32}px`,
-                  transform: 'translateX(-50%)'
-                }}
-              >
-                <div className="font-medium text-popover-foreground">
-                  {hoveredCell.count} {hoveredCell.count === 1 ? 'trade' : 'trades'} on{' '}
-                  {hoveredCell.date.toLocaleDateString('en-US', {
-                    month: 'short',
+                  const dateStr = cell.date.toLocaleDateString('en-US', {
+                    month: 'long',
                     day: 'numeric',
                     year: 'numeric'
-                  })}
-                </div>
-              </motion.div>
-            )}
+                  })
+                  const activityLevel = cell.count === 0
+                    ? 'no trades'
+                    : `${cell.count} ${cell.count === 1 ? 'trade' : 'trades'}`
+
+                  return (
+                    <div
+                      key={`${dayIdx}-${weekIdx}`}
+                      className={cn(
+                        'aspect-square rounded-[2px] transition-shadow duration-100 ease-out',
+                        'hover:shadow-[inset_0_0_0_1px_hsl(var(--foreground)/0.6)]',
+                        cell.count > 0 ? 'cursor-pointer' : 'cursor-default',
+                        getColorClass(cell.level)
+                      )}
+                      onMouseEnter={(e) => showTooltip(e.currentTarget, cell)}
+                      onMouseLeave={() => setHoveredCell(null)}
+                      onFocus={(e) => showTooltip(e.currentTarget, cell)}
+                      onBlur={() => setHoveredCell(null)}
+                      role="gridcell"
+                      tabIndex={cell.count > 0 ? 0 : -1}
+                      aria-label={`${dateStr}: ${activityLevel}`}
+                    />
+                  )
+                })
+              )}
             </div>
           </div>
+        </div>
 
-            {/* Year selector - always visible */}
-            <div className="flex flex-col gap-1 flex-shrink-0" role="group" aria-label="Select year">
-            {availableYears.map((year) => (
-              <button
-                key={year}
-                onClick={() => setSelectedYear(year)}
-                className={cn(
-                  'px-2 py-1 text-xs rounded transition-colors text-right',
-                  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                  selectedYear === year
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
-                aria-label={`View trading activity for ${year}`}
-                aria-pressed={selectedYear === year}
-              >
-                {year}
-              </button>
+        {/* Legend */}
+        <div
+          className="mt-4 flex items-center justify-end gap-2 text-label text-fg-gray"
+          role="group"
+          aria-label="Activity intensity legend"
+        >
+          <span>Less</span>
+          <div className="flex gap-[2px]" role="presentation" aria-hidden="true">
+            {[0, 1, 2, 3, 4].map((level) => (
+              <div key={level} className={cn('h-2.5 w-2.5 rounded-[2px]', getColorClass(level))} />
             ))}
           </div>
-          </div>
+          <span>More</span>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Tooltip */}
+        {hoveredCell && (
+          <div
+            className="pointer-events-none absolute z-50 whitespace-nowrap"
+            style={{
+              left: hoveredCell.x,
+              top: hoveredCell.y - 8,
+              transform: 'translate(-50%, -100%)'
+            }}
+          >
+            <ChartTooltip
+              title={hoveredCell.date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+              rows={[{
+                value: `${hoveredCell.count} ${hoveredCell.count === 1 ? 'trade' : 'trades'}`
+              }]}
+            />
+          </div>
+        )}
+      </div>
+    </section>
   )
 }

@@ -2,8 +2,9 @@
 
 import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -15,6 +16,9 @@ import {
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockMetrics } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
+import { BlurReveal } from '@/components/motion/blur-reveal'
+import { MetricCell, MetricGrid } from '@/components/features/metric-cell'
+import { EmptyCell, SectionHeader, StatusMark, TableFrame } from '@/components/features/analysis-kit'
 
 const DividendSection = dynamic(
   () => import('./dividend-section').then(m => m.DividendSection),
@@ -160,24 +164,27 @@ function calculateMetrics(
 }
 
 /**
- * Individual metric card component
+ * Quiet chip summarising one side of the trade history (buys or sells).
  */
-function MetricCard({
-  label,
-  value,
-  className
+function FlowChip({
+  tone,
+  count,
+  noun,
+  shares
 }: {
-  label: string
-  value: string
-  className?: string
+  tone: 'positive' | 'negative'
+  count: number
+  noun: string
+  shares: number
 }) {
   return (
-    <Card className={className}>
-      <CardContent className="p-4">
-        <p className="metric-label text-muted-foreground">{label}</p>
-        <p className="text-h5 text-foreground mt-0.5">{value}</p>
-      </CardContent>
-    </Card>
+    <div className="tabular inline-flex h-8 items-center gap-2 rounded-full border border-border px-3 text-p-sm">
+      <StatusMark tone={tone} />
+      <span className="text-foreground">
+        {count} {noun}
+      </span>
+      <span className="text-fg-secondary">{formatShares(shares)} shares</span>
+    </div>
   )
 }
 
@@ -241,209 +248,174 @@ export function StockDetail ({
 
   if (!ticker) return null
 
+  const realizedSign = metrics.realizedResult >= 0 ? '+' : ''
+
   return (
-    <div className={cn('space-y-5', className)}>
-      {/* Header Section */}
-      <div className="space-y-3">
+    <div className={cn('min-w-0', className)}>
+      {/* Header */}
+      <BlurReveal immediate className="mb-8">
         <Button
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 px-2"
+          className="-ml-2.5 mb-4 text-fg-secondary"
           aria-label="Return to portfolio overview"
         >
-          <span aria-hidden="true">&larr;</span>
-          Back to Portfolio
+          <ArrowLeft aria-hidden="true" strokeWidth={1.5} />
+          Back to portfolio
         </Button>
 
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-h4 text-foreground">
-              {metrics.companyName}
-            </h1>
-            <span className="ticker px-1.5 py-0.5 text-label bg-primary/10 text-primary rounded">
-              {ticker}
-            </span>
-          </div>
-          {metrics.isin && (
-            <p className="text-label text-muted-foreground font-mono">
-              ISIN: {metrics.isin}
-            </p>
-          )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="min-w-0 text-h4 text-foreground md:text-h3">
+            {metrics.companyName}
+          </h1>
+          <Badge className="ticker">{ticker}</Badge>
         </div>
-      </div>
-
-      {/* Partial Data Warning */}
-      {isPartialDataForTicker && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-3 flex items-start gap-2">
-            <div className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-amber-500 text-xs font-bold">!</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">
-                Partial Transaction Data
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {partialDataExplanation}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <MetricCard
-          label="Buy Volume"
-          value={formatCurrency(metrics.buyVolume, metrics.baseCurrency)}
-          className="border-blue-500/20"
-        />
-        <MetricCard
-          label="Sell Volume"
-          value={formatCurrency(metrics.sellVolume, metrics.baseCurrency)}
-          className="border-rose-500/20"
-        />
-        <MetricCard
-          label="Realized P&L"
-          value={`${metrics.realizedResult >= 0 ? '+' : ''}${formatCurrency(metrics.realizedResult, metrics.baseCurrency)}`}
-          className={cn(
-            metrics.realizedResult >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'
-          )}
-        />
-        <Card className={cn(
-          metrics.positionStatus === 'net-buying' 
-            ? 'border-blue-500/20' 
-            : metrics.positionStatus === 'net-selling'
-            ? 'border-rose-500/20'
-            : 'border-muted'
-        )}>
-          <CardContent className="p-4">
-            <p className="metric-label text-muted-foreground">Net Share Flow</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-h5 text-foreground font-tabular">
-                {metrics.netShareFlow >= 0 ? '+' : ''}{formatShares(metrics.netShareFlow)}
-              </p>
-              {metrics.positionStatus === 'net-buying' && (
-                <span className="px-1.5 py-0.5 text-label bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
-                  Buying
-                </span>
-              )}
-              {metrics.positionStatus === 'net-selling' && (
-                <span className="px-1.5 py-0.5 text-label bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
-                  Selling
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Transaction Counts */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="metric-label text-muted-foreground">Buy Transactions</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-h5 text-foreground font-tabular">
-                {metrics.buyTransactionCount}
-              </p>
-              <p className="text-p-sm text-muted-foreground font-tabular">
-                ({formatShares(metrics.buyShares)} shares)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="metric-label text-muted-foreground">Sell Transactions</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-h5 text-foreground font-tabular">
-                {metrics.sellTransactionCount}
-              </p>
-              <p className="text-p-sm text-muted-foreground font-tabular">
-                ({formatShares(metrics.sellShares)} shares)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Transaction History */}
-      <div className="space-y-3">
-        <h2 className="text-h5 text-foreground">
-          Transaction History
-        </h2>
-
-        {tableTransactions.length === 0 ? (
-          <Card className="p-6 text-center border-dashed">
-            <p className="text-xs text-muted-foreground">No transactions found</p>
-          </Card>
-        ) : (
-          <Card>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs" scope="col">Date</TableHead>
-                    <TableHead className="text-xs" scope="col">Action</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Shares</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Price/Share</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tableTransactions.map((transaction, index) => {
-                    const isBuy = isBuyAction(transaction.Action)
-                    const actionColor = isBuy
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-red-600 dark:text-red-400'
-                    const dateStr = formatDate(transaction.Time)
-                    const shares = formatShares(transaction['No. of shares'] || 0)
-                    const price = formatCurrency(
-                      transaction['Price / share'] || 0,
-                      transaction['Currency (Price / share)'] || metrics.baseCurrency
-                    )
-                    const total = formatCurrency(
-                      transaction.totalInBaseCurrency || 0,
-                      metrics.baseCurrency
-                    )
-
-                    return (
-                      <TableRow key={transaction.ID || index}>
-                        <TableCell className="text-xs text-muted-foreground py-2">
-                          {dateStr}
-                        </TableCell>
-                        <TableCell className={cn('text-xs font-medium py-2', actionColor)}>
-                          <span aria-label={isBuy ? 'Buy transaction' : 'Sell transaction'}>
-                            {isBuy ? 'Buy' : 'Sell'}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-right py-2" aria-label={`${shares} shares`}>
-                          {shares}
-                        </TableCell>
-                        <TableCell className="text-xs text-right text-muted-foreground py-2" aria-label={`Price per share: ${price}`}>
-                          {price}
-                        </TableCell>
-                        <TableCell className={cn('text-xs text-right font-medium py-2', actionColor)} aria-label={`Total: ${total}`}>
-                          {total}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </Card>
+        {metrics.isin && (
+          <p className="tabular mt-1 text-p-sm text-fg-gray">
+            ISIN {metrics.isin}
+          </p>
         )}
-      </div>
+      </BlurReveal>
 
-      {/* Dividend Income Section */}
-      <DividendSection
-        ticker={ticker}
-        transactions={transactions}
-        baseCurrency={metrics.baseCurrency}
-      />
+      <div className="space-y-10 md:space-y-12">
+        <BlurReveal immediate delay={0.1} className="space-y-4">
+          {/* Partial data warning */}
+          {isPartialDataForTicker && (
+            <div className="flex items-start gap-3 border border-border px-5 py-4 md:px-6">
+              <StatusMark tone="warning" className="mt-[7px]" />
+              <div className="min-w-0 flex-1">
+                <p className="text-p-sm text-foreground">Partial transaction data</p>
+                <p className="mt-0.5 text-p-sm text-fg-secondary">
+                  {partialDataExplanation}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Key metrics */}
+          <MetricGrid columns={4}>
+            <MetricCell
+              label="Buy volume"
+              value={formatCurrency(metrics.buyVolume, metrics.baseCurrency)}
+            />
+            <MetricCell
+              label="Sell volume"
+              value={formatCurrency(metrics.sellVolume, metrics.baseCurrency)}
+            />
+            <MetricCell
+              label="Realized P&L"
+              value={`${realizedSign}${formatCurrency(metrics.realizedResult, metrics.baseCurrency)}`}
+              tone={metrics.realizedResult > 0 ? 'positive' : metrics.realizedResult < 0 ? 'negative' : 'default'}
+            />
+            <MetricCell
+              label="Net share flow"
+              value={`${metrics.netShareFlow >= 0 ? '+' : ''}${formatShares(metrics.netShareFlow)}`}
+              aside={
+                metrics.positionStatus === 'net-buying' ? (
+                  <span className="inline-flex items-center gap-1.5 text-label text-fg-secondary">
+                    <StatusMark tone="positive" />Buying
+                  </span>
+                ) : metrics.positionStatus === 'net-selling' ? (
+                  <span className="inline-flex items-center gap-1.5 text-label text-fg-secondary">
+                    <StatusMark tone="negative" />Selling
+                  </span>
+                ) : undefined
+              }
+            />
+          </MetricGrid>
+
+          {/* Transaction counts */}
+          <div className="flex flex-wrap gap-2" aria-label="Transaction counts">
+            <FlowChip
+              tone="positive"
+              count={metrics.buyTransactionCount}
+              noun={metrics.buyTransactionCount === 1 ? 'buy' : 'buys'}
+              shares={metrics.buyShares}
+            />
+            <FlowChip
+              tone="negative"
+              count={metrics.sellTransactionCount}
+              noun={metrics.sellTransactionCount === 1 ? 'sell' : 'sells'}
+              shares={metrics.sellShares}
+            />
+          </div>
+        </BlurReveal>
+
+        {/* Transaction history */}
+        <section aria-labelledby="transaction-history-heading">
+          <SectionHeader
+            id="transaction-history-heading"
+            title="Transaction history"
+            meta={`${tableTransactions.length} ${tableTransactions.length === 1 ? 'trade' : 'trades'}`}
+          />
+
+          {tableTransactions.length === 0 ? (
+            <EmptyCell title="No transactions found" />
+          ) : (
+            <BlurReveal soft>
+              <TableFrame>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead scope="col">Date</TableHead>
+                      <TableHead scope="col">Action</TableHead>
+                      <TableHead className="text-right" scope="col">Shares</TableHead>
+                      <TableHead className="text-right" scope="col">Price / share</TableHead>
+                      <TableHead className="text-right" scope="col">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tableTransactions.map((transaction, index) => {
+                      const isBuy = isBuyAction(transaction.Action)
+                      const dateStr = formatDate(transaction.Time)
+                      const shares = formatShares(transaction['No. of shares'] || 0)
+                      const price = formatCurrency(
+                        transaction['Price / share'] || 0,
+                        transaction['Currency (Price / share)'] || metrics.baseCurrency
+                      )
+                      const total = formatCurrency(
+                        transaction.totalInBaseCurrency || 0,
+                        metrics.baseCurrency
+                      )
+
+                      return (
+                        <TableRow key={transaction.ID || index}>
+                          <TableCell className="whitespace-nowrap text-fg-secondary">
+                            {dateStr}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" aria-label={isBuy ? 'Buy transaction' : 'Sell transaction'}>
+                              <StatusMark tone={isBuy ? 'positive' : 'negative'} />
+                              {isBuy ? 'Buy' : 'Sell'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right text-foreground" aria-label={`${shares} shares`}>
+                            {shares}
+                          </TableCell>
+                          <TableCell className="text-right text-fg-secondary" aria-label={`Price per share: ${price}`}>
+                            {price}
+                          </TableCell>
+                          <TableCell className="text-right text-foreground" aria-label={`Total: ${total}`}>
+                            {total}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </TableFrame>
+            </BlurReveal>
+          )}
+        </section>
+
+        {/* Dividend income */}
+        <DividendSection
+          ticker={ticker}
+          transactions={transactions}
+          baseCurrency={metrics.baseCurrency}
+        />
+      </div>
     </div>
   )
 }
