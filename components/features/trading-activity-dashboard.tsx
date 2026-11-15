@@ -474,7 +474,7 @@ export function TradingActivityDashboard ({
                     <TableHead scope="col">Date</TableHead>
                     <TableHead scope="col">Action</TableHead>
                     <TableHead scope="col">Ticker</TableHead>
-                    <TableHead scope="col">Name</TableHead>
+                    <TableHead scope="col" className="hidden sm:table-cell">Name</TableHead>
                     <TableHead scope="col" className="text-right">Shares</TableHead>
                     <TableHead scope="col" className="text-right">Price</TableHead>
                     <TableHead scope="col" className="text-right">Total</TableHead>
@@ -529,7 +529,7 @@ export function TradingActivityDashboard ({
                           <TableCell className="text-foreground">
                             {transaction.Ticker || '-'}
                           </TableCell>
-                          <TableCell className="max-w-[220px] truncate text-fg-secondary">
+                          <TableCell className="hidden max-w-[220px] truncate normal-nums text-fg-secondary sm:table-cell">
                             {transaction.Name || '-'}
                           </TableCell>
                           <TableCell className="text-right text-foreground">{shares}</TableCell>

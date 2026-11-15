@@ -25,7 +25,7 @@ export function DashboardHeader() {
 
   return (
     <header className="sticky top-0 z-50 h-header border-b border-border bg-background/85 backdrop-blur-[8px]">
-      <nav className="flex h-full items-center justify-between gap-4 pl-4 pr-2 sm:px-6" aria-label="Dashboard">
+      <nav className="flex h-full items-center justify-between gap-4 pl-4 pr-2 sm:px-6 md:px-8 lg:px-6" aria-label="Dashboard">
         <Link
           href="/"
           aria-label="Vizvest home"

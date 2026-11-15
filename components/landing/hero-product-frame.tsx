@@ -160,7 +160,7 @@ export function HeroProductFrame({ className }: { className?: string }) {
                     <div>
                       <p
                         className={cn(
-                          'tabular text-[15px] font-medium leading-5 tracking-[-0.3px] md:text-[20px] md:leading-7 md:tracking-[-0.4px] xl:text-[22px]',
+                          'tabular whitespace-nowrap text-[15px] font-medium leading-5 tracking-[-0.3px] md:text-[18px] md:leading-7 md:tracking-[-0.4px] lg:text-[20px] xl:text-[22px]',
                           'positive' in m && m.positive ? 'text-positive' : 'text-foreground'
                         )}
                       >

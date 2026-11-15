@@ -386,7 +386,7 @@ export function DividendVisual() {
                       transitionDelay: reduce ? '0ms' : `${150 + i * 50}ms`,
                     }}
                   />
-                  <span className="absolute -bottom-6 text-[10px] leading-3 text-fg-gray">{d.m}</span>
+                  <span className={cn('absolute -bottom-6 text-[10px] leading-3 text-fg-gray', i % 2 === 1 && 'max-[379px]:hidden')}>{d.m}</span>
                 </div>
               )
             })}
@@ -436,7 +436,7 @@ export function TradesVisual() {
                 <span className="sm:hidden"> sh</span>
               </p>
             </div>
-            <MockChip tone={tr.side === 'BUY' ? 'positive' : 'negative'} className="w-10 justify-center">
+            <MockChip tone={tr.side === 'BUY' ? 'positive' : 'negative'} className="w-10 justify-center max-[379px]:hidden">
               {tr.side === 'BUY' ? 'Buy' : 'Sell'}
             </MockChip>
             <span className="tabular w-[72px] text-right text-[13px] leading-[18px] text-foreground">{eur(tr.amount)}</span>

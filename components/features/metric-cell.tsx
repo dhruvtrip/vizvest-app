@@ -35,7 +35,7 @@ export function MetricCell({ label, value, sub, tone = 'default', size = 'lg', a
         {aside}
       </div>
       <div>
-        <p className={cn('tabular', size === 'lg' ? 'text-h4 md:text-h3' : 'text-h5 md:text-h4', TONE_CLASS[tone])}>
+        <p className={cn('metric-figure tabular whitespace-nowrap', size === 'lg' ? 'text-h4 md:text-h3' : 'text-h5 md:text-h4', TONE_CLASS[tone])}>
           {value}
         </p>
         {sub ? <p className="mt-1 text-p-sm text-fg-gray">{sub}</p> : null}
@@ -47,8 +47,9 @@ export function MetricCell({ label, value, sub, tone = 'default', size = 'lg', a
 const COLS: Record<2 | 3 | 4 | 5, string> = {
   2: 'grid-cols-1 sm:grid-cols-2',
   3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-  4: 'grid-cols-2 lg:grid-cols-4',
-  5: 'grid-cols-2 md:grid-cols-3 xl:grid-cols-5',
+  4: 'grid-cols-1 min-[380px]:grid-cols-2 xl:grid-cols-4',
+  // five across leaves ~150px per figure below 1536px, so figures step down one size there
+  5: 'grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 xl:max-2xl:[&_.metric-figure]:text-h4',
 }
 
 export function MetricGrid({

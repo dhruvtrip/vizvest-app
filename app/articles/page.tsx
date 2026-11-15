@@ -23,9 +23,10 @@ export default function ArticlesPage() {
   const articles = getArticles()
 
   return (
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
+      <main id="main-content">
       <section className="relative pb-24 md:pb-32">
         <GridGuides />
         <Container>
@@ -54,7 +55,9 @@ export default function ArticlesPage() {
         </Container>
       </section>
 
+      </main>
+
       <Footer />
-    </main>
+    </div>
   )
 }

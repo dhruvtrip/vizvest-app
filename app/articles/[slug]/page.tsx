@@ -113,7 +113,7 @@ export default async function ArticlePage({ params }: Props) {
   })
 
   return (
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -126,6 +126,7 @@ export default async function ArticlePage({ params }: Props) {
       )}
       <Navbar />
 
+      <main id="main-content">
       <ReadingShell className="pb-24 md:pb-32">
         <article>
           <ReadingHeader
@@ -173,7 +174,7 @@ export default async function ArticlePage({ params }: Props) {
               Upload your Trading 212 CSV and get the full picture in seconds, processed in your browser.
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-3">
             <Button asChild variant="secondary">
               <Link href="/articles">
                 <ArrowLeft aria-hidden="true" strokeWidth={1.5} />
@@ -190,7 +191,9 @@ export default async function ArticlePage({ params }: Props) {
         </nav>
       </ReadingShell>
 
+      </main>
+
       <Footer />
-    </main>
+    </div>
   )
 }

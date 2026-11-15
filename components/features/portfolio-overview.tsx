@@ -383,11 +383,11 @@ export function PortfolioOverview ({
       {/* Sold Positions Section */}
       {soldPositions.length > 0 && (
         <section aria-labelledby="sold-positions-heading">
-          <div className="mb-4 flex items-end justify-between gap-4">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
             <h2 id="sold-positions-heading" className="text-h5 text-foreground">
               Closed positions
             </h2>
-            <div className="flex items-center gap-3 text-p-sm">
+            <div className="flex items-center gap-3 whitespace-nowrap text-p-sm">
               <span className="tabular text-fg-secondary" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
                 {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
               </span>

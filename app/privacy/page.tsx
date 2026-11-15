@@ -26,9 +26,10 @@ const SECTION = 'border-t border-border pt-10 mt-12 first:mt-0 first:border-t-0 
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
+      <main id="main-content">
       <ReadingShell className="pb-24 md:pb-32">
         <ReadingHeader
           meta={<p>Last updated: August 2026</p>}
@@ -139,7 +140,9 @@ export default function PrivacyPage() {
         </ReadingBody>
       </ReadingShell>
 
+      </main>
+
       <Footer />
-    </main>
+    </div>
   )
 }

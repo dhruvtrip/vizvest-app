@@ -31,7 +31,7 @@ export function Stats() {
               <p className="text-p-sm text-fg-gray">{s.label}</p>
               <div>
                 <p className="tabular text-h2-m text-foreground md:text-h1">{s.value}</p>
-                <p className="mt-2 max-w-[300px] text-pretty text-p text-fg-secondary md:min-h-12">{s.caption}</p>
+                <p className="mt-2 max-w-[300px] text-pretty text-p text-fg-secondary md:min-h-[72px] lg:min-h-12">{s.caption}</p>
               </div>
             </Reveal>
           ))}

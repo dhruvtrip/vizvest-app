@@ -12,9 +12,10 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <Navbar />
 
+      <main id="main-content" className="flex flex-1 flex-col">
       <section className="relative flex flex-1 flex-col justify-center py-16 md:py-24">
         <GridGuides />
         <Container>
@@ -44,7 +45,9 @@ export default function NotFound() {
         </Container>
       </section>
 
+      </main>
+
       <Footer />
-    </main>
+    </div>
   )
 }

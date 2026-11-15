@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
 import {
@@ -98,11 +98,24 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
   const uploadAnother = useDashboardStore((state) => state.uploadAnother)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
 
-  // Escape closes the mobile drawer
+  const navRef = useRef<HTMLElement>(null)
+
+  // Escape closes the mobile drawer; Tab stays inside it (and its toggle) while open
   useEffect(() => {
     if (!isMobileOpen) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMobileSidebarOpen(false)
+      if (e.key !== 'Tab' || window.matchMedia('(min-width: 1024px)').matches) return
+      const toggle = document.querySelector<HTMLElement>('[aria-label="Close menu"]')
+      const inside = Array.from(navRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]') ?? [])
+      const stops = toggle ? [toggle, ...inside] : inside
+      if (stops.length === 0) return
+      const index = stops.indexOf(document.activeElement as HTMLElement)
+      const next = e.shiftKey
+        ? index <= 0 ? stops.length - 1 : index - 1
+        : index === -1 || index === stops.length - 1 ? 0 : index + 1
+      e.preventDefault()
+      stops[next].focus()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -144,7 +157,7 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
     },
     {
       id: 'activity',
-      label: 'Trading Activity',
+      label: 'Trading activity',
       onClick: () => handleOptionClick(() => handleNavigate('activity')),
       isActive: currentView === 'activity'
     }
@@ -176,14 +189,16 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
       </AnimatePresence>
 
       <nav
+        ref={navRef}
         aria-label="Dashboard views"
         className={cn(
           // Mobile: drawer under the header, slides in from the left
           'fixed bottom-0 left-0 top-header z-50 flex w-64 flex-col overflow-hidden overscroll-contain',
           'border-r border-border bg-background',
-          'transition-[transform,width] duration-[250ms] ease-smooth-out',
+          // visibility rides along so the closed drawer leaves the tab order once it has slid out
+          'transition-[transform,width,visibility] duration-[250ms] ease-smooth-out',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full',
-          isMobileOpen ? 'pointer-events-auto' : 'pointer-events-none lg:pointer-events-auto',
+          isMobileOpen ? 'pointer-events-auto' : 'pointer-events-none invisible lg:pointer-events-auto lg:visible',
           // Desktop: sticky column with an animated width
           'lg:sticky lg:top-header lg:z-auto lg:h-[calc(100dvh-3.5rem)] lg:shrink-0 lg:translate-x-0 lg:self-start',
           expanded ? 'lg:w-60' : 'lg:w-16',

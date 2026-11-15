@@ -33,7 +33,9 @@ export function WordRotator({ words, interval = 3000, className }: WordRotatorPr
           key={word}
           aria-hidden="true"
           className={cn(
-            'col-start-1 row-start-1 whitespace-nowrap text-center',
+            // Words stay on one line wherever they fit; on the narrowest phones a long word wraps
+            // instead of overflowing, and every word is centred in the (stable) tallest row.
+            'col-start-1 row-start-1 self-center text-balance text-center min-[360px]:whitespace-nowrap',
             'transition-[opacity,filter] [transition-duration:600ms] ease-in-out',
             i === index ? 'opacity-100 blur-0' : 'opacity-0 blur-[20px]'
           )}

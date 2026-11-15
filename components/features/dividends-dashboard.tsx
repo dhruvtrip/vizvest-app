@@ -742,7 +742,7 @@ export function DividendsDashboard ({
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
                       <TableHead scope="col">Stock</TableHead>
-                      <TableHead scope="col">Company</TableHead>
+                      <TableHead scope="col" className="hidden sm:table-cell">Company</TableHead>
                       <TableHead scope="col" className="text-right" aria-sort={sortAria('dividends')}>
                         <SortButton
                           label="Total dividends"
@@ -778,7 +778,7 @@ export function DividendsDashboard ({
                       return (
                         <TableRow key={stock.ticker}>
                           <TableCell className="text-foreground">{stock.ticker}</TableCell>
-                          <TableCell className="max-w-[260px] truncate text-fg-secondary">
+                          <TableCell className="hidden max-w-[260px] truncate normal-nums text-fg-secondary sm:table-cell">
                             {stock.name}
                           </TableCell>
                           <TableCell className="text-right text-foreground">

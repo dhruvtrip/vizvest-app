@@ -37,8 +37,8 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-background" role="contentinfo">
       <Container className="py-16 md:py-20">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-12 px-6 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] md:gap-12">
-          <div className="col-span-2 flex flex-col gap-6 md:col-span-1">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-12 px-6 md:grid-cols-3 md:gap-12 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+          <div className="col-span-2 flex flex-col gap-6 md:col-span-3 lg:col-span-1">
             <Link href="/" aria-label="Vizvest home" className="w-fit rounded-sm transition-opacity duration-200 hover:opacity-70">
               <Wordmark />
             </Link>
@@ -50,7 +50,7 @@ export function Footer() {
 
           {footerLinks.map((col) => (
             <nav key={col.heading} aria-label={col.label}>
-              <h3 className="mb-4 text-p-sm text-white">{col.heading}</h3>
+              <h2 className="mb-4 text-p-sm text-white">{col.heading}</h2>
               <ul className="flex flex-col gap-3" role="list">
                 {col.links.map((link) => (
                   <li key={link.label}>

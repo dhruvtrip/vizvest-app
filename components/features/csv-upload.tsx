@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import Papa from 'papaparse'
 import posthog from 'posthog-js'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
   ChevronRight,
@@ -24,7 +24,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { Container, GridGuides } from '@/components/layout/container'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { BlurReveal } from '@/components/motion/blur-reveal'
+import { BlurReveal, useReducedMotionSafe } from '@/components/motion/blur-reveal'
 import { CurrencyPickerDialog } from './currency-picker-dialog'
 
 interface UploadResult {
@@ -160,7 +160,8 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
     status: ''
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const reduce = useReducedMotion()
+  // Hydration-safe: false for the server render, so SSR and first client styles match
+  const reduce = useReducedMotionSafe()
 
   const { pendingMerge, commitMerge, cancelPendingMerge } = useDashboardStore(
     useShallow((state) => ({
@@ -470,7 +471,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
                       role="region"
                       aria-label="Files ready to upload"
                     >
-                      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 md:px-5">
+                      <div className="flex flex-col items-start gap-2 border-b border-border px-4 py-3 min-[360px]:flex-row min-[360px]:items-center min-[360px]:justify-between min-[360px]:gap-4 md:px-5">
                         <div className="min-w-0">
                           <p className="text-p-sm text-foreground">
                             <span className="tabular">{stagedFiles.length}</span> file{stagedFiles.length === 1 ? '' : 's'} ready
@@ -485,7 +486,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
                           variant="ghost"
                           size="sm"
                           onClick={handleAddMoreClick}
-                          className="text-fg-secondary"
+                          className="text-fg-secondary max-[359px]:-ml-2.5"
                         >
                           <Plus strokeWidth={1.5} aria-hidden="true" />
                           Add more files

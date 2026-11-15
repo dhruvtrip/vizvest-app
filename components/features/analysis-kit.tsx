@@ -253,7 +253,9 @@ export function TableFrame({ className, children }: { className?: string; childr
   return (
     <div
       className={cn(
-        'min-w-0 border border-border bg-background',
+        'relative min-w-0 border border-border bg-background',
+        // hint that a wide table scrolls sideways inside its frame
+        "after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-6 after:bg-gradient-to-l after:from-background after:content-[''] lg:after:hidden",
         '[&>div:first-child]:overscroll-x-contain',
         '[&_td:first-child]:pl-5 [&_th:first-child]:pl-5 md:[&_td:first-child]:pl-6 md:[&_th:first-child]:pl-6',
         '[&_td:last-child]:pr-5 [&_th:last-child]:pr-5 md:[&_td:last-child]:pr-6 md:[&_th:last-child]:pr-6',

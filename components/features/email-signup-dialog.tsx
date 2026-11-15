@@ -70,7 +70,7 @@ export function EmailSignupDialog({ show }: { show: boolean }) {
           <Mail className="h-4 w-4" strokeWidth={1.5} />
         </span>
 
-        <DialogTitle className="mt-5 text-h4">Be first to know</DialogTitle>
+        <DialogTitle className="mt-5">Be first to know</DialogTitle>
         <DialogDescription className="mt-2 text-pretty text-p-sm text-fg-secondary">
           New features, portfolio insights and updates, delivered to your inbox.
         </DialogDescription>

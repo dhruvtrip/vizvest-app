@@ -92,7 +92,7 @@ export function ProofStrip() {
           Vizvest reads market, limit and stop orders, deposits, dividends, interest on cash, withholding tax,
           currency conversion fees and exchange rates, and merges several exports with duplicate rows removed.
         </p>
-        <div ref={gridRef} aria-hidden="true" className="cell-grid grid-cols-3 md:grid-cols-6">
+        <div ref={gridRef} aria-hidden="true" className="cell-grid grid-cols-3 lg:grid-cols-6">
           {Array.from({ length: CELLS }, (_, i) => {
             const item = ITEMS[(i + step * CELLS) % ITEMS.length]
             return (
