@@ -62,5 +62,5 @@ export function Region({ label, action, id, className, children }: RegionProps) 
 
 /** Standard grids. Figures drop columns before they clip. */
 export const kpiGrid = 'grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4'
-export const kpiGridFive = 'grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 md:grid-cols-3 2xl:grid-cols-5'
+export const kpiGridFive = 'grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 md:grid-cols-3 min-[1400px]:grid-cols-5'
 export const chartGrid = 'grid gap-3 lg:grid-cols-2'

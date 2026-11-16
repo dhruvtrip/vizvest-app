@@ -211,22 +211,30 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
 
       <Region label="Summary" id="portfolio-summary">
         <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-3">
-          {metricCards.map((metric) => (
-            <KpiTile
-              key={metric.label}
-              label={metric.label}
-              hint={metric.hint}
-              tone={metric.tone}
-              sub={metric.subValue}
-              value={
-                <AnimatedCurrency
-                  amount={metric.rawValue}
-                  currency={metrics.baseCurrency}
-                  formatFn={metric.signed ? formatSignedCurrency : formatCurrency}
+          {metricCards.map((metric) => {
+            const format = metric.signed ? formatSignedCurrency : formatCurrency
+            // The tile fits its figure to its width by character count; the
+            // count-up node hides that count, so it is passed down here.
+            const chars = Math.max(4, format(metric.rawValue, metrics.baseCurrency).length)
+            return (
+              <div key={metric.label} className="min-w-0" style={{ '--vz-chars': chars } as React.CSSProperties}>
+                <KpiTile
+                  className="h-full"
+                  label={metric.label}
+                  hint={metric.hint}
+                  tone={metric.tone}
+                  sub={metric.subValue}
+                  value={
+                    <AnimatedCurrency
+                      amount={metric.rawValue}
+                      currency={metrics.baseCurrency}
+                      formatFn={format}
+                    />
+                  }
                 />
-              }
-            />
-          ))}
+              </div>
+            )
+          })}
         </div>
       </Region>
     </div>

@@ -405,20 +405,29 @@ export function TradingActivityDashboard ({
   const hasTrades = allTrades.length > 0
 
   // Display data for the charts, derived from the filtered trades.
-  const weekdayRows = useMemo<BarRow[]>(() => {
+  const [selectedWeekday, setSelectedWeekday] = useState<string | null>(null)
+  const weekdays = useMemo(() => {
     const counts = new Array(7).fill(0)
+    const split = Array.from({ length: 7 }, () => ({ buys: 0, sells: 0, volume: 0 }))
     for (const trade of filteredTrades) {
       const day = new Date(trade.Time).getDay()
-      if (!isNaN(day)) counts[day]++
+      if (isNaN(day)) continue
+      counts[day]++
+      if (isBuyAction(trade.Action)) split[day].buys++
+      else split[day].sells++
+      split[day].volume += Math.abs(trade.totalInBaseCurrency || 0)
     }
     const total = counts.reduce((sum, n) => sum + n, 0)
-    return WEEKDAY_ORDER.filter((day) => (day >= 1 && day <= 5) || counts[day] > 0).map((day) => ({
+    const days = WEEKDAY_ORDER.filter((day) => (day >= 1 && day <= 5) || counts[day] > 0)
+    const rows: BarRow[] = days.map((day) => ({
       id: WEEKDAY_NAMES[day].toLowerCase(),
       label: WEEKDAY_NAMES[day],
       value: counts[day],
       display: String(counts[day]),
       note: total > 0 ? `${Math.round((counts[day] / total) * 100)}% of trades` : undefined
     }))
+    const detail = new Map(days.map((day) => [WEEKDAY_NAMES[day].toLowerCase(), split[day]]))
+    return { rows, detail }
   }, [filteredTrades])
 
   const monthlyFlow = useMemo(() => {
@@ -598,14 +607,33 @@ export function TradingActivityDashboard ({
             <Reveal className={chartGrid}>
               <ChartCard title="Trades by weekday" color={3} note={`${metrics.totalTransactions} trades`}>
                 <BarRows
-                  rows={weekdayRows}
+                  rows={weekdays.rows}
                   color={3}
                   emphasis="max"
                   labelWidth={88}
                   aria-label={`Trades by weekday, ${periodLabel}`}
+                  selectedId={selectedWeekday}
+                  onSelect={(id) => setSelectedWeekday((current) => (current === id ? null : id))}
+                  renderDetail={(row) => {
+                    const detail = weekdays.detail.get(row.id)
+                    if (!detail) return null
+                    return (
+                      <p className="figure flex flex-wrap gap-x-4 gap-y-1 text-xs font-normal text-muted-foreground">
+                        <span>
+                          <span className="text-foreground">{detail.buys}</span> {detail.buys === 1 ? 'buy' : 'buys'}
+                        </span>
+                        <span>
+                          <span className="text-foreground">{detail.sells}</span> {detail.sells === 1 ? 'sell' : 'sells'}
+                        </span>
+                        <span>
+                          <span className="text-foreground">{formatCurrency(detail.volume, metrics.baseCurrency)}</span> traded
+                        </span>
+                      </p>
+                    )
+                  }}
                 />
               </ChartCard>
-              <ChartCard title="Buys and sells by month" color={1} note={`Volume in ${metrics.baseCurrency}`}>
+              <ChartCard title="Buys and sells by month" note={`Volume in ${metrics.baseCurrency}`}>
                 <StackedColumns
                   series={[
                     { key: 'buys', label: 'Buys', color: 1 },
