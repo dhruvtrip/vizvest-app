@@ -36,6 +36,55 @@ export interface Trading212Transaction {
 export interface NormalizedTransaction extends Trading212Transaction {
   totalInBaseCurrency: number
   detectedBaseCurrency: string
+  /**
+   * Split-adjusted values, in today's share terms. Set on buy/sell rows only,
+   * and only when a later stock split applies to the row. Read them through
+   * getAdjustedShares / getAdjustedPricePerShare in lib/transaction-utils.ts.
+   */
+  /** `No. of shares` x splitFactor */
+  adjustedShares?: number
+  /** `Price / share` / splitFactor, in the row's own price currency */
+  adjustedPricePerShare?: number
+  /** Product of the ratios of all applied splits after this row; absent or 1 means unadjusted */
+  splitFactor?: number
+}
+
+/**
+ * Where a split event came from: split rows in the uploaded CSV, or the
+ * bundled table of verified splits (lib/split-table.ts).
+ */
+export type SplitSource = 'csv' | 'table'
+
+/**
+ * One stock split (or reverse split) of one security
+ */
+export interface SplitEvent {
+  /** Stable id: `${source}:${isins[0]}:${cutoff}` */
+  id: string
+  /** Every ISIN the security has had; a row matching any of them is affected */
+  isins: string[]
+  name: string
+  /** New shares per old share: 20 for 20-for-1, 0.1 for 1-for-10 */
+  ratio: number
+  /** Human-readable ratio, e.g. "20-for-1" */
+  ratioLabel: string
+  /** "YYYY-MM-DD HH:mm:ss" UTC; rows with Time < cutoff are pre-split */
+  cutoff: string
+  source: SplitSource
+  /**
+   * Ticker of the CSV split rows. Used to match trade rows only when the
+   * split rows carried no ISIN (`isins` is empty).
+   */
+  tickerFallback?: string
+}
+
+/**
+ * A split event that was applied to at least one ticker in this upload
+ */
+export interface AppliedSplit extends SplitEvent {
+  /** Tickers in this upload that were adjusted */
+  tickers: string[]
+  rowsAdjusted: number
 }
 
 /**

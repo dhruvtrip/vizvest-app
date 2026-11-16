@@ -1,5 +1,6 @@
 import type { Trading212Transaction } from '@/types/trading212'
 import { detectBaseCurrency } from './currency-normalizer'
+import { isSplitAction } from './transaction-utils'
 
 export interface ParsedFile {
   fileName: string
@@ -30,6 +31,11 @@ export interface MergeResult {
 export function dedupeKey(transaction: Trading212Transaction): string {
   const id = transaction.ID
   if (typeof id === 'string' && id.trim().length > 0) {
+    // It is unknown whether the two halves of a stock split pair share an ID.
+    // Keying split rows by ID + action guarantees neither half is dropped.
+    if (typeof transaction.Action === 'string' && isSplitAction(transaction.Action)) {
+      return `id:${id.trim()}|${transaction.Action}`
+    }
     return `id:${id.trim()}`
   }
 

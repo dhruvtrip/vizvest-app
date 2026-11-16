@@ -2,8 +2,9 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { normalizeAllTransactions } from '@/lib/currency-normalizer'
 import { detectPartialData } from '@/lib/partial-data-detector'
+import { resolveSplitEvents, applySplitAdjustments } from '@/lib/split-adjuster'
 import { mergeAndDedupe, type MergeResult, type ParsedFile } from '@/lib/csv-merger'
-import type { Trading212Transaction, NormalizedTransaction, PartialDataWarning } from '@/types/trading212'
+import type { Trading212Transaction, NormalizedTransaction, PartialDataWarning, AppliedSplit } from '@/types/trading212'
 
 export interface UploadInfo {
   fileName: string
@@ -38,12 +39,18 @@ interface DashboardState {
   mergeBanner: MergeBanner | null
   isMergeBannerDismissed: boolean
   pendingMerge: MergeResult | null
+  /** Stock splits that were applied to this upload (CSV split rows + bundled table) */
+  appliedSplits: AppliedSplit[]
+  /** Split rows found in the CSV without their matching half; reported, never applied */
+  unpairedSplitRows: number
+  isSplitBannerDismissed: boolean
 
   handleDataParsed: (data: Trading212Transaction[], uploadInfo: UploadInfo) => void
   handleMultipleFilesParsed: (files: ParsedFile[]) => void
   commitMerge: (merge: MergeResult, forcedBaseCurrency?: string) => void
   cancelPendingMerge: () => void
   dismissMergeBanner: () => void
+  dismissSplitBanner: () => void
   normalizeTransactions: (forcedBaseCurrency?: string) => void
   uploadAnother: () => void
   dismissAlert: () => void
@@ -73,7 +80,10 @@ const initialState = {
   isPartialDataDismissed: false,
   mergeBanner: null as MergeBanner | null,
   isMergeBannerDismissed: false,
-  pendingMerge: null as MergeResult | null
+  pendingMerge: null as MergeResult | null,
+  appliedSplits: [] as AppliedSplit[],
+  unpairedSplitRows: 0,
+  isSplitBannerDismissed: false
 }
 
 export const useDashboardStore = create<DashboardState>()(
@@ -144,13 +154,18 @@ export const useDashboardStore = create<DashboardState>()(
 
       dismissMergeBanner: () => set({ isMergeBannerDismissed: true }),
 
+      dismissSplitBanner: () => set({ isSplitBannerDismissed: true }),
+
       normalizeTransactions: (forcedBaseCurrency) => {
         const raw = get().rawTransactions
         if (raw.length === 0) {
           set({
             normalizedTransactions: [],
             baseCurrency: 'USD',
-            partialDataWarning: null
+            partialDataWarning: null,
+            appliedSplits: [],
+            unpairedSplitRows: 0,
+            isSplitBannerDismissed: false
           })
           return
         }
@@ -161,22 +176,35 @@ export const useDashboardStore = create<DashboardState>()(
           const normalized = normalizeAllTransactions(raw, forcedBaseCurrency)
           const detected = normalized[0]?.detectedBaseCurrency || 'USD'
 
-          // Detect partial data after normalization
-          const partialDataWarning = detectPartialData(normalized)
+          // Annotate trade rows with split-adjusted shares and prices. Split
+          // events come from split rows in the CSV and from the bundled table;
+          // raw values (shares, price, Total, Result) are never modified.
+          const { events, unpaired } = resolveSplitEvents(normalized)
+          const { transactions: adjusted, applied } = applySplitAdjustments(normalized, events)
+
+          // Detect partial data on the split-adjusted rows, so a split is not
+          // mistaken for selling more shares than were bought.
+          const partialDataWarning = detectPartialData(adjusted)
 
           set({
-            normalizedTransactions: normalized,
+            normalizedTransactions: adjusted,
             baseCurrency: detected,
             isNormalizing: false,
             partialDataWarning,
-            isPartialDataDismissed: false
+            isPartialDataDismissed: false,
+            appliedSplits: applied,
+            unpairedSplitRows: unpaired.length,
+            isSplitBannerDismissed: false
           })
         } catch (err) {
           set({
             error: err instanceof Error ? err.message : 'Failed to normalize transactions',
             normalizedTransactions: [],
             isNormalizing: false,
-            partialDataWarning: null
+            partialDataWarning: null,
+            appliedSplits: [],
+            unpairedSplitRows: 0,
+            isSplitBannerDismissed: false
           })
         }
       },
@@ -193,7 +221,10 @@ export const useDashboardStore = create<DashboardState>()(
           isPartialDataDismissed: false,
           mergeBanner: null,
           isMergeBannerDismissed: false,
-          pendingMerge: null
+          pendingMerge: null,
+          appliedSplits: [],
+          unpairedSplitRows: 0,
+          isSplitBannerDismissed: false
         })
       },
 

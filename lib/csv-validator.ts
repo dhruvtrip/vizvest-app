@@ -1,5 +1,5 @@
 import type { Trading212Transaction, CSVValidationResult } from '@/types/trading212'
-import { isBuyAction, isSellAction } from './transaction-utils'
+import { isBuyAction, isSellAction, isSplitAction } from './transaction-utils'
 
 /**
  * Required columns in Trading 212 CSV export
@@ -119,8 +119,14 @@ export function validateTransaction(
     }
   }
 
-  // Total is always required for all transaction types
+  // Total is required for every transaction type except stock split rows.
+  // On those it is a position value rather than a cash flow, nothing reads it,
+  // and it is not known whether Trading 212 always fills it in, so a blank
+  // value there must not reject the whole upload.
   const total = transaction.Total
+  if (isSplitAction(transaction.Action)) {
+    return errors
+  }
   if (total === undefined || total === null || typeof total !== 'number') {
     errors.push(`Row ${rowIndex + 1}: Invalid total amount`)
   }
