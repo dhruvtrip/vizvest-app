@@ -313,9 +313,10 @@ export function StockDetail ({
               <button
                 type="button"
                 onClick={(event) => {
-                  // Keeps Radix from closing the tooltip on the same click, so a tap opens it.
+                  // A tap focuses the badge (which opens the tooltip) and then clicks it:
+                  // keep it open and stop Radix from closing it on that same click.
                   event.preventDefault()
-                  setPartialOpen((open) => !open)
+                  setPartialOpen(true)
                 }}
                 className={cn(badgeVariants({ variant: 'warning' }), 'relative text-xs before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[\'\']')}
                 aria-label={`Partial data: ${partialDataExplanation}`}
