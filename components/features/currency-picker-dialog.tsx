@@ -10,6 +10,8 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Check } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import type { PerFileBaseCurrency } from '@/lib/csv-merger'
 
@@ -50,6 +52,20 @@ export function CurrencyPickerDialog({
   const filesForCurrency = (currency: string) =>
     perFileBreakdown.filter(f => f.baseCurrency === currency)
 
+  // Arrow keys move the choice, like a native radio group.
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const step = event.key === 'ArrowDown' || event.key === 'ArrowRight'
+      ? 1
+      : event.key === 'ArrowUp' || event.key === 'ArrowLeft' ? -1 : 0
+    if (step === 0) return
+    event.preventDefault()
+    const next = (index + step + currencies.length) % currencies.length
+    setSelected(currencies[next])
+    const group = event.currentTarget.parentElement
+    const target = group?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next]
+    target?.focus()
+  }
+
   return (
     <Dialog
       open={open}
@@ -61,13 +77,13 @@ export function CurrencyPickerDialog({
         <DialogHeader>
           <DialogTitle>Choose a base currency</DialogTitle>
           <DialogDescription>
-            Your uploads use more than one base currency. Pick the one we should
-            convert everything to.
+            Your uploads use more than one base currency. Pick the one every amount
+            should be converted to.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2 pt-2">
-          {currencies.map((currency) => {
+        <div role="radiogroup" aria-label="Base currency" className="flex flex-col gap-2">
+          {currencies.map((currency, index) => {
             const files = filesForCurrency(currency)
             const isSelected = selected === currency
             const isRecommended = currency === recommended
@@ -75,51 +91,48 @@ export function CurrencyPickerDialog({
               <button
                 key={currency}
                 type="button"
+                role="radio"
+                aria-checked={isSelected}
+                tabIndex={isSelected || (!selected && index === 0) ? 0 : -1}
                 onClick={() => setSelected(currency)}
+                onKeyDown={(event) => handleKeyDown(event, index)}
                 className={cn(
-                  'w-full text-left rounded-xl border p-4 transition-all',
-                  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                  'flex w-full items-center gap-3 rounded-2xl p-3.5 text-left',
+                  'transition-[background-color,box-shadow] duration-150 ease-ui',
                   isSelected
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border/60 hover:border-primary/40 hover:bg-muted/40'
+                    ? 'bg-tile ring-[1.5px] ring-inset ring-foreground'
+                    : 'bg-tile hover:bg-tile-hover'
                 )}
-                aria-pressed={isSelected}
               >
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        'inline-flex h-4 w-4 items-center justify-center rounded-full border',
-                        isSelected ? 'border-primary' : 'border-muted-foreground/40'
-                      )}
-                      aria-hidden
-                    >
-                      {isSelected && (
-                        <span className="h-2 w-2 rounded-full bg-primary" />
-                      )}
-                    </span>
-                    <span className="font-semibold text-base tracking-tight">
-                      {currency}
-                    </span>
-                    {isRecommended && (
-                      <span className="text-[10px] font-medium uppercase tracking-wide text-primary bg-primary/12 border border-primary/20 rounded-full px-2 py-0.5">
-                        Recommended
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {files.length} {files.length === 1 ? 'file' : 'files'}
+                <span
+                  className={cn(
+                    'grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 ease-ui',
+                    isSelected
+                      ? 'bg-primary text-primary-foreground'
+                      : 'ring-[1.5px] ring-inset ring-foreground/25'
+                  )}
+                  aria-hidden="true"
+                >
+                  {isSelected && <Check size={12} strokeWidth={2.5} />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-base font-medium">{currency}</span>
+                    {isRecommended && <Badge variant="outline" className="h-5 px-2 font-normal">Recommended</Badge>}
                   </span>
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {files.map(f => f.fileName).join(', ')}
-                </p>
+                  <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
+                    {files.map(f => f.fileName).join(', ')}
+                  </span>
+                </span>
+                <span className="figure shrink-0 self-start pt-0.5 text-xs font-normal text-muted-foreground">
+                  {files.length} {files.length === 1 ? 'file' : 'files'}
+                </span>
               </button>
             )
           })}
         </div>
 
-        <DialogFooter className="pt-2">
+        <DialogFooter>
           <Button variant="ghost" onClick={onCancel}>
             Cancel
           </Button>

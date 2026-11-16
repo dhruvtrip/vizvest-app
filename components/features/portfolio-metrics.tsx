@@ -1,10 +1,9 @@
 'use client'
 
 import { useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
 import { AnimatedCurrency } from '@/components/ui/animated-number'
-import { cn } from '@/lib/utils'
+import { KpiTile } from '@/components/charts'
+import { PageHeader, Region } from '@/components/features/dashboard-layout'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { isBuyAction, isSellAction, isDividendAction, isDepositAction } from '@/lib/transaction-utils'
@@ -45,11 +44,11 @@ interface PortfolioMetricsProps {
 
 interface MetricData {
   label: string
-  value: string
   rawValue: number
-  currency: string
   subValue?: string
-  valueColor?: string
+  hint: string
+  tone?: 'neutral' | 'up' | 'down'
+  signed?: boolean
 }
 
 /**
@@ -145,46 +144,12 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
   }
 }
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+/** Adds a + to gains so the sign of money always shows. */
+function formatSignedCurrency(amount: number, currency: string): string {
+  return `${amount > 0 ? '+' : ''}${formatCurrency(amount, currency)}`
 }
 
-function MetricCard({
-  metric,
-  index
-}: {
-  metric: MetricData
-  index: number
-}) {
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={fadeInUp}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-    >
-      <Card className={cn(
-        'relative overflow-hidden transition-all duration-300',
-        'border-border/50 hover:border-border',
-        'hover:shadow-lg hover:shadow-primary/5'
-      )}>
-        <CardContent className="relative z-10 p-5">
-          <p className="metric-label text-muted-foreground mb-2">{metric.label}</p>
-          <p className={cn(
-            'metric-value',
-            metric.valueColor || 'text-foreground'
-          )}>
-            <AnimatedCurrency amount={metric.rawValue} currency={metric.currency} formatFn={formatCurrency} />
-          </p>
-          {metric.subValue && (
-            <p className="text-body-sm text-muted-foreground mt-1">{metric.subValue}</p>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  )
-}
+const plural = (count: number, word: string) => `${count} ${word}${count !== 1 ? 's' : ''}`
 
 export function PortfolioMetrics ({ transactions: transactionsProp, className }: PortfolioMetricsProps) {
   const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
@@ -194,69 +159,76 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
     [transactions]
   )
 
-  const isRealizedPositive = metrics.realizedPnL >= 0
+  const realizedTone = metrics.realizedPnL > 0 ? 'up' : metrics.realizedPnL < 0 ? 'down' : 'neutral'
 
   const metricCards: MetricData[] = [
     {
-      label: 'Buy Volume',
-      value: formatCurrency(metrics.totalInvested, metrics.baseCurrency),
+      label: 'Buy volume',
       rawValue: metrics.totalInvested,
-      currency: metrics.baseCurrency,
       subValue: 'Total bought',
+      hint: 'Everything you spent buying shares in this export, in your base currency.'
     },
     {
-      label: 'Sell Volume',
-      value: formatCurrency(metrics.totalSold, metrics.baseCurrency),
+      label: 'Sell volume',
       rawValue: metrics.totalSold,
-      currency: metrics.baseCurrency,
       subValue: 'Total sold',
+      hint: 'Everything you received from selling shares in this export.'
     },
     {
-      label: 'Realized P&L',
-      value: `${isRealizedPositive ? '+' : ''}${formatCurrency(metrics.realizedPnL, metrics.baseCurrency)}`,
+      label: 'Realised profit',
       rawValue: metrics.realizedPnL,
-      currency: metrics.baseCurrency,
-      subValue: `${metrics.soldCount} position${metrics.soldCount !== 1 ? 's' : ''} closed`,
-      valueColor: isRealizedPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400',
+      subValue: `${plural(metrics.soldCount, 'position')} closed`,
+      tone: realizedTone,
+      signed: true,
+      hint: 'Profit or loss on the shares you sold, taken from the Result column of your export.'
     },
     {
-      label: 'Total Dividends',
-      value: formatCurrency(metrics.totalDividends, metrics.baseCurrency),
+      label: 'Dividends',
       rawValue: metrics.totalDividends,
-      currency: metrics.baseCurrency,
       subValue: 'Dividend income',
-      valueColor: metrics.totalDividends > 0 ? 'text-emerald-600 dark:text-emerald-400' : undefined,
+      hint: 'Dividend payments received in this export.'
     },
     {
-      label: 'Currency Fees',
-      value: formatCurrency(metrics.totalFees, metrics.baseCurrency),
+      label: 'Currency fees',
       rawValue: metrics.totalFees,
-      currency: metrics.baseCurrency,
       subValue: 'Conversion costs',
+      hint: 'Fees Trading 212 charged to convert currency when you traded shares priced in another currency.'
     },
     {
-      label: 'Total Deposits',
-      value: formatCurrency(metrics.totalDeposit, metrics.baseCurrency),
+      label: 'Deposits',
       rawValue: metrics.totalDeposit,
-      currency: metrics.baseCurrency,
-      subValue: `${metrics.depositCount} deposit${metrics.depositCount !== 1 ? 's' : ''} made`,
+      subValue: `${plural(metrics.depositCount, 'deposit')} made`,
+      hint: 'Money you paid into your account in this export.'
     }
   ]
 
   return (
-    <div className={cn('space-y-4', className)}>
-      <div>
-        <h1 className="text-h2 text-foreground">Portfolio Overview</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Your portfolio overview in the above timeframe
-        </p>
-      </div>
+    <div className={className}>
+      <PageHeader
+        title="Portfolio overview"
+        description="What you bought, sold, earned and paid across the period in your export."
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {metricCards.map((metric, index) => (
-          <MetricCard key={metric.label} metric={metric} index={index} />
-        ))}
-      </div>
+      <Region label="Summary" id="portfolio-summary">
+        <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-3">
+          {metricCards.map((metric) => (
+            <KpiTile
+              key={metric.label}
+              label={metric.label}
+              hint={metric.hint}
+              tone={metric.tone}
+              sub={metric.subValue}
+              value={
+                <AnimatedCurrency
+                  amount={metric.rawValue}
+                  currency={metrics.baseCurrency}
+                  formatFn={metric.signed ? formatSignedCurrency : formatCurrency}
+                />
+              }
+            />
+          ))}
+        </div>
+      </Region>
     </div>
   )
 }

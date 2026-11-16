@@ -126,21 +126,30 @@ export function pickXLabels(labels: string[], mode: XLabelMode, width: number | 
   if (n > 1) out.add(n - 1)
   if (mode === 'ends' || width === null || n <= 2) {
     // Two end labels that would touch keep only the first.
-    if (n > 1 && width !== null && labelPx(labels[0]) / 2 + labelPx(labels[n - 1]) / 2 > width) out.delete(n - 1)
+    if (n > 1 && width !== null && labelPx(labels[0]) + labelPx(labels[n - 1]) + 8 > width) out.delete(n - 1)
     return out
   }
-  const widest = Math.max(...labels.map(labelPx))
-  const gap = points ? width / Math.max(1, n - 1) : width / n
-  const every = Math.max(1, Math.ceil((widest + 8) / Math.max(1, gap)))
-  out.clear()
-  for (let i = 0; i < n; i += every) out.add(i)
-  // Keep the last label when it has room, dropping the one before it if needed.
-  const last = n - 1
-  if (!out.has(last)) {
-    const prev = Math.floor(last / every) * every
-    if (last - prev < every && prev !== 0) out.delete(prev)
-    if (last - prev >= every / 2 || prev !== 0) out.add(last)
+  // Edges of each label as drawn: the first hugs the left, the last the right, the rest centre on their slot.
+  const slot = points ? width / Math.max(1, n - 1) : Math.min(width / n, 124)
+  const offset = points ? 0 : (width - slot * n) / 2
+  const centre = (i: number) => (points ? i * slot : offset + (i + 0.5) * slot)
+  const edges = (i: number): [number, number] => {
+    const w = labelPx(labels[i])
+    if (i === 0) return points ? [0, w] : [offset, offset + w]
+    if (i === n - 1) return points ? [width - w, width] : [width - offset - w, width - offset]
+    return [centre(i) - w / 2, centre(i) + w / 2]
   }
+  const widest = Math.max(...labels.map(labelPx))
+  const every = Math.max(1, Math.ceil((widest + 8) / Math.max(1, slot)))
+  const kept: number[] = [0]
+  for (let i = every; i < n - 1; i += every) {
+    if (edges(i)[0] >= edges(kept[kept.length - 1])[1] + 8) kept.push(i)
+  }
+  // The last label wins over its neighbour; it only gives way to the first.
+  while (kept.length > 1 && edges(n - 1)[0] < edges(kept[kept.length - 1])[1] + 8) kept.pop()
+  if (edges(n - 1)[0] >= edges(kept[kept.length - 1])[1] + 8) kept.push(n - 1)
+  out.clear()
+  kept.forEach((i) => out.add(i))
   return out
 }
 

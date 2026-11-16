@@ -1,9 +1,17 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import groupBy from 'lodash/groupBy'
 import posthog from 'posthog-js'
-import { Card, CardContent } from '@/components/ui/card'
+import { Tile } from '@/components/ui/tile'
+import { badgeVariants } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BarRows, ChartCard, Donut, Legend, foldSeries, isOther, seriesAt, type BarRow, type Segment } from '@/components/charts'
+import { AutoHeight } from '@/components/motion'
+import { ChartBar, ChartPie, ChevronRight, Folder } from '@/components/icons'
+import { Region, chartGrid } from '@/components/features/dashboard-layout'
+import { METRIC_EXPLANATIONS } from '@/components/features/metric-tooltip'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
@@ -137,6 +145,23 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
   })
 }
 
+/** Signed amount: gains get a +, losses keep their -. */
+function formatSigned(amount: number, currency: string): string {
+  return `${amount >= 0 ? '+' : ''}${formatCurrency(amount, currency)}`
+}
+
+const holdingsGrid = 'grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'
+
+/** One label and figure. The figure never wraps; on a very narrow tile it drops under its label. */
+function FigureRow({ label, value, className }: { label: string; value: string; className?: string }) {
+  return (
+    <span className="flex flex-wrap items-baseline justify-between gap-x-3">
+      <span className="text-xs font-normal text-muted-foreground">{label}</span>
+      <span className={cn('figure ms-auto whitespace-nowrap text-sm font-medium', className)}>{value}</span>
+    </span>
+  )
+}
+
 /**
  * Individual stock position tile component for current holdings
  */
@@ -153,82 +178,48 @@ function StockPositionTile({
   const hasNegativeInvested = position.netCashFlow < 0
 
   return (
-    <Card
-      className={cn(
-        'cursor-pointer transition-all duration-200 group',
-        'hover:shadow-md hover:-translate-y-0.5',
-        'hover:border-primary/50 hover:bg-primary/5',
-        'active:scale-[0.99]',
-        'h-full flex flex-col',
-        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2',
-        isPartialData && 'border-amber-500/20'
-      )}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick()
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={`View details for ${position.ticker} - ${position.name}`}
-    >
-      <CardContent className="p-5 flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <h3 className="ticker text-base text-foreground truncate group-hover:text-primary transition-colors">
-                {position.ticker}
-              </h3>
+    <Tile asChild interactive>
+      <button
+        type="button"
+        onClick={onClick}
+        className="group flex h-full w-full flex-col gap-4"
+        aria-label={`View details for ${position.ticker} - ${position.name}${isPartialData ? ' (partial data)' : ''}`}
+      >
+        <span className="flex w-full items-start gap-2">
+          <span className="min-w-0 flex-1">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="ticker truncate text-base text-foreground">{position.ticker}</span>
               {isPartialData && (
-                <span className="px-1.5 py-0.5 text-label-sm font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded" aria-label="Partial data">
-                  Partial
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={cn(badgeVariants({ variant: 'warning' }), 'h-5 px-2 font-normal')}>Partial</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">{METRIC_EXPLANATIONS.partialData}</TooltipContent>
+                </Tooltip>
               )}
-            </div>
-            <p className="text-body-sm text-muted-foreground truncate">
-              {position.name}
-            </p>
-          </div>
-        </div>
+            </span>
+            <span className="mt-0.5 block truncate text-sm text-muted-foreground">{position.name}</span>
+          </span>
+          <ChevronRight
+            size={16}
+            className="mt-1 shrink-0 text-muted-foreground transition-colors duration-150 ease-ui group-hover:text-foreground motion-safe:transition-[color,transform] motion-safe:group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </span>
 
-        <div className="mt-auto space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-body-sm text-muted-foreground">
-              {isNetSelling ? 'Net Flow' : 'Shares'}
-            </span>
-            <div className="flex items-center gap-1">
-              <span className={cn(
-                'text-body-sm font-medium font-tabular',
-                isNetSelling ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
-              )}>
-               {formatShares(position.totalShares)}
-              </span>
-              {isNetSelling && (
-                <span className="px-1 py-0.5 text-label-sm font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
-                  Selling
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-body-sm text-muted-foreground">
-              {hasNegativeInvested ? 'Net Cash' : 'Net Invested'}
-            </span>
-            <span className={cn(
-              'text-body-sm font-medium currency',
-              hasNegativeInvested
-                ? 'change-positive'
-                : 'text-foreground'
-            )}>
-              {formatCurrency(position.netCashFlow, position.baseCurrency)}
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        <span className="mt-auto flex w-full flex-col gap-1">
+          <FigureRow
+            label={isNetSelling ? 'Net flow' : 'Shares'}
+            value={formatShares(position.totalShares)}
+            className={isNetSelling ? 'text-down' : undefined}
+          />
+          <FigureRow
+            label={hasNegativeInvested ? 'Net cash' : 'Net invested'}
+            value={formatCurrency(position.netCashFlow, position.baseCurrency)}
+          />
+        </span>
+      </button>
+    </Tile>
   )
 }
 
@@ -246,78 +237,172 @@ function SoldPositionTile({
   const isProfit = position.realizedResult >= 0
 
   return (
-    <Card
-      className={cn(
-        'cursor-pointer transition-all duration-200 group',
-        'hover:shadow-md hover:-translate-y-0.5',
-        'hover:border-primary/50 hover:bg-primary/5',
-        'active:scale-[0.99]',
-        'bg-muted/30',
-        'h-full flex flex-col',
-        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2'
-      )}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick()
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={`View transaction history for ${position.ticker} - ${position.name}`}
-    >
-      <CardContent className="p-5 flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="ticker text-base text-muted-foreground truncate group-hover:text-primary transition-colors">
-              {position.ticker}
-            </h3>
-            <p className="text-body-sm text-muted-foreground/70 truncate mt-0.5">
-              {position.name}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-label-sm px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-              Sold
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-auto space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-body-sm text-muted-foreground">Result</span>
-            <span className={cn(
-              'text-body-sm font-medium currency',
-              isProfit ? 'change-positive' : 'change-negative'
-            )}>
-              {isProfit ? '+' : ''}{formatCurrency(position.realizedResult, position.baseCurrency)}
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <Tile asChild interactive>
+      <button
+        type="button"
+        onClick={onClick}
+        className="group flex h-full w-full flex-col gap-4"
+        aria-label={`View transaction history for ${position.ticker} - ${position.name}`}
+      >
+        <span className="flex w-full items-start gap-2">
+          <span className="min-w-0 flex-1">
+            <span className="ticker block truncate text-base text-muted-foreground">{position.ticker}</span>
+            <span className="mt-0.5 block truncate text-sm text-muted-foreground">{position.name}</span>
+          </span>
+          <ChevronRight
+            size={16}
+            className="mt-1 shrink-0 text-muted-foreground transition-colors duration-150 ease-ui group-hover:text-foreground motion-safe:transition-[color,transform] motion-safe:group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </span>
+        <span className="mt-auto flex w-full flex-col gap-1">
+          <FigureRow
+            label="Result"
+            value={formatSigned(position.realizedResult, position.baseCurrency)}
+            className={isProfit ? 'text-up' : 'text-down'}
+          />
+        </span>
+      </button>
+    </Tile>
   )
 }
+
+/** Quiet empty state inside a chart card, the same height as the chart it stands in for. */
+function ChartEmptyState({ icon: Icon, title, detail }: { icon: React.ElementType; title: string; detail: string }) {
+  return (
+    <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl bg-background px-6 py-8 text-center">
+      <Icon size={20} className="text-muted-foreground" aria-hidden="true" />
+      <p className="text-sm font-medium">{title}</p>
+      <p className="max-w-xs text-sm text-muted-foreground">{detail}</p>
+    </div>
+  )
+}
+
+/** Net invested per current holding: the top five and everything else as "Other". */
+function AllocationChart({ holdings, baseCurrency }: { holdings: StockPosition[]; baseCurrency: string }) {
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  const { segments, total } = useMemo(() => {
+    const items = holdings
+      .filter((p) => p.netCashFlow > 0)
+      .map((p) => ({ id: p.ticker, label: p.ticker, value: p.netCashFlow }))
+    const folded = foldSeries(items, 6)
+    const segments: Segment[] = folded.map((item, i) => ({
+      id: item.id,
+      label: isOther(item) ? `Other (${item.members.length})` : item.label,
+      value: item.value,
+      display: formatCurrency(item.value, baseCurrency),
+      color: seriesAt(i)
+    }))
+    const total = items.reduce((sum, item) => sum + item.value, 0)
+    return { segments, total }
+  }, [holdings, baseCurrency])
+
+  return (
+    <ChartCard
+      title="Allocation by holding"
+      color={1}
+      footnote="Net invested: what you paid for a holding minus what you sold of it."
+    >
+      {segments.length === 0 ? (
+        <ChartEmptyState
+          icon={ChartPie}
+          title="Nothing invested right now"
+          detail="Allocation appears here while you hold shares you paid for in this export."
+        />
+      ) : (
+        <div className="flex h-full flex-col items-center justify-center gap-6 py-2 min-[440px]:flex-row min-[440px]:justify-start">
+          <Donut
+            segments={segments}
+            aria-label="Allocation of net invested by holding"
+            size={168}
+            thickness={16}
+            activeId={activeId}
+            onActiveChange={setActiveId}
+          >
+            <span className="flex flex-col items-center px-4 text-center">
+              <span className="text-xs font-normal text-muted-foreground">Net invested</span>
+              <span className="figure mt-0.5 whitespace-nowrap text-base font-semibold tracking-[-0.01em]">
+                {formatCurrency(total, baseCurrency)}
+              </span>
+            </span>
+          </Donut>
+          <Legend
+            className="w-full min-w-0 flex-1 flex-col gap-y-2.5"
+            items={segments.map((s) => ({ id: s.id, label: s.label, color: s.color, value: s.display }))}
+            activeId={activeId}
+            onActiveChange={setActiveId}
+          />
+        </div>
+      )}
+    </ChartCard>
+  )
+}
+
+/** Realised profit or loss per stock, largest results first. */
+function RealisedChart({ positions, baseCurrency }: { positions: StockPosition[]; baseCurrency: string }) {
+  const rows: BarRow[] = useMemo(
+    () =>
+      positions
+        .filter((p) => Math.abs(p.realizedResult) > 0.004)
+        .sort((a, b) => Math.abs(b.realizedResult) - Math.abs(a.realizedResult))
+        .map((p) => ({
+          id: p.ticker,
+          label: p.ticker,
+          note: p.name,
+          value: p.realizedResult,
+          display: formatSigned(p.realizedResult, baseCurrency)
+        })),
+    [positions, baseCurrency]
+  )
+
+  return (
+    <ChartCard
+      title="Realised profit by stock"
+      footnote="From the Result column of every sale in your export."
+    >
+      {rows.length === 0 ? (
+        <ChartEmptyState
+          icon={ChartBar}
+          title="No sales yet"
+          detail="Realised profit shows up here once you sell shares."
+        />
+      ) : (
+        <BarRows
+          rows={rows}
+          color={1}
+          signed
+          emphasis="none"
+          labelWidth={120}
+          maxRows={8}
+          aria-label="Realised profit or loss by stock"
+        />
+      )}
+    </ChartCard>
+  )
+}
+
+const CLOSED_PREVIEW = 8
 
 /**
  * Empty state component when no stocks are found
  */
 function EmptyState() {
   return (
-    <Card className="p-8 text-center border-dashed">
-      <p className="text-sm text-muted-foreground">No stocks found</p>
-      <p className="text-xs text-muted-foreground mt-1">
+    <Tile className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+      <Folder size={20} className="text-muted-foreground" aria-hidden="true" />
+      <p className="text-sm font-medium">No stocks found</p>
+      <p className="text-sm text-muted-foreground">
         Upload a CSV file to see your portfolio
       </p>
-    </Card>
+    </Tile>
   )
 }
 
 /**
  * Portfolio Overview Component
- * Displays aggregated stock positions as a responsive grid of clickable tiles
- * Shows both current holdings and sold positions in separate sections
+ * Allocation and realised profit charts, then the current holdings and the
+ * closed positions as grids of tiles that open each stock.
  */
 export function PortfolioOverview ({
   transactions: transactionsProp,
@@ -329,6 +414,7 @@ export function PortfolioOverview ({
   const partialDataWarning = useDashboardStore((state) => state.partialDataWarning)
   const transactions = transactionsProp ?? storeTransactions
   const onSelectTicker = onSelectTickerProp ?? storeSetSelectedTicker
+  const [showAllClosed, setShowAllClosed] = useState(false)
 
   const positions = useMemo(
     () => aggregatePositions(transactions),
@@ -358,95 +444,108 @@ export function PortfolioOverview ({
   }
 
   const baseCurrency = positions[0]?.baseCurrency || 'USD'
+  const visibleClosed = showAllClosed ? soldPositions : soldPositions.slice(0, CLOSED_PREVIEW)
+  const totalSign = totalRealizedResult >= 0 ? '+' : ''
 
   return (
-    <div className={cn('space-y-6', className)}>
-      {/* Current Holdings Section */}
-      {currentHoldings.length > 0 && (
-        <section className="space-y-3" aria-labelledby="portfolio-heading">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 id="portfolio-heading" className="text-h3 text-foreground">
-                Current Holdings
-              </h2>
-            </div>
-            <span className="text-body-sm text-muted-foreground font-tabular" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
-              {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
-            </span>
+    <TooltipProvider delayDuration={200}>
+      <div className={className}>
+        <Region label="Where your money is" id="portfolio-allocation-heading">
+          <div className={chartGrid}>
+            <AllocationChart holdings={currentHoldings} baseCurrency={baseCurrency} />
+            <RealisedChart positions={positions} baseCurrency={baseCurrency} />
           </div>
+        </Region>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" role="list" aria-label="Current stock holdings">
-            {currentHoldings.map(position => {
-              const isPartialData = partialDataWarning 
-                ? isTickerPartialData(position.ticker, partialDataWarning)
-                : false
-              
-              return (
-                <div key={position.ticker} role="listitem">
-                  <StockPositionTile
-                    position={position}
-                    isPartialData={isPartialData}
-                    onClick={() => {
-                      posthog.capture('stock_selected', { source: 'holding' })
-                      onSelectTicker(position.ticker)
-                    }}
-                  />
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Sold Positions Section */}
-      {soldPositions.length > 0 && (
-        <section className="space-y-3" aria-labelledby="sold-positions-heading">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 id="sold-positions-heading" className="text-h3 font-medium text-muted-foreground">
-                Closed Positions
-              </h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-body-sm text-muted-foreground font-tabular" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
-                {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
+        {/* Current Holdings Section */}
+        {currentHoldings.length > 0 && (
+          <Region
+            label="Current holdings"
+            id="portfolio-heading"
+            action={
+              <span className="figure" aria-label={`${currentHoldings.length} ${currentHoldings.length === 1 ? 'stock' : 'stocks'} in portfolio`}>
+                {currentHoldings.length} {currentHoldings.length === 1 ? 'stock' : 'stocks'}
               </span>
-              <span
-                className={cn(
-                  'text-body-sm font-medium currency',
-                  totalRealizedResult >= 0
-                    ? 'change-positive'
-                    : 'change-negative'
-                )}
-                aria-label={`Total realized ${totalRealizedResult >= 0 ? 'profit' : 'loss'}: ${totalRealizedResult >= 0 ? '+' : ''}${formatCurrency(totalRealizedResult, baseCurrency)}`}
+            }
+          >
+            <ul className={holdingsGrid} aria-label="Current stock holdings">
+              {currentHoldings.map(position => {
+                const isPartialData = partialDataWarning
+                  ? isTickerPartialData(position.ticker, partialDataWarning)
+                  : false
+
+                return (
+                  <li key={position.ticker} className="min-w-0">
+                    <StockPositionTile
+                      position={position}
+                      isPartialData={isPartialData}
+                      onClick={() => {
+                        posthog.capture('stock_selected', { source: 'holding' })
+                        onSelectTicker(position.ticker)
+                      }}
+                    />
+                  </li>
+                )
+              })}
+            </ul>
+          </Region>
+        )}
+
+        {/* Sold Positions Section */}
+        {soldPositions.length > 0 && (
+          <Region
+            label="Closed positions"
+            id="sold-positions-heading"
+            action={
+              <span className="flex items-center gap-3">
+                <span className="figure" aria-label={`${soldPositions.length} ${soldPositions.length === 1 ? 'stock' : 'stocks'} sold`}>
+                  {soldPositions.length} {soldPositions.length === 1 ? 'stock' : 'stocks'}
+                </span>
+                <span
+                  className={cn('figure whitespace-nowrap font-medium', totalRealizedResult >= 0 ? 'text-up' : 'text-down')}
+                  aria-label={`Total realized ${totalRealizedResult >= 0 ? 'profit' : 'loss'}: ${totalSign}${formatCurrency(totalRealizedResult, baseCurrency)}`}
+                >
+                  Total {totalSign}{formatCurrency(totalRealizedResult, baseCurrency)}
+                </span>
+              </span>
+            }
+          >
+            <AutoHeight>
+              <ul className={holdingsGrid} aria-label="Sold stock positions">
+                {visibleClosed.map(position => (
+                  <li key={position.ticker} className="min-w-0">
+                    <SoldPositionTile
+                      position={position}
+                      onClick={() => {
+                        posthog.capture('stock_selected', { source: 'sold' })
+                        onSelectTicker(position.ticker)
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </AutoHeight>
+            {soldPositions.length > CLOSED_PREVIEW && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-ms-3 mt-2"
+                aria-expanded={showAllClosed}
+                onClick={() => setShowAllClosed((value) => !value)}
               >
-                Total: {totalRealizedResult >= 0 ? '+' : ''}{formatCurrency(totalRealizedResult, baseCurrency)}
-              </span>
-            </div>
-          </div>
+                {showAllClosed ? 'Show fewer' : `Show all closed positions (${soldPositions.length})`}
+              </Button>
+            )}
+          </Region>
+        )}
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" role="list" aria-label="Sold stock positions">
-            {soldPositions.map(position => (
-              <div key={position.ticker} role="listitem">
-                <SoldPositionTile
-                  position={position}
-                  onClick={() => {
-                    posthog.capture('stock_selected', { source: 'sold' })
-                    onSelectTicker(position.ticker)
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Edge case: Only sold positions, no current holdings */}
-      {currentHoldings.length === 0 && soldPositions.length > 0 && (
-        <div className="text-center py-3 text-xs text-muted-foreground">
-          No current holdings. All positions shown above have been sold.
-        </div>
-      )}
-    </div>
+        {/* Edge case: Only sold positions, no current holdings */}
+        {currentHoldings.length === 0 && soldPositions.length > 0 && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            No current holdings. Every position above has been sold.
+          </p>
+        )}
+      </div>
+    </TooltipProvider>
   )
 }

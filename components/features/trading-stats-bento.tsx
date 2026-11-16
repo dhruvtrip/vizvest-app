@@ -1,12 +1,13 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
-import { motion, useInView, animate } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
-import { Flame, Zap, CalendarDays, TrendingUp, Activity } from 'lucide-react'
+import { useInView, animate } from 'framer-motion'
+import { KpiTile } from '@/components/charts'
+import { Reveal, useReducedMotionSafe } from '@/components/motion'
+import { Flame, CalendarDays, Star, Calendar, Gauge } from '@/components/icons'
+import { Region, kpiGridFive } from '@/components/features/dashboard-layout'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { isTradeAction } from '@/lib/transaction-utils'
-import { cn } from '@/lib/utils'
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -164,65 +165,43 @@ interface TradingStatsBentoProps {
   className?: string
 }
 
+/** Counts up from 0 the first time it scrolls into view; shows the value at once under reduced motion. */
 function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
   const ref = useRef<HTMLSpanElement>(null)
   const inView = useInView(ref, { once: true, margin: '-20% 0px' })
+  const reduced = useReducedMotionSafe()
   const [display, setDisplay] = useState(0)
 
   useEffect(() => {
     if (!inView) return
+    if (reduced) {
+      setDisplay(value)
+      return
+    }
     const controls = animate(0, value, {
       duration: 0.8,
       ease: 'easeOut',
       onUpdate: (v) => setDisplay(v),
     })
     return () => controls.stop()
-  }, [inView, value])
+  }, [inView, value, reduced])
 
-  return <span ref={ref}>{display.toFixed(decimals)}</span>
-}
-
-interface StatTileProps {
-  icon: React.ReactNode
-  label: string
-  value: React.ReactNode
-  subtext: string
-  index: number
-  highlight?: boolean
-  className?: string
-}
-
-function StatTile({ icon, label, value, subtext, index, highlight = false, className }: StatTileProps) {
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-10% 0px' }}
-      transition={{ delay: index * 0.06, duration: 0.4 }}
-    >
-      <Card className="relative overflow-hidden border-border/50 hover:border-border transition-colors h-full">
-        <CardContent className="p-4 sm:p-5 flex flex-col gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-            {icon}
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p
-              className={cn(
-                'text-2xl sm:text-3xl font-mono font-semibold tabular-nums tracking-tight',
-                highlight ? 'text-brand' : 'text-foreground'
-              )}
-            >
-              {value}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">{subtext}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <span ref={ref}>
+      <span aria-hidden="true">{display.toFixed(decimals)}</span>
+      <span className="sr-only">{value.toFixed(decimals)}</span>
+    </span>
   )
 }
+
+/** "April 2026" to "Apr 2026", so the month fits a tile beside other figures. */
+const shortMonthLabel = (label: string) => label.replace(/^([A-Za-z]{3})[A-Za-z]*/, '$1')
+
+const Unit = ({ children }: { children: React.ReactNode }) => (
+  <span className="ms-1 text-sm font-normal text-muted-foreground">{children}</span>
+)
+
+const iconProps = { size: 14, className: 'text-muted-foreground' } as const
 
 export function TradingStatsBento({ transactions, className }: TradingStatsBentoProps) {
   const stats = computeStats(transactions)
@@ -233,69 +212,62 @@ export function TradingStatsBento({ transactions, className }: TradingStatsBento
     : '—'
 
   const busiestDateLabel = stats.busiestDay
-    ? stats.busiestDay.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
+    ? stats.busiestDay.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
     : '—'
 
-  return (
-    <div className={cn('space-y-4', className)} data-testid="trading-stats-bento">
-      <div>
-        <p className="text-[11px] font-mono font-medium uppercase tracking-[1.5px] text-muted-foreground">
-          All-Time Highlights
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Based on your full trade history, ignoring year filters
-        </p>
-      </div>
+  const streakDays = stats.longestStreak?.days ?? 0
+  const busiestCount = stats.busiestDay?.count ?? 0
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatTile
-          index={0}
-          icon={<Flame className="w-4 h-4" />}
+  return (
+    <Region
+      id="activity-highlights"
+      label="Highlights"
+      action="All time, not affected by the year filter"
+      className={className}
+    >
+      <Reveal className={kpiGridFive} data-testid="trading-stats-bento">
+        <KpiTile
+          icon={<Flame {...iconProps} />}
           label="Longest streak"
           value={
             <>
-              <AnimatedNumber value={stats.longestStreak?.days ?? 0} />{' '}
-              <span className="text-sm font-normal text-muted-foreground">days</span>
+              <AnimatedNumber value={streakDays} />
+              <Unit>{streakDays === 1 ? 'day' : 'days'}</Unit>
             </>
           }
-          subtext={dateRange}
-          highlight
+          sub={dateRange}
+          hint="Most trading days in a row, counting calendar days."
         />
-        <StatTile
-          index={1}
-          icon={<Zap className="w-4 h-4" />}
+        <KpiTile
+          icon={<CalendarDays {...iconProps} />}
           label="Busiest day"
           value={
             <>
-              <AnimatedNumber value={stats.busiestDay?.count ?? 0} />{' '}
-              <span className="text-sm font-normal text-muted-foreground">trades</span>
+              <AnimatedNumber value={busiestCount} />
+              <Unit>{busiestCount === 1 ? 'trade' : 'trades'}</Unit>
             </>
           }
-          subtext={busiestDateLabel}
+          sub={busiestDateLabel}
         />
-        <StatTile
-          index={2}
-          icon={<CalendarDays className="w-4 h-4" />}
-          label="Favorite day"
+        <KpiTile
+          icon={<Star {...iconProps} />}
+          label="Favourite day"
           value={stats.favoriteDay?.day ?? '—'}
-          subtext={stats.favoriteDay ? `${stats.favoriteDay.percentage}% of trades` : '—'}
+          sub={stats.favoriteDay ? `${stats.favoriteDay.percentage}% of trades` : '—'}
         />
-        <StatTile
-          index={3}
-          icon={<TrendingUp className="w-4 h-4" />}
+        <KpiTile
+          icon={<Calendar {...iconProps} />}
           label="Most active month"
-          value={stats.mostActiveMonth?.label ?? '—'}
-          subtext={stats.mostActiveMonth ? `${stats.mostActiveMonth.count} trades` : '—'}
+          value={stats.mostActiveMonth ? shortMonthLabel(stats.mostActiveMonth.label) : '—'}
+          sub={stats.mostActiveMonth ? `${stats.mostActiveMonth.count} trades` : '—'}
         />
-        <StatTile
-          index={4}
-          className="sm:col-span-2 lg:col-span-1"
-          icon={<Activity className="w-4 h-4" />}
+        <KpiTile
+          icon={<Gauge {...iconProps} />}
           label="Trades per active day"
           value={<AnimatedNumber value={stats.tradesPerActiveDay} decimals={1} />}
-          subtext="avg on active days"
+          sub="Average on days you traded"
         />
-      </div>
-    </div>
+      </Reveal>
+    </Region>
   )
 }

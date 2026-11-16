@@ -1,10 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
-import { Menu } from 'lucide-react'
-import { useDashboardStore } from '@/stores/useDashboardStore'
 import { useShallow } from 'zustand/react/shallow'
+import { Logo } from '@/components/logo'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { Button } from '@/components/ui/button'
+import { IconSwap } from '@/components/motion'
+import { Menu, X } from '@/components/icons'
+import { useDashboardStore } from '@/stores/useDashboardStore'
+import { DashboardContextChips } from './dashboard-pills'
+
+/** The drawer returns focus here when it closes. */
+export const DASHBOARD_MENU_BUTTON_ID = 'dashboard-menu-button'
 
 export function DashboardHeader() {
   const { normalizedTransactions, isMobileSidebarOpen, setMobileSidebarOpen } = useDashboardStore(
@@ -18,45 +25,34 @@ export function DashboardHeader() {
   const hasData = normalizedTransactions.length > 0
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background">
-      <div className="container mx-auto px-8 h-16 flex items-center justify-between">
-        <Link
-          href="/"
-          className="flex items-center hover:opacity-80 transition-opacity"
-        >
-          <Image
-            src="/assets/logo-full-light-nobg.png"
-            alt="Vizvest"
-            width={150}
-            height={34}
-            className="h-20 w-auto dark:hidden"
-            priority
-          />
-          <Image
-            src="/assets/logo-full-dark-nobg.png"
-            alt="Vizvest"
-            width={150}
-            height={34}
-            className="hidden h-20 w-auto dark:block"
-            priority
-          />
+    <header className="sticky top-0 z-50 h-16 border-b border-border bg-background/80 backdrop-blur-md">
+      <nav aria-label="Dashboard" className="flex h-full items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href="/" aria-label="Vizvest home" className="flex h-10 shrink-0 items-center rounded-md">
+          <Logo height={15} priority />
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            Dashboard
-          </span>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {hasData && <DashboardContextChips className="hidden lg:flex" />}
+          <ThemeToggle />
           {hasData && (
-            <button
+            <Button
+              id={DASHBOARD_MENU_BUTTON_ID}
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileSidebarOpen(!isMobileSidebarOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="lg:hidden"
               aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileSidebarOpen}
+              aria-controls="dashboard-drawer"
             >
-              <Menu className="h-5 w-5 text-foreground" />
-            </button>
+              <IconSwap
+                swapped={isMobileSidebarOpen}
+                from={<Menu size={20} />}
+                to={<X size={20} />}
+              />
+            </Button>
           )}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   )
 }

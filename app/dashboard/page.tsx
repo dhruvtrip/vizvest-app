@@ -17,13 +17,81 @@ const DividendsDashboard = dynamic(
 )
 import { DashboardSidebar } from '@/components/features/dashboard-sidebar'
 import { DashboardPills } from '@/components/features/dashboard-pills'
+import { DashboardPage as DashboardPageShell } from '@/components/features/dashboard-layout'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { DotLoader, ShimmerText } from '@/components/motion'
+import { CircleAlert, CircleCheck, GitMerge, TriangleAlert, X } from '@/components/icons'
+import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { getPartialDataExplanation } from '@/lib/partial-data-detector'
 import { EmailSignupDialog } from '@/components/features/email-signup-dialog'
 import { Footer } from '@/components/landing/footer'
+
+const EASE_OUT = [0, 0, 0.58, 1] as const
+
+/* Notices enter with a fade and a 12px rise (300ms) and leave faster
+   (150ms). Their height opens and closes with them, so the view below
+   never jumps. */
+const noticeMotion = {
+  initial: { opacity: 0, y: 12, height: 0 },
+  animate: { opacity: 1, y: 0, height: 'auto', transition: { duration: 0.3, ease: EASE_OUT } },
+  exit: { opacity: 0, y: -8, height: 0, transition: { duration: 0.15, ease: EASE_OUT } }
+}
+
+type NoticeTone = 'up' | 'neutral' | 'warning' | 'destructive'
+
+const NOTICE_TONES: Record<NoticeTone, { surface: string; icon: string }> = {
+  up: { surface: 'bg-up/10', icon: 'text-up' },
+  neutral: { surface: 'bg-tile', icon: 'text-muted-foreground' },
+  warning: { surface: 'bg-warning/10', icon: 'text-warning' },
+  destructive: { surface: 'bg-destructive/10', icon: 'text-destructive' }
+}
+
+function NoticeBody ({
+  tone,
+  icon: Icon,
+  lead,
+  detail,
+  action,
+  onDismiss,
+  dismissLabel
+}: {
+  tone: NoticeTone
+  icon: React.ElementType
+  lead: React.ReactNode
+  detail?: React.ReactNode
+  action?: React.ReactNode
+  onDismiss?: () => void
+  dismissLabel?: string
+}) {
+  const colours = NOTICE_TONES[tone]
+  return (
+    <div className="pt-3">
+      <div className={cn('flex items-start gap-3 rounded-2xl py-2.5 pe-2.5 ps-4 text-sm', colours.surface)}>
+        <Icon size={16} strokeWidth={2} className={cn('mt-2 shrink-0', colours.icon)} aria-hidden="true" />
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 py-1.5">
+          <p className="min-w-0 flex-1 basis-60 leading-5 text-foreground">
+            <span className="font-medium">{lead}</span>
+            {detail && <> <span className="font-normal">{detail}</span></>}
+          </p>
+          {action}
+        </div>
+        {onDismiss && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onDismiss}
+            className="shrink-0 text-muted-foreground hover:bg-background/60 hover:text-foreground"
+            aria-label={dismissLabel}
+          >
+            <X size={16} />
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function DashboardPage () {
   const {
@@ -99,180 +167,138 @@ export default function DashboardPage () {
   }, [uploadAnother])
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-    <div className="flex flex-1 relative">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col">
+    <div className="relative flex flex-1">
 
       {hasData && <DashboardSidebar />}
 
-      <main className="flex-1 min-w-0 w-full lg:w-auto">
+      <main className="w-full min-w-0 flex-1">
         <EmailSignupDialog show={showSignupDialog} />
         {hasData && <DashboardPills />}
-        <AnimatePresence>
-          {uploadInfo && hasData && !isAlertDismissed && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="border-b border-border border-l-4 border-l-emerald-500 bg-emerald-500/8 relative z-40"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <div className="container mx-auto px-4 sm:px-8 py-3">
-                <Alert className="border-0 bg-transparent">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
-                    <AlertDescription className="text-sm flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          Successfully loaded {uploadInfo.rowCount} transactions
-                        </span>
-                        <span className="text-muted-foreground text-sm">
-                          from {uploadInfo.fileName}
-                        </span>
-                      </div>
-                    </AlertDescription>
-                    <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleUploadAnother}
-                        className="gap-1.5 text-xs h-8 text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary"
-                        aria-label="Upload a different CSV file"
-                      >
-                        <span className="hidden sm:inline">Upload Different File</span>
-                      </Button>
-                      <button
-                        onClick={dismissAlert}
-                        className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0"
-                        aria-label="Dismiss success message"
-                      >
-                        Dismiss
-                      </button>
-                    </div>
-                  </div>
-                </Alert>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        <AnimatePresence>
-          {mergeBanner && !isMergeBannerDismissed && hasData && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="border-b border-border border-l-4 border-l-sky-500 bg-sky-500/8 relative z-40"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <div className="container mx-auto px-4 sm:px-8 py-3">
-                <Alert className="border-0 bg-transparent">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
-                    <AlertDescription className="text-sm flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
-                        <span className="font-medium text-sky-700 dark:text-sky-400">
-                          Merged {mergeBanner.fileCount} {mergeBanner.fileCount === 1 ? 'file' : 'files'}
-                        </span>
-                        <span className="text-muted-foreground text-sm">
-                          {mergeBanner.duplicatesRemoved > 0
-                            ? `removed ${mergeBanner.duplicatesRemoved} duplicate ${mergeBanner.duplicatesRemoved === 1 ? 'transaction' : 'transactions'} · ${mergeBanner.totalRows} unique rows`
-                            : `${mergeBanner.totalRows} unique rows · no duplicates found`}
-                        </span>
-                      </div>
-                    </AlertDescription>
-                    <button
-                      onClick={dismissMergeBanner}
-                      className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
-                      aria-label="Dismiss merge summary"
+        {/* Status notices sit at the top of the content column, at the views' width. */}
+        <div className={cn('mx-auto w-full max-w-shell px-4 sm:px-6 lg:px-8', hasData && 'pt-1 lg:pt-3')}>
+          <AnimatePresence initial={false}>
+            {uploadInfo && hasData && !isAlertDismissed && (
+              <motion.div
+                key="loaded"
+                {...noticeMotion}
+                className="overflow-hidden"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <NoticeBody
+                  tone="up"
+                  icon={CircleCheck}
+                  lead={<>Loaded <span className="figure">{uploadInfo.rowCount}</span> transactions</>}
+                  detail={<>from <span className="break-all">{uploadInfo.fileName}</span></>}
+                  action={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleUploadAnother}
+                      className="-my-1 -ms-3 hover:bg-background/60"
+                      aria-label="Upload a different CSV file"
                     >
-                      Dismiss
-                    </button>
-                  </div>
-                </Alert>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                      Upload a different file
+                    </Button>
+                  }
+                  onDismiss={dismissAlert}
+                  dismissLabel="Dismiss success message"
+                />
+              </motion.div>
+            )}
+
+            {mergeBanner && !isMergeBannerDismissed && hasData && (
+              <motion.div
+                key="merged"
+                {...noticeMotion}
+                className="overflow-hidden"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <NoticeBody
+                  tone="neutral"
+                  icon={GitMerge}
+                  lead={`Merged ${mergeBanner.fileCount} ${mergeBanner.fileCount === 1 ? 'file' : 'files'}.`}
+                  detail={
+                    <span className="figure">
+                      {mergeBanner.duplicatesRemoved > 0
+                        ? `Removed ${mergeBanner.duplicatesRemoved} duplicate ${mergeBanner.duplicatesRemoved === 1 ? 'transaction' : 'transactions'} · ${mergeBanner.totalRows} unique rows`
+                        : `${mergeBanner.totalRows} unique rows · no duplicates found`}
+                    </span>
+                  }
+                  onDismiss={dismissMergeBanner}
+                  dismissLabel="Dismiss merge summary"
+                />
+              </motion.div>
+            )}
+
+            {partialDataWarning?.isPartialData && !isPartialDataDismissed && showOverview && (
+              <motion.div
+                key="partial"
+                {...noticeMotion}
+                className="overflow-hidden"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <NoticeBody
+                  tone="warning"
+                  icon={TriangleAlert}
+                  lead="Partial transaction data detected."
+                  detail={getPartialDataExplanation(partialDataWarning)}
+                  onDismiss={dismissPartialDataAlert}
+                  dismissLabel="Dismiss partial data warning"
+                />
+              </motion.div>
+            )}
+
+            {error && (
+              <motion.div
+                key="error"
+                {...noticeMotion}
+                className="overflow-hidden"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+              >
+                <NoticeBody
+                  tone="destructive"
+                  icon={CircleAlert}
+                  lead="We could not process your transactions."
+                  detail={error}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         <AnimatePresence>
           {isNormalizing && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-16"
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
               role="status"
               aria-live="polite"
               aria-label="Processing transactions"
             >
-              <div className="flex flex-col items-center justify-center gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold tracking-tight text-primary animate-pulse">...</p>
-                  <p className="text-sm font-medium mt-2">Processing transactions</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Normalizing currencies and calculating positions...
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {partialDataWarning?.isPartialData && !isPartialDataDismissed && showOverview && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="border-b border-border border-l-4 border-l-amber-500 bg-amber-500/8 relative z-40"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <div className="container mx-auto px-4 sm:px-8 py-3">
-                <Alert className="border-0 bg-transparent">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between w-full gap-3">
-                    <div className="flex-1 min-w-0">
-                      <AlertTitle className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
-                        Partial Transaction Data Detected
-                      </AlertTitle>
-                      <AlertDescription className="text-sm text-muted-foreground">
-                        {getPartialDataExplanation(partialDataWarning)}
-                      </AlertDescription>
-                    </div>
-                    <button
-                      onClick={dismissPartialDataAlert}
-                      className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0 self-end sm:self-auto"
-                      aria-label="Dismiss partial data warning"
-                    >
-                      Dismiss
-                    </button>
+              <DashboardPageShell>
+                <div className="flex flex-col items-center gap-4 py-16 text-center">
+                  <DotLoader pattern="scan" label="Processing transactions" className="text-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      <ShimmerText>Processing transactions</ShimmerText>
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Converting currencies and working out your positions
+                    </p>
                   </div>
-                </Alert>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-6"
-              role="alert"
-              aria-live="assertive"
-              aria-atomic="true"
-            >
-              <Alert variant="destructive">
-                <AlertDescription className="text-sm">{error}</AlertDescription>
-              </Alert>
+                </div>
+              </DashboardPageShell>
             </motion.div>
           )}
         </AnimatePresence>
@@ -324,7 +350,7 @@ export default function DashboardPage () {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-6 min-w-0"
+              className="min-w-0"
             >
               <ErrorBoundary area="stock_detail">
                 <StockDetail />
@@ -340,18 +366,20 @@ export default function DashboardPage () {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="container mx-auto px-8 py-6 space-y-10 min-w-0"
+              className="min-w-0"
             >
-              <div ref={analyticsRef}>
-                <ErrorBoundary area="portfolio_metrics">
-                  <PortfolioMetrics />
-                </ErrorBoundary>
-              </div>
-              <div ref={portfolioRef}>
-                <ErrorBoundary area="portfolio_overview">
-                  <PortfolioOverview />
-                </ErrorBoundary>
-              </div>
+              <DashboardPageShell>
+                <div ref={analyticsRef}>
+                  <ErrorBoundary area="portfolio_metrics">
+                    <PortfolioMetrics />
+                  </ErrorBoundary>
+                </div>
+                <div ref={portfolioRef} className="mt-8">
+                  <ErrorBoundary area="portfolio_overview">
+                    <PortfolioOverview />
+                  </ErrorBoundary>
+                </div>
+              </DashboardPageShell>
             </motion.div>
           )}
         </AnimatePresence>

@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import posthog from 'posthog-js'
-import { CheckCircle2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { SuccessCheck, useShake } from '@/components/motion'
 
 const STORAGE_KEY = 'vizvest_signup_dismissed'
 type Status = 'idle' | 'loading' | 'success' | 'error'
@@ -19,6 +21,7 @@ export function EmailSignupDialog({ show }: { show: boolean }) {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>('idle')
+  const { ref: formRef, shake } = useShake<HTMLFormElement>()
 
   useEffect(() => {
     if (!show) return
@@ -32,6 +35,11 @@ export function EmailSignupDialog({ show }: { show: boolean }) {
     const timer = setTimeout(() => setOpen(false), 2500)
     return () => clearTimeout(timer)
   }, [status])
+
+  // A failed signup shakes the form; the error line below says what happened.
+  useEffect(() => {
+    if (status === 'error') shake()
+  }, [status, shake])
 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
@@ -62,58 +70,61 @@ export function EmailSignupDialog({ show }: { show: boolean }) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-        <div className="h-[2px] bg-[hsl(var(--brand))]" />
-
-        <div className="px-8 pt-8 pb-10">
-          <div className="mb-8">
-            <p className="label-uppercase-sm text-[hsl(var(--brand))] mb-4">
-              Vizvest Updates
-            </p>
-            <DialogTitle className="font-heading text-[2rem] font-light tracking-[-0.025em] leading-[1.15] text-foreground mb-3">
-              Be first to know
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              New features, portfolio insights, and updates - delivered to your inbox.
-            </DialogDescription>
-          </div>
-
-          {status === 'success' ? (
-            <div className="flex items-center gap-3 py-2">
-              <CheckCircle2
-                className="h-5 w-5 shrink-0 text-[hsl(var(--brand))]"
-              />
-              <p className="text-sm font-medium text-foreground">
-                You&apos;re on the list.
-              </p>
+      <DialogContent className="sm:max-w-md">
+        {status === 'success' ? (
+          <div className="flex flex-col items-center gap-4 py-4 text-center" role="status">
+            <span className="grid size-14 place-items-center rounded-full bg-tile text-foreground">
+              <SuccessCheck size={28} />
+            </span>
+            <div className="space-y-1">
+              <DialogTitle>You&apos;re on the list</DialogTitle>
+              <DialogDescription>
+                We&apos;ll email you when there is something new in Vizvest.
+              </DialogDescription>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={status === 'loading'}
-                autoFocus
-                className="h-11"
-              />
+          </div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Get Vizvest updates</DialogTitle>
+              <DialogDescription>
+                An occasional email about new features and portfolio insights.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="signup-email">Email address</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={status === 'loading'}
+                  autoFocus
+                  aria-invalid={status === 'error' || undefined}
+                  aria-describedby={status === 'error' ? 'signup-error' : undefined}
+                />
+              </div>
               {status === 'error' && (
-                <p className="text-xs text-destructive">
-                  Something went wrong. Please try again.
+                <p id="signup-error" role="alert" className="text-sm font-normal text-destructive">
+                  That did not go through. Check the address and try again.
                 </p>
               )}
               <Button
                 type="submit"
+                size="lg"
                 disabled={status === 'loading'}
-                className="w-full h-11 bg-[hsl(var(--brand))] text-white hover:bg-[hsl(var(--brand))]/90 font-medium cursor-pointer"
+                className="w-full"
               >
                 {status === 'loading' ? 'Subscribing…' : 'Notify me'}
               </Button>
             </form>
-          )}
-        </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )

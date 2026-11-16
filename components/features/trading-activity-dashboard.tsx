@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
@@ -20,6 +19,19 @@ import { TradingHeatmap } from '@/components/ui/trading-heatmap'
 import { TradingStatsBento } from '@/components/features/trading-stats-bento'
 import { Pagination } from '@/components/ui/pagination'
 import { isTradeAction, isBuyAction } from '@/lib/transaction-utils'
+import { Tile, TileNote, TileTitle } from '@/components/ui/tile'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ArrowLeftRight, CalendarDays } from '@/components/icons'
+import { BarRows, ChartCard, KpiTile, Legend, StackedColumns, type BarRow } from '@/components/charts'
+import { NumberChange, Reveal, SlidingTabs, TextSwap, useReducedMotionSafe } from '@/components/motion'
+import {
+  DashboardPage,
+  PageHeader,
+  Region,
+  chartGrid,
+  kpiGrid
+} from '@/components/features/dashboard-layout'
 
 /**
  * Currency symbols for common currencies
@@ -215,48 +227,70 @@ function calculateTradingMetrics(
 }
 
 /**
- * Metric card component
+ * Signed money: "+" for gains, formatCurrency's "-" for losses.
  */
-function MetricCard({
-  label,
-  value,
-  subValue,
-  className,
-  valueClassName,
-  rawValue,
-  currency
+function formatSignedCurrency(amount: number, currency: string): string {
+  return `${amount > 0 ? '+' : ''}${formatCurrency(amount, currency)}`
+}
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+/** Monday first; weekend days only appear when they have trades. */
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
+
+const monthLabel = (year: number, month: number) =>
+  new Date(year, month, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+
+/**
+ * Money figure for a KPI tile: counts up on load and rolls to the new value
+ * when the year filter changes. Under reduced motion the changed digits
+ * cross-fade in place instead.
+ */
+function MoneyFigure({ amount, currency, signed = false }: { amount: number; currency: string; signed?: boolean }) {
+  const reduced = useReducedMotionSafe()
+  const format = signed ? formatSignedCurrency : formatCurrency
+  if (reduced) return <NumberChange value={format(amount, currency)} />
+  return <AnimatedCurrency amount={amount} currency={currency} formatFn={format} className="figure" />
+}
+
+/** Count figure for a KPI tile, with the same motion rules as MoneyFigure. */
+function CountFigure({ value }: { value: number }) {
+  const reduced = useReducedMotionSafe()
+  if (reduced) return <NumberChange value={String(value)} />
+  return <AnimatedCount value={value} className="figure" />
+}
+
+/** Buy / Sell tag. The full order type (Limit buy, Stop sell) stays in the title and for screen readers. */
+function ActionBadge({ action }: { action: string }) {
+  const isBuy = isBuyAction(action)
+  return (
+    <Badge variant={isBuy ? 'up' : 'down'} title={action} className="font-normal">
+      <span aria-hidden="true">{isBuy ? 'Buy' : 'Sell'}</span>
+      <span className="sr-only">{action}</span>
+    </Badge>
+  )
+}
+
+/** Designed empty state: icon, one plain sentence, a next step when there is one. */
+function EmptyActivity({
+  icon,
+  title,
+  body,
+  action
 }: {
-  label: string
-  value: string
-  subValue?: string
-  className?: string
-  valueClassName?: string
-  rawValue?: number
-  currency?: string
+  icon: React.ReactNode
+  title: string
+  body: string
+  action?: React.ReactNode
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="h-full"
-    >
-      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col' ,`border-l-[3px]`, className)}>
-        <CardContent className="p-5 flex flex-col h-full">
-          <p className="metric-label text-muted-foreground flex-shrink-0">{label}</p>
-          <p className={cn('metric-value text-foreground mt-1 flex-shrink-0', valueClassName)}>
-            {rawValue !== undefined && currency ? (
-              <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
-            ) : value}
-          </p>
-          {subValue ? (
-            <p className="text-body-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
-          ) : (
-            <div className="text-body-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+    <Tile size="lg" className="flex flex-col items-center px-6 py-12 text-center sm:py-16">
+      <span className="flex size-10 items-center justify-center rounded-full bg-background text-muted-foreground">
+        {icon}
+      </span>
+      <h2 className="mt-4 text-base font-medium">{title}</h2>
+      <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">{body}</p>
+      {action ? <div className="mt-5">{action}</div> : null}
+    </Tile>
   )
 }
 
@@ -308,27 +342,22 @@ export function TradingActivityDashboard ({
     }
   }, [availableYears])
 
-  // Toggle year selection
-  const toggleYear = (year: number) => {
-    const wasSelected = selectedYears.has(year)
+  // Year filter: one segmented control, "All" or a single year. It drives
+  // selectedYears, so every figure, chart and the table below follow it.
+  const [yearFilter, setYearFilter] = useState<string>('all')
+  const activeYearFilter =
+    yearFilter !== 'all' && selectedYears.size === 1 && selectedYears.has(Number(yearFilter)) ? yearFilter : 'all'
+
+  const changeYearFilter = (value: string) => {
+    if (value === activeYearFilter) return
+    const year = value === 'all' ? null : Number(value)
     posthog.capture('trading_year_filter_changed', {
-      action: wasSelected ? 'deselected' : 'selected',
-      year,
+      action: year === null ? 'deselected' : 'selected',
+      year: year ?? Number(activeYearFilter),
     })
 
-    setSelectedYears((prev) => {
-      const next = new Set(prev)
-      if (next.has(year)) {
-        next.delete(year)
-      } else {
-        next.add(year)
-      }
-      // Ensure at least one year is selected - default to all years if all deselected
-      if (next.size === 0 && availableYears.length > 0) {
-        return new Set(availableYears)
-      }
-      return next
-    })
+    setYearFilter(value)
+    setSelectedYears(year === null ? new Set(availableYears) : new Set([year]))
   }
 
   // Pagination state
@@ -375,144 +404,255 @@ export function TradingActivityDashboard ({
 
   const hasTrades = allTrades.length > 0
 
+  // Display data for the charts, derived from the filtered trades.
+  const weekdayRows = useMemo<BarRow[]>(() => {
+    const counts = new Array(7).fill(0)
+    for (const trade of filteredTrades) {
+      const day = new Date(trade.Time).getDay()
+      if (!isNaN(day)) counts[day]++
+    }
+    const total = counts.reduce((sum, n) => sum + n, 0)
+    return WEEKDAY_ORDER.filter((day) => (day >= 1 && day <= 5) || counts[day] > 0).map((day) => ({
+      id: WEEKDAY_NAMES[day].toLowerCase(),
+      label: WEEKDAY_NAMES[day],
+      value: counts[day],
+      display: String(counts[day]),
+      note: total > 0 ? `${Math.round((counts[day] / total) * 100)}% of trades` : undefined
+    }))
+  }, [filteredTrades])
+
+  const monthlyFlow = useMemo(() => {
+    const byMonth = new Map<number, { buys: number; sells: number }>()
+    let first = Infinity
+    let last = -Infinity
+    for (const trade of filteredTrades) {
+      const date = new Date(trade.Time)
+      if (isNaN(date.getTime())) continue
+      const key = date.getFullYear() * 12 + date.getMonth()
+      first = Math.min(first, key)
+      last = Math.max(last, key)
+      const entry = byMonth.get(key) ?? { buys: 0, sells: 0 }
+      const volume = Math.abs(trade.totalInBaseCurrency || 0)
+      if (isBuyAction(trade.Action)) entry.buys += volume
+      else entry.sells += volume
+      byMonth.set(key, entry)
+    }
+    if (!Number.isFinite(first)) return []
+    const months = []
+    for (let key = first; key <= last; key++) {
+      const year = Math.floor(key / 12)
+      const month = key % 12
+      const entry = byMonth.get(key) ?? { buys: 0, sells: 0 }
+      months.push({
+        id: `${year}-${month + 1}`,
+        label: monthLabel(year, month),
+        values: { buys: entry.buys, sells: entry.sells },
+        display: {
+          buys: formatCurrency(entry.buys, metrics.baseCurrency),
+          sells: formatCurrency(entry.sells, metrics.baseCurrency)
+        },
+        totalDisplay: formatCurrency(entry.buys + entry.sells, metrics.baseCurrency)
+      })
+    }
+    return months
+  }, [filteredTrades, metrics.baseCurrency])
+
+  const yearItems = useMemo(
+    () => [
+      { value: 'all', label: 'All' },
+      ...availableYears.map((year) => ({ value: String(year), label: String(year) }))
+    ],
+    [availableYears]
+  )
+
+  const header = (
+    <PageHeader
+      title="Trading activity"
+      description="Every buy and sell in your export, when you traded and how it went."
+      actions={
+        availableYears.length > 0 ? (
+          <div className="max-w-full overflow-x-auto overscroll-x-contain">
+            <SlidingTabs
+              variant="segmented"
+              size="sm"
+              aria-label="Filter by year"
+              items={yearItems}
+              value={activeYearFilter}
+              onValueChange={changeYearFilter}
+            />
+          </div>
+        ) : undefined
+      }
+    />
+  )
+
   if (!hasTrades) {
     return (
-      <div className={cn('container mx-auto px-6 py-6', className)}>
-        <Card className="p-8 text-center border-dashed">
-          <p className="text-sm text-muted-foreground">No trading activity found</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Upload transaction data to see trading analytics
-          </p>
-        </Card>
-      </div>
+      <DashboardPage className={className}>
+        {header}
+        <EmptyActivity
+          icon={<ArrowLeftRight size={20} />}
+          title="No trading activity found"
+          body="This export has no buy or sell orders. Upload a Trading 212 export that covers your trades to see them here."
+        />
+      </DashboardPage>
     )
   }
 
-  return (
-    <div className={cn('container mx-auto px-6 py-6 space-y-8', className)}>
-      {/* Header */}
-      <div>
-        <h1 className="text-h2 text-foreground">Trading Activity Dashboard</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Comprehensive view of all buy and sell transactions
-        </p>
-      </div>
+  const periodLabel = activeYearFilter === 'all' ? 'All years' : activeYearFilter
+  const pct = (part: number) =>
+    metrics.totalTransactions > 0 ? `${Math.round((part / metrics.totalTransactions) * 100)}% of trades` : 'No trades'
+  const breakEven = metrics.sellCount - metrics.profitableTrades - metrics.losingTrades
+  const realizedTone = metrics.realizedPnL > 0 ? 'up' : metrics.realizedPnL < 0 ? 'down' : 'neutral'
 
-      {/* Year Filter Pills */}
-      {availableYears.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground font-medium">Filter by year:</span>
-          {availableYears.map((year) => {
-            const isSelected = selectedYears.has(year)
-            return (
-              <motion.button
-                key={year}
-                onClick={() => toggleYear(year)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
-                  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                  isSelected
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                )}
-                aria-label={`${isSelected ? 'Deselect' : 'Select'} year ${year}`}
-                aria-pressed={isSelected}
-              >
-                {year}
-              </motion.button>
-            )
-          })}
-        </div>
+  return (
+    <DashboardPage className={className}>
+      {header}
+
+      {filteredTrades.length === 0 ? (
+        <EmptyActivity
+          icon={<CalendarDays size={20} />}
+          title={`No trades in ${periodLabel}`}
+          body="Nothing was bought or sold in this period. Pick another year, or show every year."
+          action={
+            <Button variant="outline" onClick={() => changeYearFilter('all')}>
+              Show all years
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <Region id="activity-summary" label="Summary" action={periodLabel}>
+            <div className={kpiGrid}>
+              <KpiTile
+                label="Transactions"
+                value={<CountFigure value={metrics.totalTransactions} />}
+                sub={`Avg ${formatCurrency(metrics.averageTransactionSize, metrics.baseCurrency)} per trade`}
+              />
+              <KpiTile label="Buys" value={<CountFigure value={metrics.buyCount} />} sub={pct(metrics.buyCount)} />
+              <KpiTile label="Sells" value={<CountFigure value={metrics.sellCount} />} sub={pct(metrics.sellCount)} />
+              <KpiTile
+                label="Win rate"
+                value={<NumberChange value={`${metrics.winRate.toFixed(1)}%`} />}
+                tone={metrics.sellCount > 0 && metrics.winRate >= 50 ? 'up' : 'neutral'}
+                sub={
+                  metrics.sellCount > 0
+                    ? `${metrics.profitableTrades}W / ${metrics.losingTrades}L${breakEven > 0 ? ` / ${breakEven} even` : ''}`
+                    : 'No sells yet'
+                }
+                hint="Share of sells that closed at a profit, from the Result column of your export."
+              />
+              <KpiTile
+                label="Realised profit"
+                value={<MoneyFigure amount={metrics.realizedPnL} currency={metrics.baseCurrency} signed />}
+                tone={realizedTone}
+                sub={`From ${metrics.sellCount} ${metrics.sellCount === 1 ? 'sell' : 'sells'}`}
+                hint="Sum of the Result column on sells in this period, in your base currency."
+              />
+              <KpiTile
+                label="Buy volume"
+                value={<MoneyFigure amount={metrics.totalBuyVolume} currency={metrics.baseCurrency} />}
+                sub={
+                  metrics.buyCount > 0
+                    ? `Avg ${formatCurrency(metrics.totalBuyVolume / metrics.buyCount, metrics.baseCurrency)} per buy`
+                    : 'No buys'
+                }
+              />
+              <KpiTile
+                label="Sell volume"
+                value={<MoneyFigure amount={metrics.totalSellVolume} currency={metrics.baseCurrency} />}
+                sub={
+                  metrics.sellCount > 0
+                    ? `Avg ${formatCurrency(metrics.totalSellVolume / metrics.sellCount, metrics.baseCurrency)} per sell`
+                    : 'No sells'
+                }
+              />
+              <KpiTile
+                label="Most traded stock"
+                value={
+                  metrics.mostTradedStock ? (
+                    <TextSwap text={metrics.mostTradedStock.ticker} className="ticker" />
+                  ) : (
+                    'N/A'
+                  )
+                }
+                sub={
+                  metrics.mostTradedStock
+                    ? `${metrics.mostTradedStock.count} trades · ${metrics.mostTradedStock.name}`
+                    : undefined
+                }
+              />
+            </div>
+          </Region>
+
+          <Region id="activity-calendar" label="Calendar">
+            <Reveal>
+              <TradingHeatmap
+                transactions={filteredTrades}
+                formatVolume={(amount) => formatCurrency(amount, metrics.baseCurrency)}
+              />
+            </Reveal>
+          </Region>
+
+          <Region id="activity-patterns" label="Patterns">
+            <Reveal className={chartGrid}>
+              <ChartCard title="Trades by weekday" color={3} note={`${metrics.totalTransactions} trades`}>
+                <BarRows
+                  rows={weekdayRows}
+                  color={3}
+                  emphasis="max"
+                  labelWidth={88}
+                  aria-label={`Trades by weekday, ${periodLabel}`}
+                />
+              </ChartCard>
+              <ChartCard title="Buys and sells by month" color={1} note={`Volume in ${metrics.baseCurrency}`}>
+                <StackedColumns
+                  series={[
+                    { key: 'buys', label: 'Buys', color: 1 },
+                    { key: 'sells', label: 'Sells', color: 6 }
+                  ]}
+                  data={monthlyFlow}
+                  height={168}
+                  aria-label={`Buy and sell volume by month in ${metrics.baseCurrency}, ${periodLabel}`}
+                />
+                <Legend
+                  className="mt-3"
+                  items={[
+                    { id: 'buys', label: 'Buys', color: 1, value: formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency) },
+                    { id: 'sells', label: 'Sells', color: 6, value: formatCurrency(metrics.totalSellVolume, metrics.baseCurrency) }
+                  ]}
+                />
+              </ChartCard>
+            </Reveal>
+          </Region>
+        </>
       )}
 
-      {/* Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
-        <MetricCard
-          label="Total Transactions"
-          value={metrics.totalTransactions.toString()}
-        />
-        <MetricCard
-          label="Buy Transactions"
-          value={metrics.buyCount.toString()}
-          subValue={formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency)}
-          valueClassName="text-emerald-600 dark:text-emerald-400"
-        />
-        <MetricCard
-          label="Sell Transactions"
-          value={metrics.sellCount.toString()}
-          subValue={formatCurrency(metrics.totalSellVolume, metrics.baseCurrency)}
-          valueClassName="text-red-600 dark:text-red-400"
-        />
-        <MetricCard
-          label="Realized P&L"
-          value={`${metrics.realizedPnL >= 0 ? '+' : ''}${formatCurrency(metrics.realizedPnL, metrics.baseCurrency)}`}
-          rawValue={metrics.realizedPnL}
-          currency={metrics.baseCurrency}
-          subValue={`${metrics.profitableTrades}W / ${metrics.losingTrades}L`}
-          valueClassName={metrics.realizedPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
-        />
-        <MetricCard
-          label="Win Rate"
-          value={`${metrics.winRate.toFixed(1)}%`}
-          subValue={metrics.sellCount > 0 ? (() => {
-            const breakEven = metrics.sellCount - metrics.profitableTrades - metrics.losingTrades
-            return `${metrics.profitableTrades}W / ${metrics.losingTrades}L${breakEven > 0 ? ` / ${breakEven} even` : ''}`
-          })() : 'No sells yet'}
-          valueClassName={metrics.winRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
-        />
-        <MetricCard
-          label="Total Buy Volume"
-          value={formatCurrency(metrics.totalBuyVolume, metrics.baseCurrency)}
-          rawValue={metrics.totalBuyVolume}
-          currency={metrics.baseCurrency}
-          valueClassName="text-emerald-600 dark:text-emerald-400"
-        />
-        <MetricCard
-          label="Total Sell Volume"
-          value={formatCurrency(metrics.totalSellVolume, metrics.baseCurrency)}
-          rawValue={metrics.totalSellVolume}
-          currency={metrics.baseCurrency}
-          valueClassName="text-red-600 dark:text-red-400"
-        />
-        <MetricCard
-          label="Most Traded Stock"
-          value={metrics.mostTradedStock ? `${metrics.mostTradedStock.ticker}` : 'N/A'}
-        />
-      </div>
-
-      {/* Trading Heatmap */}
-      <TradingHeatmap transactions={filteredTrades} />
-
-      {/* All-time trading stats */}
       <TradingStatsBento transactions={storeTransactions} />
 
-      {/* Transactions Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-normal">All Transactions</CardTitle>
-          <CardDescription className="text-sm">
-            {sortedTrades.length} {sortedTrades.length === 1 ? 'transaction' : 'transactions'}
-            {selectedYears.size > 0 && ` in selected ${selectedYears.size === 1 ? 'year' : 'years'}`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
+      {filteredTrades.length > 0 ? (
+        <Region id="activity-transactions" label="Transactions">
+          <Tile size="flush">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-3 pt-4 sm:px-5 sm:pt-5">
+              <TileTitle>All transactions</TileTitle>
+              <TileNote className="figure">
+                {sortedTrades.length} {sortedTrades.length === 1 ? 'transaction' : 'transactions'} in the selected period
+              </TileNote>
+            </div>
+            <Table className="text-xs sm:text-sm">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Date</TableHead>
-                  <TableHead className="text-xs">Action</TableHead>
-                  <TableHead className="text-xs">Ticker</TableHead>
-                  <TableHead className="text-xs">Name</TableHead>
-                  <TableHead className="text-xs text-right">Shares</TableHead>
-                  <TableHead className="text-xs text-right">Price</TableHead>
-                  <TableHead className="text-xs text-right">Total</TableHead>
-                  <TableHead className="text-xs text-right">Result</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="ps-4 pe-2 sm:ps-5 sm:pe-4">Date</TableHead>
+                  <TableHead className="px-2 sm:px-4">Action</TableHead>
+                  <TableHead className="px-2 sm:px-4">Ticker</TableHead>
+                  <TableHead className="hidden px-4 md:table-cell">Name</TableHead>
+                  <TableHead className="hidden px-4 text-right xl:table-cell">Shares</TableHead>
+                  <TableHead className="hidden px-4 text-right sm:table-cell">Price</TableHead>
+                  <TableHead className="ps-2 pe-4 text-right sm:px-4">Total</TableHead>
+                  <TableHead className="hidden ps-4 pe-5 text-right sm:table-cell">Result</TableHead>
                 </TableRow>
               </TableHeader>
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 <motion.tbody
                   key={currentPage}
                   initial={{ opacity: 0 }}
@@ -521,75 +661,69 @@ export function TradingActivityDashboard ({
                   transition={{ duration: 0.15 }}
                   className="[&_tr:last-child]:border-0"
                 >
-                  {paginatedTrades.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="text-center text-xs text-muted-foreground py-8">
-                        No transactions found for selected year(s)
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedTrades.map((transaction) => {
-                      const isBuy = isBuyAction(transaction.Action)
-                      const actionColor = isBuy
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-red-600 dark:text-red-400'
-                      const dateStr = formatDate(transaction.Time)
-                      const shares = formatShares(transaction['No. of shares'] || 0)
-                      const price = formatCurrency(
-                        transaction['Price / share'] || 0,
-                        transaction['Currency (Price / share)'] || metrics.baseCurrency
-                      )
-                      const total = formatCurrency(
-                        transaction.totalInBaseCurrency || 0,
-                        metrics.baseCurrency
-                      )
+                  {paginatedTrades.map((transaction) => {
+                    const isBuy = isBuyAction(transaction.Action)
+                    const dateStr = formatDate(transaction.Time)
+                    const shares = formatShares(transaction['No. of shares'] || 0)
+                    const price = formatCurrency(
+                      transaction['Price / share'] || 0,
+                      transaction['Currency (Price / share)'] || metrics.baseCurrency
+                    )
+                    const total = formatCurrency(
+                      transaction.totalInBaseCurrency || 0,
+                      metrics.baseCurrency
+                    )
 
-                      // Show result only for sell transactions
-                      const result = transaction.Result
-                      const hasResult = !isBuy && result !== null && result !== undefined
-                      const resultColor = hasResult && result >= 0
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-red-600 dark:text-red-400'
+                    // Show result only for sell transactions
+                    const result = transaction.Result
+                    const hasResult = !isBuy && result !== null && result !== undefined
+                    const resultTone = hasResult ? (result > 0 ? 'text-up' : result < 0 ? 'text-down' : 'text-foreground') : ''
 
-                      return (
-                        <TableRow key={transaction.ID || `${transaction.Time}-${transaction.Ticker}`}>
-                          <TableCell className="text-xs">{dateStr}</TableCell>
-                          <TableCell className={cn('text-xs font-medium', actionColor)}>
-                            {transaction.Action}
-                          </TableCell>
-                          <TableCell className="text-xs font-medium">
-                            {transaction.Ticker || '-'}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                    return (
+                      <TableRow key={transaction.ID || `${transaction.Time}-${transaction.Ticker}`}>
+                        <TableCell className="figure whitespace-nowrap ps-4 pe-2 sm:ps-5 sm:pe-4">{dateStr}</TableCell>
+                        <TableCell className="px-2 sm:px-4">
+                          <ActionBadge action={transaction.Action} />
+                        </TableCell>
+                        <TableCell className="ticker whitespace-nowrap px-2 sm:px-4">{transaction.Ticker || '-'}</TableCell>
+                        <TableCell className="hidden px-4 text-muted-foreground md:table-cell">
+                          <span className="block max-w-[8rem] truncate xl:max-w-[16rem]" title={transaction.Name || undefined}>
                             {transaction.Name || '-'}
-                          </TableCell>
-                          <TableCell className="text-xs text-right">{shares}</TableCell>
-                          <TableCell className="text-xs text-right">{price}</TableCell>
-                          <TableCell className="text-xs text-right font-medium">{total}</TableCell>
-                          <TableCell className={cn('text-xs text-right font-medium', hasResult && resultColor)}>
-                            {hasResult ? `${result >= 0 ? '+' : ''}${formatCurrency(result, metrics.baseCurrency)}` : '-'}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })
-                  )}
+                          </span>
+                        </TableCell>
+                        <TableCell className="figure hidden whitespace-nowrap px-4 text-right xl:table-cell">{shares}</TableCell>
+                        <TableCell className="figure hidden whitespace-nowrap px-4 text-right sm:table-cell">{price}</TableCell>
+                        <TableCell className="figure whitespace-nowrap ps-2 pe-4 text-right font-medium sm:px-4">{total}</TableCell>
+                        <TableCell className={cn('figure hidden whitespace-nowrap ps-4 pe-5 text-right sm:table-cell', resultTone)}>
+                          {hasResult ? (
+                            formatSignedCurrency(result, metrics.baseCurrency)
+                          ) : (
+                            <span className="text-muted-foreground">
+                              <span aria-hidden="true">–</span>
+                              <span className="sr-only">No result</span>
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </motion.tbody>
               </AnimatePresence>
             </Table>
-          </div>
 
-          {totalPages > 1 && (
-            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-border/50">
-              <p className="text-xs text-muted-foreground">{showingText}</p>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            {totalPages > 1 && (
+              <div className="flex flex-col items-center justify-between gap-3 border-t border-border px-4 py-3 sm:flex-row sm:px-5">
+                <p className="figure text-xs font-normal text-muted-foreground">{showingText}</p>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            )}
+          </Tile>
+        </Region>
+      ) : null}
+    </DashboardPage>
   )
 }

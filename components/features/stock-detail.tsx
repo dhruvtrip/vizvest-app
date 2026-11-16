@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Badge, badgeVariants } from '@/components/ui/badge'
+import { Tile, TileNote } from '@/components/ui/tile'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -15,6 +17,9 @@ import {
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockMetrics } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
+import { ChartCard, KpiTile, Legend, StackedColumns } from '@/components/charts'
+import { DashboardPage, PageHeader, Region } from '@/components/features/dashboard-layout'
+import { ArrowLeft, ArrowLeftRight, TriangleAlert } from '@/components/icons'
 
 const DividendSection = dynamic(
   () => import('./dividend-section').then(m => m.DividendSection),
@@ -160,25 +165,54 @@ function calculateMetrics(
 }
 
 /**
- * Individual metric card component
+ * Formats a date string as "Oct 2025" for chart labels
  */
-function MetricCard({
-  label,
-  value,
-  className
-}: {
+function formatMonthYear(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    year: 'numeric'
+  }).format(date)
+}
+
+interface MonthlyFlow {
+  id: string
   label: string
-  value: string
-  className?: string
-}) {
-  return (
-    <Card className={className}>
-      <CardContent className="p-4">
-        <p className="metric-label text-muted-foreground">{label}</p>
-        <p className="text-h3 text-foreground mt-0.5">{value}</p>
-      </CardContent>
-    </Card>
-  )
+  buy: number
+  sell: number
+}
+
+/**
+ * Buy and sell volume per calendar month, from the first trade to the last,
+ * with quiet months kept so the spacing reads as time.
+ */
+function monthlyFlows(trades: NormalizedTransaction[]): MonthlyFlow[] {
+  if (trades.length === 0) return []
+  const byMonth = new Map<string, { buy: number; sell: number }>()
+  let first: Date | null = null
+  let last: Date | null = null
+  for (const t of trades) {
+    const date = new Date(t.Time)
+    if (Number.isNaN(date.getTime())) continue
+    const key = `${date.getFullYear()}-${date.getMonth()}`
+    const entry = byMonth.get(key) ?? { buy: 0, sell: 0 }
+    const amount = Math.abs(t.totalInBaseCurrency || 0)
+    if (isBuyAction(t.Action)) entry.buy += amount
+    else if (isSellAction(t.Action)) entry.sell += amount
+    byMonth.set(key, entry)
+    if (!first || date < first) first = date
+    if (!last || date > last) last = date
+  }
+  if (!first || !last) return []
+  const out: MonthlyFlow[] = []
+  const cursor = new Date(first.getFullYear(), first.getMonth(), 1)
+  const end = new Date(last.getFullYear(), last.getMonth(), 1)
+  while (cursor <= end && out.length < 240) {
+    const key = `${cursor.getFullYear()}-${cursor.getMonth()}`
+    const entry = byMonth.get(key) ?? { buy: 0, sell: 0 }
+    out.push({ id: key, label: formatMonthYear(cursor), buy: entry.buy, sell: entry.sell })
+    cursor.setMonth(cursor.getMonth() + 1)
+  }
+  return out
 }
 
 /**
@@ -198,6 +232,7 @@ export function StockDetail ({
   const ticker = tickerProp ?? storeSelectedTicker
   const transactions = transactionsProp ?? storeTransactions
   const onBack = onBackProp ?? storeBackToOverview
+  const [partialOpen, setPartialOpen] = useState(false)
 
   const metrics = useMemo(
     () =>
@@ -239,204 +274,161 @@ export function StockDetail ({
       .sort((a, b) => new Date(b.Time).getTime() - new Date(a.Time).getTime())
   }, [transactions, ticker])
 
+  const flows = useMemo(() => monthlyFlows(tableTransactions), [tableTransactions])
+
+  const flowData = useMemo(
+    () =>
+      flows.map((month) => ({
+        id: month.id,
+        label: month.label,
+        values: { buy: month.buy, sell: month.sell },
+        display: {
+          buy: formatCurrency(month.buy, metrics.baseCurrency),
+          sell: formatCurrency(month.sell, metrics.baseCurrency)
+        }
+      })),
+    [flows, metrics.baseCurrency]
+  )
+
   if (!ticker) return null
 
-  return (
-    <div className={cn('space-y-5', className)}>
-      {/* Header Section */}
-      <div className="space-y-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onBack}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 px-2"
-          aria-label="Return to portfolio overview"
-        >
-          <span aria-hidden="true">&larr;</span>
-          Back to Portfolio
-        </Button>
+  const currency = metrics.baseCurrency
+  const avgBuyPrice = metrics.buyShares > 0 ? metrics.buyVolume / metrics.buyShares : null
+  const avgSellPrice = metrics.sellShares > 0 ? metrics.sellVolume / metrics.sellShares : null
+  const realizedTone = metrics.realizedResult > 0 ? 'up' : metrics.realizedResult < 0 ? 'down' : 'neutral'
+  const statusLabel =
+    metrics.positionStatus === 'net-buying'
+      ? 'Net buying in this file'
+      : metrics.positionStatus === 'net-selling'
+        ? 'Net selling in this file'
+        : 'Bought and sold the same amount'
 
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-h2 text-foreground">
-              {metrics.companyName}
-            </h1>
-            <span className="ticker px-1.5 py-0.5 text-label-sm bg-primary/10 text-primary rounded">
-              {ticker}
-            </span>
-          </div>
-          {metrics.isin && (
-            <p className="text-label-sm text-muted-foreground font-mono">
-              ISIN: {metrics.isin}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Partial Data Warning */}
+  const title = (
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="ticker">{ticker}</span>
       {isPartialDataForTicker && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-3 flex items-start gap-2">
-            <div className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-amber-500 text-xs font-bold">!</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">
-                Partial Transaction Data
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {partialDataExplanation}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip open={partialOpen} onOpenChange={setPartialOpen}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setPartialOpen((open) => !open)}
+                className={cn(badgeVariants({ variant: 'warning' }), 'relative text-xs before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[\'\']')}
+                aria-label={`Partial data: ${partialDataExplanation}`}
+              >
+                <TriangleAlert size={12} strokeWidth={2} />
+                Partial data
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              {partialDataExplanation}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
+    </span>
+  )
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <MetricCard
-          label="Buy Volume"
-          value={formatCurrency(metrics.buyVolume, metrics.baseCurrency)}
-          className="border-blue-500/20"
-        />
-        <MetricCard
-          label="Sell Volume"
-          value={formatCurrency(metrics.sellVolume, metrics.baseCurrency)}
-          className="border-rose-500/20"
-        />
-        <MetricCard
-          label="Realized P&L"
-          value={`${metrics.realizedResult >= 0 ? '+' : ''}${formatCurrency(metrics.realizedResult, metrics.baseCurrency)}`}
-          className={cn(
-            metrics.realizedResult >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'
-          )}
-        />
-        <Card className={cn(
-          metrics.positionStatus === 'net-buying' 
-            ? 'border-blue-500/20' 
-            : metrics.positionStatus === 'net-selling'
-            ? 'border-rose-500/20'
-            : 'border-muted'
-        )}>
-          <CardContent className="p-4">
-            <p className="metric-label text-muted-foreground">Net Share Flow</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-h3 text-foreground font-tabular">
-                {metrics.netShareFlow >= 0 ? '+' : ''}{formatShares(metrics.netShareFlow)}
-              </p>
-              {metrics.positionStatus === 'net-buying' && (
-                <span className="px-1.5 py-0.5 text-label-sm bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
-                  Buying
-                </span>
-              )}
-              {metrics.positionStatus === 'net-selling' && (
-                <span className="px-1.5 py-0.5 text-label-sm bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded">
-                  Selling
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+  return (
+    <DashboardPage className={className}>
+      <PageHeader
+        before={
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="-ms-3 ps-2.5"
+            aria-label="Return to portfolio overview"
+          >
+            <ArrowLeft size={16} />
+            Portfolio
+          </Button>
+        }
+        title={title}
+        description={
+          <>
+            <span>{metrics.companyName}</span>
+            {metrics.isin && (
+              <span className="figure hidden sm:inline"> &middot; ISIN {metrics.isin}</span>
+            )}
+          </>
+        }
+      />
 
-      {/* Transaction Counts */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="metric-label text-muted-foreground">Buy Transactions</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-h3 text-foreground font-tabular">
-                {metrics.buyTransactionCount}
-              </p>
-              <p className="text-body-sm text-muted-foreground font-tabular">
-                ({formatShares(metrics.buyShares)} shares)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="metric-label text-muted-foreground">Sell Transactions</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-h3 text-foreground font-tabular">
-                {metrics.sellTransactionCount}
-              </p>
-              <p className="text-body-sm text-muted-foreground font-tabular">
-                ({formatShares(metrics.sellShares)} shares)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Position */}
+      <Region label="Position" id="stock-position">
+        <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 md:grid-cols-3">
+          <KpiTile
+            label="Buy volume"
+            value={formatCurrency(metrics.buyVolume, currency)}
+            sub={`${metrics.buyTransactionCount} ${metrics.buyTransactionCount === 1 ? 'buy' : 'buys'}, ${formatShares(metrics.buyShares)} shares`}
+            hint="Everything spent on buys of this stock in the file, in your base currency."
+          />
+          <KpiTile
+            label="Sell volume"
+            value={formatCurrency(metrics.sellVolume, currency)}
+            sub={`${metrics.sellTransactionCount} ${metrics.sellTransactionCount === 1 ? 'sell' : 'sells'}, ${formatShares(metrics.sellShares)} shares`}
+            hint="Everything received from sells of this stock in the file, in your base currency."
+          />
+          <KpiTile
+            label="Realised P&L"
+            tone={realizedTone}
+            value={`${metrics.realizedResult >= 0 ? '+' : ''}${formatCurrency(metrics.realizedResult, currency)}`}
+            sub={metrics.sellTransactionCount > 0 ? 'From closed sells' : 'Nothing sold yet'}
+            hint="The sum of the Result column Trading 212 reports on each sell."
+          />
+          <KpiTile
+            label="Net share flow"
+            value={`${metrics.netShareFlow >= 0 ? '+' : ''}${formatShares(metrics.netShareFlow)}`}
+            sub={statusLabel}
+            hint="Shares bought minus shares sold in this file. Negative means you sold shares bought before the file starts."
+          />
+          <KpiTile
+            label="Average buy price"
+            value={avgBuyPrice !== null ? formatCurrency(avgBuyPrice, currency) : '—'}
+            sub="Per share, buy volume over shares"
+            hint="Buy volume divided by shares bought, in your base currency."
+          />
+          <KpiTile
+            label="Average sell price"
+            value={avgSellPrice !== null ? formatCurrency(avgSellPrice, currency) : '—'}
+            sub="Per share, sell volume over shares"
+            hint="Sell volume divided by shares sold, in your base currency."
+          />
+        </div>
+      </Region>
 
-      {/* Transaction History */}
-      <div className="space-y-3">
-        <h2 className="text-h3 text-foreground">
-          Transaction History
-        </h2>
-
-        {tableTransactions.length === 0 ? (
-          <Card className="p-6 text-center border-dashed">
-            <p className="text-xs text-muted-foreground">No transactions found</p>
-          </Card>
-        ) : (
-          <Card>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs" scope="col">Date</TableHead>
-                    <TableHead className="text-xs" scope="col">Action</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Shares</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Price/Share</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tableTransactions.map((transaction, index) => {
-                    const isBuy = isBuyAction(transaction.Action)
-                    const actionColor = isBuy
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-red-600 dark:text-red-400'
-                    const dateStr = formatDate(transaction.Time)
-                    const shares = formatShares(transaction['No. of shares'] || 0)
-                    const price = formatCurrency(
-                      transaction['Price / share'] || 0,
-                      transaction['Currency (Price / share)'] || metrics.baseCurrency
-                    )
-                    const total = formatCurrency(
-                      transaction.totalInBaseCurrency || 0,
-                      metrics.baseCurrency
-                    )
-
-                    return (
-                      <TableRow key={transaction.ID || index}>
-                        <TableCell className="text-xs text-muted-foreground py-2">
-                          {dateStr}
-                        </TableCell>
-                        <TableCell className={cn('text-xs font-medium py-2', actionColor)}>
-                          <span aria-label={isBuy ? 'Buy transaction' : 'Sell transaction'}>
-                            {isBuy ? 'Buy' : 'Sell'}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-right py-2" aria-label={`${shares} shares`}>
-                          {shares}
-                        </TableCell>
-                        <TableCell className="text-xs text-right text-muted-foreground py-2" aria-label={`Price per share: ${price}`}>
-                          {price}
-                        </TableCell>
-                        <TableCell className={cn('text-xs text-right font-medium py-2', actionColor)} aria-label={`Total: ${total}`}>
-                          {total}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </Card>
-        )}
-      </div>
+      {/* Buys and sells */}
+      {flowData.length > 0 && (
+        <Region label="Buys and sells" id="stock-flows">
+          <ChartCard
+            title="Buy and sell volume by month"
+            note={
+              metrics.netCashFlow >= 0
+                ? `${formatCurrency(metrics.netCashFlow, currency)} net invested`
+                : `${formatCurrency(Math.abs(metrics.netCashFlow), currency)} net taken out`
+            }
+          >
+            <StackedColumns
+              layout="grouped"
+              series={[
+                { key: 'buy', label: 'Buys', color: 1 },
+                { key: 'sell', label: 'Sells', color: 6 }
+              ]}
+              data={flowData}
+              height={168}
+              aria-label={`Buy and sell volume by month for ${ticker}`}
+            />
+            <Legend
+              className="mt-3"
+              items={[
+                { id: 'buy', label: 'Buys', color: 1, value: formatCurrency(metrics.buyVolume, currency) },
+                { id: 'sell', label: 'Sells', color: 6, value: formatCurrency(metrics.sellVolume, currency) }
+              ]}
+            />
+          </ChartCard>
+        </Region>
+      )}
 
       {/* Dividend Income Section */}
       <DividendSection
@@ -444,6 +436,90 @@ export function StockDetail ({
         transactions={transactions}
         baseCurrency={metrics.baseCurrency}
       />
-    </div>
+
+      {/* Transactions */}
+      <Region label="Transactions" id="stock-transactions">
+        {tableTransactions.length === 0 ? (
+          <Tile size="sm" className="flex items-center gap-2.5 px-4">
+            <ArrowLeftRight size={16} className="shrink-0 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No buys or sells of {ticker} in this file.</p>
+          </Tile>
+        ) : (
+          <Tile size="flush" className="overflow-hidden">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 pt-4 sm:px-5">
+              <h3 className="text-sm font-medium leading-5">Trades</h3>
+              <TileNote>
+                {tableTransactions.length} {tableTransactions.length === 1 ? 'trade' : 'trades'}, newest first
+              </TileNote>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="ps-4 sm:ps-5" scope="col">Date</TableHead>
+                  <TableHead className="px-2 sm:px-4" scope="col">Action</TableHead>
+                  <TableHead className="hidden text-right sm:table-cell" scope="col">Shares</TableHead>
+                  <TableHead className="hidden text-right md:table-cell" scope="col">Price/share</TableHead>
+                  <TableHead className="px-2 text-right sm:px-4" scope="col">Total</TableHead>
+                  <TableHead className="pe-4 ps-2 text-right sm:pe-5 sm:ps-4" scope="col">Result</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tableTransactions.map((transaction, index) => {
+                  const isBuy = isBuyAction(transaction.Action)
+                  const dateStr = formatDate(transaction.Time)
+                  const shares = formatShares(transaction['No. of shares'] || 0)
+                  const price = formatCurrency(
+                    transaction['Price / share'] || 0,
+                    transaction['Currency (Price / share)'] || metrics.baseCurrency
+                  )
+                  const total = formatCurrency(
+                    transaction.totalInBaseCurrency || 0,
+                    metrics.baseCurrency
+                  )
+                  const result = transaction.Result
+                  const hasResult = !isBuy && typeof result === 'number' && Number.isFinite(result)
+                  const resultStr = hasResult
+                    ? `${result >= 0 ? '+' : ''}${formatCurrency(result, metrics.baseCurrency)}`
+                    : '—'
+
+                  return (
+                    <TableRow key={transaction.ID || index}>
+                      <TableCell className="figure whitespace-nowrap ps-4 text-muted-foreground sm:ps-5">
+                        {dateStr}
+                      </TableCell>
+                      <TableCell className="px-2 sm:px-4">
+                        <Badge variant={isBuy ? 'up' : 'down'} aria-label={isBuy ? 'Buy transaction' : 'Sell transaction'}>
+                          {isBuy ? 'Buy' : 'Sell'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="figure hidden whitespace-nowrap text-right sm:table-cell" aria-label={`${shares} shares`}>
+                        {shares}
+                      </TableCell>
+                      <TableCell className="figure hidden whitespace-nowrap text-right text-muted-foreground md:table-cell" aria-label={`Price per share: ${price}`}>
+                        {price}
+                      </TableCell>
+                      <TableCell className="figure whitespace-nowrap px-2 text-right sm:px-4" aria-label={`Total: ${total}`}>
+                        {total}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          'figure whitespace-nowrap pe-4 ps-2 text-right sm:pe-5 sm:ps-4',
+                          hasResult && result > 0 && 'text-up',
+                          hasResult && result < 0 && 'text-down',
+                          !hasResult && 'text-muted-foreground'
+                        )}
+                        aria-label={hasResult ? `Result: ${resultStr}` : 'No result'}
+                      >
+                        {resultStr}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </Tile>
+        )}
+      </Region>
+    </DashboardPage>
   )
 }
