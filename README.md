@@ -35,7 +35,7 @@ So I built Vizvest: the dashboard I wished Trading 212 had. Drop in your CSV exp
 - **UI**: shadcn/ui + Radix UI
 - **State**: Zustand
 - **Styling**: Tailwind CSS
-- **Data**: PapaParse (CSV), Recharts (visualization)
+- **Data**: PapaParse (CSV), in-house SVG and CSS charts (`components/charts`)
 - **Animations**: Framer Motion
 - **Theming**: next-themes
 - **Testing**: Vitest

@@ -312,7 +312,11 @@ export function StockDetail ({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                onClick={() => setPartialOpen((open) => !open)}
+                onClick={(event) => {
+                  // Keeps Radix from closing the tooltip on the same click, so a tap opens it.
+                  event.preventDefault()
+                  setPartialOpen((open) => !open)
+                }}
                 className={cn(badgeVariants({ variant: 'warning' }), 'relative text-xs before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[\'\']')}
                 aria-label={`Partial data: ${partialDataExplanation}`}
               >
