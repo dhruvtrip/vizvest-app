@@ -386,13 +386,13 @@ export function StockDetail ({
           <KpiTile
             label="Average buy price"
             value={avgBuyPrice !== null ? formatCurrency(avgBuyPrice, currency) : '—'}
-            sub="Per share, buy volume over shares"
+            sub="Per share bought"
             hint="Buy volume divided by shares bought, in your base currency."
           />
           <KpiTile
             label="Average sell price"
             value={avgSellPrice !== null ? formatCurrency(avgSellPrice, currency) : '—'}
-            sub="Per share, sell volume over shares"
+            sub="Per share sold"
             hint="Sell volume divided by shares sold, in your base currency."
           />
         </div>
@@ -455,12 +455,12 @@ export function StockDetail ({
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="ps-4 sm:ps-5" scope="col">Date</TableHead>
+                  <TableHead className="pe-2 ps-4 sm:pe-4 sm:ps-5" scope="col">Date</TableHead>
                   <TableHead className="px-2 sm:px-4" scope="col">Action</TableHead>
                   <TableHead className="hidden text-right sm:table-cell" scope="col">Shares</TableHead>
                   <TableHead className="hidden text-right md:table-cell" scope="col">Price/share</TableHead>
-                  <TableHead className="px-2 text-right sm:px-4" scope="col">Total</TableHead>
-                  <TableHead className="pe-4 ps-2 text-right sm:pe-5 sm:ps-4" scope="col">Result</TableHead>
+                  <TableHead className="pe-4 ps-2 text-right sm:px-4" scope="col">Total</TableHead>
+                  <TableHead className="hidden pe-4 ps-2 text-right sm:table-cell sm:pe-5 sm:ps-4" scope="col">Result</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -484,7 +484,7 @@ export function StockDetail ({
 
                   return (
                     <TableRow key={transaction.ID || index}>
-                      <TableCell className="figure whitespace-nowrap ps-4 text-muted-foreground sm:ps-5">
+                      <TableCell className="figure whitespace-nowrap pe-2 ps-4 text-muted-foreground sm:pe-4 sm:ps-5">
                         {dateStr}
                       </TableCell>
                       <TableCell className="px-2 sm:px-4">
@@ -498,12 +498,23 @@ export function StockDetail ({
                       <TableCell className="figure hidden whitespace-nowrap text-right text-muted-foreground md:table-cell" aria-label={`Price per share: ${price}`}>
                         {price}
                       </TableCell>
-                      <TableCell className="figure whitespace-nowrap px-2 text-right sm:px-4" aria-label={`Total: ${total}`}>
+                      <TableCell
+                        className="figure whitespace-nowrap pe-4 ps-2 text-right sm:px-4"
+                        aria-label={`Total: ${total}${hasResult ? `, result: ${resultStr}` : ''}`}
+                      >
                         {total}
+                        {hasResult && (
+                          <span
+                            aria-hidden="true"
+                            className={cn('block text-xs sm:hidden', result > 0 && 'text-up', result < 0 && 'text-down')}
+                          >
+                            {resultStr}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell
                         className={cn(
-                          'figure whitespace-nowrap pe-4 ps-2 text-right sm:pe-5 sm:ps-4',
+                          'figure hidden whitespace-nowrap pe-4 ps-2 text-right sm:table-cell sm:pe-5 sm:ps-4',
                           hasResult && result > 0 && 'text-up',
                           hasResult && result < 0 && 'text-down',
                           !hasResult && 'text-muted-foreground'

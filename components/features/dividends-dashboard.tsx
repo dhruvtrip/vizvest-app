@@ -735,7 +735,7 @@ export function DividendsDashboard ({
           <KpiTile
             label="Average per payment"
             value={<AnimatedCurrency amount={averagePerPayment} currency={baseCurrency} formatFn={formatCurrency} />}
-            sub={`Net, across ${globalData.paymentCount} payments`}
+            sub="Net, per payment"
           />
         </div>
       </Region>
@@ -857,7 +857,7 @@ export function DividendsDashboard ({
               color={2}
               emphasis="max"
               maxRows={10}
-              labelWidth={140}
+              labelWidth={120}
               selectedId={selectedStock}
               onSelect={(id) => setSelectedStock((current) => (current === id ? null : id))}
               aria-label="Net dividends by stock"

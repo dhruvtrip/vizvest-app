@@ -303,10 +303,10 @@ export function DividendSection({
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="ps-4 sm:ps-5" scope="col">Date</TableHead>
-                  <TableHead className="text-right" scope="col">Gross</TableHead>
-                  <TableHead className="text-right" scope="col">Tax</TableHead>
-                  <TableHead className="pe-4 text-right sm:pe-5" scope="col">Net</TableHead>
+                  <TableHead className="pe-2 ps-4 sm:pe-4 sm:ps-5" scope="col">Date</TableHead>
+                  <TableHead className="hidden text-right sm:table-cell" scope="col">Gross</TableHead>
+                  <TableHead className="px-2 text-right sm:px-4" scope="col">Tax</TableHead>
+                  <TableHead className="pe-4 ps-2 text-right sm:pe-5 sm:ps-4" scope="col">Net</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -318,16 +318,16 @@ export function DividendSection({
 
                   return (
                     <TableRow key={`${dividend.date}-${index}`}>
-                      <TableCell className="figure whitespace-nowrap ps-4 text-muted-foreground sm:ps-5">
+                      <TableCell className="figure whitespace-nowrap pe-2 ps-4 text-muted-foreground sm:pe-4 sm:ps-5">
                         {dateStr}
                       </TableCell>
-                      <TableCell className="figure whitespace-nowrap text-right" aria-label={`Gross dividend: ${gross}`}>
+                      <TableCell className="figure hidden whitespace-nowrap text-right sm:table-cell" aria-label={`Gross dividend: ${gross}`}>
                         {gross}
                       </TableCell>
-                      <TableCell className="figure whitespace-nowrap text-right text-muted-foreground" aria-label={`Withholding tax: ${tax}`}>
+                      <TableCell className="figure whitespace-nowrap px-2 text-right text-muted-foreground sm:px-4" aria-label={`Withholding tax: ${tax}`}>
                         {tax}
                       </TableCell>
-                      <TableCell className="figure whitespace-nowrap pe-4 text-right font-medium text-up sm:pe-5" aria-label={`Net dividend: ${net}`}>
+                      <TableCell className="figure whitespace-nowrap pe-4 ps-2 text-right font-medium text-up sm:pe-5 sm:ps-4" aria-label={`Net dividend: ${net}`}>
                         +{net}
                       </TableCell>
                     </TableRow>
