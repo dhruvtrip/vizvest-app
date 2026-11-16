@@ -2,9 +2,8 @@
 
 import { Component, ReactNode } from 'react'
 import posthog from 'posthog-js'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertCircle } from 'lucide-react'
+import { CircleAlert } from '@/components/icons'
 import { sanitizeError } from '@/lib/posthog-privacy'
 
 interface Props {
@@ -58,21 +57,23 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="p-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Something went wrong</AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p>{this.state.error?.message || 'An unexpected error occurred'}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => this.setState({ hasError: false, error: undefined })}
-              >
-                Try again
-              </Button>
-            </AlertDescription>
-          </Alert>
+        <div
+          role="alert"
+          className="mx-auto flex max-w-md flex-col items-center px-4 py-16 text-center sm:py-24"
+        >
+          <CircleAlert size={24} className="text-muted-foreground" />
+          <h2 className="heading-page mt-4">Something went wrong</h2>
+          <p className="mt-3 text-base text-muted-foreground">
+            This part of the page could not load. Try again first, as reloading clears the file you uploaded.
+          </p>
+          {this.state.error?.message && (
+            <p className="mt-3 max-w-full break-words text-xs font-normal text-muted-foreground">
+              {this.state.error.message}
+            </p>
+          )}
+          <Button className="mt-8" onClick={() => this.setState({ hasError: false, error: undefined })}>
+            Try again
+          </Button>
         </div>
       )
     }
