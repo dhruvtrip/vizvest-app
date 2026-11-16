@@ -1,1 +1,163 @@
-/* Chart marks and transitions. See components/charts. */
+/* Chart marks and transitions. See components/charts.
+
+   Growth model: a chart root carries `data-phase`:
+     pre    marks sit on the baseline (reduced motion: the plot is transparent)
+     enter  marks grow over 500ms with --ease-reveal, staggered by --vz-step x --vz-i
+     live   later data changes tween over 300ms with --ease-smooth-out
+   Marks set their target size as custom properties (--vz-h, --vz-b, --vz-w,
+   --vz-l), so the phase rules below can hold them at the baseline. */
+
+.vz-chart {
+  --vz-dur: 300ms;
+  --vz-ease: var(--ease-smooth-out);
+  --vz-delay: 0ms;
+}
+.vz-chart[data-phase='enter'] {
+  --vz-dur: 500ms;
+  --vz-ease: var(--ease-reveal);
+}
+.vz-chart[data-phase='enter'] .vz-mark {
+  --vz-delay: calc(var(--vz-i, 0) * var(--vz-step, 0ms));
+}
+
+.vz-mark {
+  transition:
+    height var(--vz-dur) var(--vz-ease) var(--vz-delay),
+    bottom var(--vz-dur) var(--vz-ease) var(--vz-delay),
+    width var(--vz-dur) var(--vz-ease) var(--vz-delay),
+    left var(--vz-dur) var(--vz-ease) var(--vz-delay),
+    flex-grow var(--vz-dur) var(--vz-ease) var(--vz-delay),
+    background-color 150ms var(--ease-ui),
+    opacity 150ms var(--ease-ui);
+}
+
+/* Columns: grow up (or down, when signed) from the baseline. */
+.vz-grow-y {
+  height: var(--vz-h, 0%);
+  bottom: var(--vz-b, 0%);
+}
+.vz-chart[data-phase='pre'] .vz-grow-y {
+  height: 0%;
+  bottom: var(--vz-zero, 0%);
+}
+
+/* Bars: grow right (or left, when signed) from the baseline. */
+.vz-grow-x {
+  width: var(--vz-w, 0%);
+  left: var(--vz-l, 0%);
+}
+.vz-chart[data-phase='pre'] .vz-grow-x {
+  width: 0%;
+  left: var(--vz-zero, 0%);
+}
+
+/* Area trend: the line and its fade draw in from the left. */
+.vz-draw {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 500ms var(--ease-reveal);
+}
+.vz-chart[data-phase='pre'] .vz-draw {
+  clip-path: inset(0 100% 0 0);
+}
+.vz-end-dot {
+  transition: opacity 150ms var(--ease-ui) 0ms;
+}
+.vz-chart[data-phase='pre'] .vz-end-dot {
+  opacity: 0;
+}
+.vz-chart[data-phase='enter'] .vz-end-dot {
+  transition-delay: 400ms;
+}
+
+/* Under reduced motion nothing grows or moves: the plot fades in once. */
+.vz-plot {
+  transition: opacity 500ms var(--ease-reveal);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-mark {
+    transition:
+      background-color 150ms var(--ease-ui),
+      opacity 150ms var(--ease-ui);
+  }
+  .vz-chart[data-phase='pre'] .vz-grow-y {
+    height: var(--vz-h, 0%);
+    bottom: var(--vz-b, 0%);
+  }
+  .vz-chart[data-phase='pre'] .vz-grow-x {
+    width: var(--vz-w, 0%);
+    left: var(--vz-l, 0%);
+  }
+  .vz-draw {
+    transition: none;
+  }
+  .vz-chart[data-phase='pre'] .vz-draw {
+    clip-path: inset(0 0 0 0);
+  }
+  .vz-chart[data-phase='pre'] .vz-plot {
+    opacity: 0;
+  }
+}
+
+/* Low-confidence marks: diagonal stripes in the series colour. */
+.vz-hatch {
+  background: repeating-linear-gradient(45deg, var(--vz-hatch) 0 2px, transparent 2px 6px);
+}
+
+/* Narrow-aware containers. */
+.vz-cq {
+  container-type: inline-size;
+}
+
+/* KPI figure: 24px, scaling down with the tile so it never wraps or clips.
+   --vz-chars (set by KpiTile from the value) fits the whole figure to the
+   tile's width; a semibold tabular digit is about 0.62em wide. */
+.vz-kpi {
+  container-type: inline-size;
+}
+.vz-kpi .vz-kpi-value {
+  font-size: clamp(0.75rem, calc(100cqi / (var(--vz-chars, 10) * 0.62)), 1.5rem);
+  line-height: 2rem;
+}
+
+/* ==========================================================================
+   Donut chart (transitions.dev 35-donut-chart), pasted verbatim.
+   Its four tokens are not in motion-tokens.css yet, so they are scoped to
+   the donut here with the snippet's defaults.
+   ========================================================================== */
+
+.t-donut {
+  --chart-morph-dur: 400ms;
+  --chart-morph-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --chart-gap: 3px;
+  --chart-corner: 2px;
+}
+
+.t-donut {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+.t-donut svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* Each segment is filled and stroked in its color with a round join:
+   the stroke (twice the corner radius wide) rounds the corners. */
+.t-donut-seg {
+  stroke-linejoin: round;
+  transition: opacity 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.t-donut-seg.is-dim { opacity: 0.2; }
+.t-donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-donut-seg { transition: none !important; }
+}

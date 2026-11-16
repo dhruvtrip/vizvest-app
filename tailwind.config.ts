@@ -130,6 +130,7 @@ const config: Config = {
         reveal: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         'smooth-out': 'cubic-bezier(0.22, 1, 0.36, 1)',
         press: 'cubic-bezier(0, 0, 0.58, 1)',
+        glide: 'cubic-bezier(0.42, 0, 0.58, 1)',
       },
       keyframes: {
         'accordion-down': {

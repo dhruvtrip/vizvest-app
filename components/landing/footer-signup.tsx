@@ -1,16 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { CheckCircle2 } from 'lucide-react'
+import { useId, useState } from 'react'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SuccessCheck, useShake } from '@/components/motion'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export function FooterSignup() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>('idle')
+  const inputId = useId()
+  const errorId = useId()
+  const { ref: formRef, shake } = useShake<HTMLFormElement>()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,47 +29,48 @@ export function FooterSignup() {
       posthog.capture('footer_signup_success')
     } else {
       setStatus('error')
+      shake()
       posthog.capture('footer_signup_error')
     }
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-2">
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          New features and portfolio insights, in your inbox.
-        </p>
-      </div>
+    <div className="flex w-full max-w-md flex-col items-center gap-3">
+      <label htmlFor={inputId} className="text-sm text-muted-foreground">
+        New features and portfolio insights, in your inbox.
+      </label>
 
       {status === 'success' ? (
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-[hsl(var(--brand))]" />
+        <p role="status" className="flex h-10 items-center gap-2 text-sm font-medium">
+          <SuccessCheck size={20} className="text-up" />
           You&apos;re on the list.
-        </div>
+        </p>
       ) : (
-        <div className="flex flex-col gap-2">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+        <>
+          <form ref={formRef} onSubmit={handleSubmit} className="flex w-full flex-col gap-2 min-[400px]:flex-row">
             <Input
+              id={inputId}
               type="email"
-              placeholder="your@email.com"
+              autoComplete="email"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={status === 'loading'}
-              className="h-9 w-56 text-sm"
+              aria-invalid={status === 'error'}
+              aria-describedby={status === 'error' ? errorId : undefined}
+              className="min-[400px]:min-w-0 min-[400px]:flex-1"
             />
-            <Button
-              type="submit"
-              disabled={status === 'loading'}
-              className="h-9 px-4 text-sm bg-[hsl(var(--brand))] text-white hover:bg-[hsl(var(--brand))]/90 cursor-pointer shrink-0"
-            >
-              {status === 'loading' ? 'Subscribing…' : 'Notify me'}
+            <Button type="submit" size="lg" disabled={status === 'loading'}>
+              {status === 'loading' ? 'Subscribing' : 'Notify me'}
             </Button>
           </form>
           {status === 'error' && (
-            <p className="text-xs text-destructive">Something went wrong. Please try again.</p>
+            <p id={errorId} role="alert" className="text-sm font-normal text-destructive">
+              That didn&apos;t go through. Please try again.
+            </p>
           )}
-        </div>
+        </>
       )}
     </div>
   )

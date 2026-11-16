@@ -65,7 +65,7 @@
 
     /* Hero glow and the dark photographic panel */
     --glow-start: 40 49% 27%;
-    --glow-mid: 39 14% 62%;
+    --glow-mid: 40 32% 68%;
     --glow-opacity: 0.3;
     --panel: 36 22% 8%;
     --panel-foreground: 0 0% 100%;
@@ -198,7 +198,7 @@
 
 @layer components {
   .heading-display {
-    @apply text-[2.5rem] leading-[2.75rem] font-light tracking-[-0.05em] sm:text-6xl sm:leading-none lg:text-7xl;
+    @apply text-[2.5rem] leading-[2.75rem] font-light tracking-[-0.05em] sm:text-6xl sm:leading-none lg:text-[3.25rem] lg:leading-[3.5rem] xl:text-7xl xl:leading-none;
   }
 
   .heading-section {
@@ -283,10 +283,12 @@
     color: hsl(var(--panel-foreground));
     background-color: hsl(var(--panel));
     background-image:
-      radial-gradient(90% 70% at 12% 0%, rgb(222 176 98 / 0.62) 0%, rgb(164 122 58 / 0.3) 34%, transparent 66%),
-      radial-gradient(80% 80% at 96% 104%, rgb(134 104 52 / 0.6) 0%, rgb(84 64 30 / 0.25) 40%, transparent 68%),
-      radial-gradient(50% 42% at 62% 34%, rgb(255 226 160 / 0.14) 0%, transparent 72%),
-      linear-gradient(160deg, #2b2215 0%, #17120b 55%, #0f0c07 100%);
+      radial-gradient(52rem 34rem at 6% -8%, rgb(226 182 104 / 0.68) 0%, rgb(170 126 60 / 0.3) 38%, transparent 70%),
+      radial-gradient(44rem 30rem at 102% 108%, rgb(140 108 54 / 0.6) 0%, rgb(90 68 32 / 0.25) 42%, transparent 70%),
+      radial-gradient(30rem 22rem at 72% 8%, rgb(255 228 170 / 0.09) 0%, transparent 70%),
+      linear-gradient(160deg, rgb(42 33 20) 0%, rgb(23 18 11) 55%, rgb(15 12 7) 100%);
+    /* Focus outlines inside the panel are always light. */
+    --ring-strong: 0 0% 100%;
   }
 
   .panel-texture::before {
@@ -313,6 +315,18 @@
     opacity: var(--glow-opacity);
     filter: blur(7.5rem);
     background: radial-gradient(circle at center, hsl(var(--glow-start)) 0%, hsl(var(--glow-mid)) 100%);
+  }
+
+  /* Navigation drops in once on page load. */
+  .nav-enter {
+    animation: nav-enter 300ms var(--ease-reveal) both;
+  }
+
+  @keyframes nav-enter {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
   }
 
   /* Content images get a hairline so they hold their edge on any surface. */

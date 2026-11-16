@@ -63,7 +63,17 @@ No API routes exist. If adding one, create `app/api/<route>/route.ts`.
 
 shadcn/ui components live in `components/ui/` — **never modify these files directly**. Install new ones via the shadcn MCP server tool (`add-component`), not the CLI. Feature components go in `components/features/`, landing page components in `components/landing/`.
 
-Fonts: **Funnel Sans** (`--font-heading`) for headings, **Geist** (`--font-sans`) for body, **Geist Mono** (`--font-mono`).
+### Design System
+
+One language across the landing page, the dashboard and the reading pages. Tokens live in `app/globals.css` and `tailwind.config.ts`.
+
+- **Font:** Inter only (`--font-sans`). No second family, no monospace. Weights: 300 text, 400 dense data, 500 headings and controls, 600 figures. Numbers use the `figure` class (tabular).
+- **Colour:** neutral surfaces (`background`, `foreground`, `muted`, `muted-foreground`, `border`, `tile`, `raised`), one bronze accent (`brand`), meaning colours (`up`, `down`, `warning`) and six data colours (`chart-1` … `chart-6`, fixed order, never more than six). No hex values or Tailwind palette colours in components.
+- **Surfaces:** `Card` (outlined, 22px radius) for standalone content, `Tile` (`components/ui/tile.tsx`, flat fill) for dashboard figures and charts, `hairline-grid` for bare 1px tables, `panel-texture` + `surface-glass` for the dark feature panel.
+- **Controls:** every button is a pill (`components/ui/button.tsx` variants). Theme switch is `components/theme-toggle.tsx`; the wordmark is `components/logo.tsx`.
+- **Icons:** Keyline Icons, rounded stroke, generated into `components/icons/` by `npm run icons` (add names in `scripts/generate-icons.mjs`). Import from `@/components/icons`; do not add another icon library.
+- **Charts:** `components/charts/` (dependency-free). Dashboard views are composed from `DashboardPage`, `PageHeader` and `Region` in `components/features/dashboard-layout.tsx`.
+- **Motion:** `components/motion/` wraps the transitions in `app/styles/transitions.css`; tokens are in `app/styles/motion-tokens.css`. Name transitioned properties (never `transition-all`), press scale is 0.96, movement respects `prefers-reduced-motion`.
 
 ### Analytics & Consent
 

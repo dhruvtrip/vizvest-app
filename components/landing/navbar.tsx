@@ -1,171 +1,186 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/logo'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { Menu, X } from '@/components/icons'
 import { cn } from '@/lib/utils'
-import { Menu, X, ChevronRight } from 'lucide-react'
 
 const navLinks = [
   { label: 'Features', href: '/#features' },
   { label: 'How it works', href: '/#how-it-works' },
+  { label: 'FAQ', href: '/#faqs' },
   { label: 'Articles', href: '/articles' },
 ]
 
+const menuItem = {
+  closed: { opacity: 0, x: -20 },
+  open: { opacity: 1, x: 0, transition: { duration: 0.2, ease: 'easeInOut' as const } },
+}
+
+const COMPACT_AFTER = 50
+const HIDE_AFTER = 150
+
+/**
+ * Floating pill navigation. Past 50px of scroll it tightens and gains a soft
+ * shadow; scrolling down past 150px slides it away and any scroll up brings
+ * it back. On small screens the links move into a panel under the pill.
+ */
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [compact, setCompact] = useState(false)
+  const [hidden, setHidden] = useState(false)
+  const [open, setOpen] = useState(false)
+  const lastY = useRef(0)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const firstMenuItemRef = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
+    const onScroll = () => {
+      const y = window.scrollY
+      if (y === lastY.current) return
+      setCompact(y > COMPACT_AFTER)
+      setHidden(y > lastY.current && y > HIDE_AFTER)
+      lastY.current = y
     }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Focus management for mobile menu
   useEffect(() => {
-    if (isMobileMenuOpen && firstMenuItemRef.current) {
-      firstMenuItemRef.current.focus()
-    } else if (!isMobileMenuOpen && menuButtonRef.current) {
-      menuButtonRef.current.focus()
-    }
-  }, [isMobileMenuOpen])
-
-  // Close menu on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isMobileMenuOpen) {
-        setIsMobileMenuOpen(false)
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
         menuButtonRef.current?.focus()
       }
     }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isMobileMenuOpen])
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  // The menu never hides while it is open.
+  const isHidden = hidden && !open
 
   return (
-    <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          isScrolled
-            ? 'bg-background/50 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/10 dark:border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
-            : 'bg-background/20 backdrop-blur-md backdrop-saturate-150'
-        )}
-      >
-        <nav className="container mx-auto px-6" aria-label="Main navigation">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <Link 
-              href="/" 
-              className="flex items-center hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
-              aria-label="Vizvest home"
-            >
-              <Image
-                src="/assets/logo-full-light-nobg.png"
-                alt="Vizvest"
-                width={150}
-                height={34}
-                className="h-20 w-auto dark:hidden"
-                priority
-              />
-              <Image
-                src="/assets/logo-full-dark-nobg.png"
-                alt="Vizvest"
-                width={150}
-                height={34}
-                className="hidden h-20 w-auto dark:block"
-                priority
-              />
+    <header
+      className={cn(
+        'nav-enter fixed inset-x-0 top-0 z-50 transition-[opacity,transform] duration-300 ease-reveal',
+        isHidden && 'pointer-events-none opacity-0 motion-safe:-translate-y-5'
+      )}
+      // Keep hidden links out of the tab order.
+      inert={isHidden || undefined}
+    >
+      <div className="mx-auto w-full max-w-content px-4 pt-4">
+        <div className={cn('transition-transform duration-200 ease-glide', compact && 'motion-safe:scale-[0.98]')}>
+          <nav
+            aria-label="Main"
+            className={cn(
+              'flex items-center justify-between gap-4 rounded-full border border-border bg-background/60 p-2 backdrop-blur-md transition-[box-shadow,background-color] duration-300 dark:border-[hsl(0_0%_63%/0.2)]',
+              compact && 'bg-background/80 shadow-nav'
+            )}
+          >
+            <Link href="/" aria-label="Vizvest home" className="ml-3 flex h-10 items-center rounded-md sm:ml-4">
+              <Logo height={15} priority />
             </Link>
 
-            {/* Center: Desktop Navigation */}
-            <ul className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2" role="list">
-              {navLinks.map((link) => (
-                <li key={link.label} role="none">
-                  <Link
-                    href={link.href}
-                    className="px-3 py-2 text-xs sm:text-sm font-mono uppercase tracking-[1.2px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {/* Right: Desktop CTA */}
-            <div className="hidden md:flex items-center">
-              <Button asChild size="sm" className="text-xs h-8 gap-1 bg-brand text-white hover:bg-brand">
-                <Link href="/dashboard" aria-label="Open dashboard application">
-                  Open App
-                  <ChevronRight className="w-3 h-3" aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              ref={menuButtonRef}
-              className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="mobile-menu"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
-            </button>
-          </div>
-        </nav>
-      </motion.header>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-16 z-40 bg-background/60 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/10 dark:border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.08)] md:hidden"
-            id="mobile-menu"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Mobile navigation menu"
-          >
-            <nav className="container mx-auto px-6 py-4 space-y-2" aria-label="Mobile navigation">
-              <ul role="list">
-                {navLinks.map((link, index) => (
-                  <li key={link.label} role="none">
+            <div className="hidden items-center gap-4 lg:flex">
+              <ul className="mr-2 flex items-center gap-7 lg:gap-8">
+                {navLinks.map((link) => (
+                  <li key={link.label}>
                     <Link
-                      ref={index === 0 ? firstMenuItemRef : null}
                       href={link.href}
-                      className="block px-3 py-2 text-xs font-mono uppercase tracking-[1.2px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="rounded-sm text-base font-medium transition-colors duration-150 ease-ui hover:text-muted-foreground"
                     >
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-              <div className="pt-2 border-t border-border">
-                <Button asChild className="w-full text-sm" size="sm">
-                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} aria-label="Open dashboard application">
-                    Open App
-                    <ChevronRight className="w-4 h-4 ml-1" aria-hidden="true" />
-                  </Link>
-                </Button>
-              </div>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+              <ThemeToggle />
+              <Button asChild size="lg">
+                <Link href="/dashboard">Open dashboard</Link>
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2 lg:hidden">
+              <Button asChild>
+                <Link href="/dashboard">
+                  <span className="max-[359px]:hidden">Open dashboard</span>
+                  <span className="min-[360px]:hidden">Dashboard</span>
+                </Link>
+              </Button>
+              <Button
+                ref={menuButtonRef}
+                variant="ghost"
+                size="icon"
+                aria-label={open ? 'Close menu' : 'Open menu'}
+                aria-expanded={open}
+                aria-controls="mobile-menu"
+                onClick={() => setOpen((value) => !value)}
+              >
+                <span className="relative block size-5">
+                  <Menu
+                    size={20}
+                    className={cn(
+                      'absolute inset-0 transition-[opacity,transform] duration-200 ease-glide',
+                      open && 'opacity-0 motion-safe:rotate-90'
+                    )}
+                  />
+                  <X
+                    size={20}
+                    className={cn(
+                      'absolute inset-0 transition-[opacity,transform] duration-200 ease-glide',
+                      !open && 'opacity-0 motion-safe:-rotate-90'
+                    )}
+                  />
+                </span>
+              </Button>
+            </div>
+          </nav>
+        </div>
+
+        {/* Small-screen menu: the panel opens to its content height, then the links slide in one by one. */}
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              id="mobile-menu"
+              key="mobile-menu"
+              initial={{ height: 0, opacity: 0, y: -10 }}
+              animate={{ height: 'auto', opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -10, transition: { duration: 0.15, ease: 'easeOut' } }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="overflow-hidden lg:hidden"
+            >
+              <motion.div
+                initial="closed"
+                animate="open"
+                variants={{ closed: {}, open: { transition: { staggerChildren: 0.05 } } }}
+                className="mt-2 flex flex-col gap-1 rounded-2xl border border-border bg-background p-3 shadow-nav"
+              >
+                {navLinks.map((link) => (
+                  <motion.div key={link.label} variants={menuItem}>
+                    <Link
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className="flex rounded-lg px-4 py-3 font-medium transition-colors duration-150 ease-ui hover:bg-muted"
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
+                <motion.div variants={menuItem} className="my-2 border-t border-border" />
+                <motion.div variants={menuItem} className="flex items-center justify-between gap-2 px-4 pb-1">
+                  <span className="text-sm text-muted-foreground">Theme</span>
+                  <ThemeToggle />
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </header>
   )
 }

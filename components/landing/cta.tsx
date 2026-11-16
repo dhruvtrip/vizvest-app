@@ -1,84 +1,74 @@
 'use client'
 
-import { useRef } from 'react'
 import Link from 'next/link'
-import { motion, useInView } from 'framer-motion'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { Check } from '@/components/icons'
+import { Reveal } from '@/components/motion/reveal'
+import { SectionHeading } from './section-heading'
 
+const included = [
+  'As many CSV exports as you like, merged into one history',
+  'Dividend income, withholding tax and net received',
+  'Realised profit and loss for every position',
+  'Trading activity heatmap, streaks and win rate',
+  'Currency conversion fees added up',
+  'Trades in any currency shown in your base currency',
+  'Light and dark themes',
+]
+
+/** Closing call to action: the free plan, set as a glass card on the dark panel. */
 export function CTA() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
-
   return (
-    <section className="py-24 lg:py-32 relative" ref={ref}>
-      <div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 max-w-7xl">
-        <motion.div
-          className="relative"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-        >
-          <Card className={cn(
-            'relative overflow-hidden',
-            'border-border/50',
-            'bg-card/50 backdrop-blur-sm'
-          )}>
-            <CardContent className="relative z-10 px-8 py-16 sm:px-12 sm:py-20 lg:px-16">
-              <div className="text-center max-w-2xl mx-auto">
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.2 }}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-xs font-medium text-brand mb-6 backdrop-blur-sm"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  Easy to use
-                </motion.div>
+    <Reveal>
+      <section
+        aria-labelledby="cta-heading"
+        className="panel-texture mx-auto w-full max-w-shell rounded-4xl px-4 py-16 sm:px-8 lg:px-12 lg:py-20"
+      >
+        <div className="mx-auto max-w-4xl">
+          <SectionHeading
+            id="cta-heading"
+            onPanel
+            title="Ready to see what you really earned?"
+            description="Upload your export and have the full picture in under ten seconds."
+          />
 
-                <motion.h2
-                  className="text-3xl sm:text-4xl font-light text-foreground mb-4 tracking-tight"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.3 }}
+          <div className="surface-glass mt-12 flex flex-col text-sm text-foreground md:flex-row">
+            <div className="flex flex-col border-b border-border/40 p-8 md:w-2/5 md:border-b-0 md:border-r lg:p-10">
+              <h3 className="text-center text-4xl font-medium tracking-tight">Vizvest</h3>
+              <p className="mt-1 text-center text-lg leading-7 text-muted-foreground">For Trading 212 investors</p>
+              <p className="mt-8 text-center text-xl font-medium">Free</p>
+              <div className="mt-8 flex flex-col gap-3">
+                <Button
+                  asChild
+                  className="w-full"
+                  onClick={() => posthog.capture('get_started_cta_clicked', { location: 'cta_section' })}
                 >
-                  Ready to see what you&apos;re really earning?
-                </motion.h2>
-
-                <motion.p
-                  className="text-base text-muted-foreground mb-8 max-w-lg mx-auto"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.4 }}
-                >
-                  Upload your CSV and get clarity in under 10 seconds.
-                </motion.p>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Button
-                    asChild
-                    size="lg"
-                    className="h-12 px-8 text-sm font-medium bg-brand text-white hover:bg-brand gap-2"
-                    onClick={() => posthog.capture('get_started_cta_clicked', { location: 'cta_section' })}
-                  >
-                    <Link href="/dashboard" aria-label="Get started with Vizvest dashboard">
-                      Get Started Now
-                      <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                    </Link>
-                  </Button>
-                </motion.div>
+                  <Link href="/dashboard">Open the dashboard</Link>
+                </Button>
+                <Button asChild variant="glass" className="w-full">
+                  <Link href="/articles">Read the guides</Link>
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    </section>
+              <p className="mt-8 text-center text-sm text-muted-foreground">No account or card needed.</p>
+            </div>
+
+            <div className="flex flex-col justify-between p-8 md:w-3/5 lg:p-10">
+              <ul className="flex flex-col gap-3">
+                {included.map((item) => (
+                  <li key={item} className="flex items-start gap-3 font-medium">
+                    <Check size={16} strokeWidth={2} className="mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-8 border-t border-border/40 pt-6 leading-relaxed text-muted-foreground">
+                Your file is read in your browser and kept in memory only. Refresh the page and it is gone.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </Reveal>
   )
 }
