@@ -10,7 +10,7 @@ import type { Trading212Transaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AutoHeight, Disclosure, DotLoader, TextSwap, TextsReveal, useShake } from '@/components/motion'
 import { seriesAt, seriesVar } from '@/components/charts'
 import { CircleAlert, CloudUpload, FileSpreadsheet, Lock, Plus, RotateCcw, X } from '@/components/icons'
@@ -367,7 +367,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
                 {uploadState === 'error' && (
                   <Alert variant="destructive">
                     <CircleAlert size={16} strokeWidth={2} />
-                    <AlertTitle>Upload failed</AlertTitle>
+                    <h2 className="mb-1 font-medium leading-5">Upload failed</h2>
                     <AlertDescription>
                       <ul className="space-y-1 break-words font-normal leading-5">
                         {errors.map((error, index) => (
@@ -390,9 +390,9 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
                 {uploadState === 'staging' && stagingRejects.length > 0 && (
                   <Alert variant="destructive">
                     <CircleAlert size={16} strokeWidth={2} />
-                    <AlertTitle>
+                    <h2 className="mb-1 font-medium leading-5">
                       {stagingRejects.length} file{stagingRejects.length === 1 ? '' : 's'} skipped
-                    </AlertTitle>
+                    </h2>
                     <AlertDescription>
                       <ul className="space-y-1 break-words font-normal leading-5">
                         {stagingRejects.map((msg, i) => (

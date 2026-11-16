@@ -53,7 +53,7 @@ export function Features() {
         />
       </Reveal>
 
-      <Reveal className="mt-12 grid items-center gap-10 lg:mt-16 lg:grid-cols-[1fr_2.2fr_1fr] lg:gap-12">
+      <Reveal className="mt-12 grid grid-cols-1 items-center gap-10 lg:mt-16 lg:grid-cols-[1fr_2.2fr_1fr] lg:gap-12">
         <div className="order-2 grid gap-8 sm:grid-cols-3 lg:order-1 lg:grid-cols-1 lg:gap-20 lg:pb-24">
           {left.map((feature) => (
             <Feature key={feature.title} {...feature} />

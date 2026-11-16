@@ -33,7 +33,7 @@ export function Currencies() {
                     color: `rgb(var(--chart-${currency.hue}))`,
                     backgroundImage: `linear-gradient(rgb(var(--chart-${currency.hue}) / 0.14), rgb(var(--chart-${currency.hue}) / 0.14))`,
                   }}
-                  className="figure grid size-14 place-items-center rounded-full bg-background text-lg font-semibold ring-4 ring-background"
+                  className="figure grid size-14 place-items-center rounded-full bg-background text-2xl font-semibold ring-4 ring-background"
                 >
                   <span aria-hidden="true">{currency.glyph}</span>
                   <span className="sr-only">{currency.code}</span>

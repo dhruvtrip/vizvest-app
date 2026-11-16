@@ -177,7 +177,7 @@ export function PortfolioMetrics ({ transactions: transactionsProp, className }:
     {
       label: 'Realised profit',
       rawValue: metrics.realizedPnL,
-      subValue: `${plural(metrics.soldCount, 'position')} closed`,
+      subValue: `${plural(metrics.soldCount, 'position')} fully sold`,
       tone: realizedTone,
       signed: true,
       hint: 'Profit or loss on the shares you sold, taken from the Result column of your export.'

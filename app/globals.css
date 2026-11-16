@@ -47,13 +47,13 @@
     --amber: 45 100% 50%;             /* small highlights only */
 
     /* Meaning */
-    --up: 140 44% 33%;
+    --up: 140 44% 30%;
     --down: 5 46% 45%;
-    --success: 140 44% 33%;
+    --success: 140 44% 30%;
     --success-foreground: 0 0% 100%;
     --destructive: 5 46% 45%;
     --destructive-foreground: 0 0% 100%;
-    --warning: 36 100% 35%;
+    --warning: 36 100% 30%;
 
     /* Data colours, in fixed order. Never cycle past six: fold the rest into "Other". */
     --chart-1: 34 0 255;

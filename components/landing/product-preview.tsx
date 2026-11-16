@@ -114,7 +114,7 @@ export function ProductPreview() {
       <div className="rounded-3xl border border-white/[0.08] bg-background/85 p-3 text-foreground shadow-lift backdrop-blur-xl sm:p-5 lg:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 px-1">
-            <p className="text-sm font-medium">Sample portfolio</p>
+            <h2 className="text-sm font-medium">Sample portfolio</h2>
             <p className="figure truncate text-xs font-normal text-muted-foreground">
               6 Jan 2025 to 30 Oct 2026 · base currency EUR
             </p>
@@ -133,7 +133,7 @@ export function ProductPreview() {
           <div role="tabpanel" id={`preview-panel-${view}`} aria-labelledby={`preview-tab-${view}`}>
             {view === 'portfolio' && (
               <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
                   <KpiTile label="Buy volume" value="€91,608.29" sub="Total bought" />
                   <KpiTile label="Realised profit" value="+€3,181.60" sub="7 positions closed" tone="up" />
                   <KpiTile label="Net dividends" value="€1,284.20" sub="53 payments" />
@@ -180,7 +180,7 @@ export function ProductPreview() {
 
             {view === 'dividends' && (
               <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
                   <KpiTile label="Net dividends" value="€1,284.20" sub="Reached your account" tone="up" />
                   <KpiTile label="Withholding tax" value="€226.62" sub="Taken at source" />
                   <KpiTile label="Payments" value="53" sub="From 9 companies" />
@@ -217,7 +217,7 @@ export function ProductPreview() {
 
             {view === 'activity' && (
               <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
                   <KpiTile label="Trades" value="269" sub="188 buys, 81 sells" />
                   <KpiTile label="Win rate" value="73%" sub="59 of 81 sells in profit" tone="up" />
                   <KpiTile label="Longest streak" value="9 days" sub="7 to 17 Apr 2026" />

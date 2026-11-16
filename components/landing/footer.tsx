@@ -14,7 +14,7 @@ const footerLinks = [
 ]
 
 const linkClass =
-  'rounded-sm text-base text-muted-foreground transition-colors duration-300 ease-ui hover:text-brand dark:hover:text-foreground'
+  'inline-flex min-h-9 items-center rounded-sm text-base text-muted-foreground transition-colors duration-150 ease-ui hover:text-brand dark:hover:text-foreground'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -22,12 +22,12 @@ export function Footer() {
   return (
     <footer className="px-4 pt-8">
       <div className="mx-auto flex w-full max-w-shell flex-col items-center gap-8 pb-16 text-center">
-        <Link href="/" aria-label="Vizvest home" className="rounded-md">
+        <Link href="/" aria-label="Vizvest home" className="inline-flex h-10 items-center rounded-md">
           <Logo height={18} />
         </Link>
 
         <nav aria-label="Footer">
-          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+          <ul className="flex flex-wrap items-center justify-center gap-x-8">
             {footerLinks.map((link) => (
               <li key={link.label}>
                 <Link href={link.href} className={linkClass}>

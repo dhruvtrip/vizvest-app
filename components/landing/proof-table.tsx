@@ -40,7 +40,7 @@ export function ProofTable() {
               <li
                 key={label}
                 style={{ '--hue': `rgb(var(--chart-${hue}))` } as React.CSSProperties}
-                className="group flex h-32 flex-col items-center justify-center gap-3 px-3 text-center"
+                className="group flex min-h-32 flex-col items-center gap-3 px-3 pb-7 pt-9 text-center"
               >
                 <IconComponent
                   size={24}

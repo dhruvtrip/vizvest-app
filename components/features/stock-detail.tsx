@@ -415,7 +415,7 @@ export function StockDetail ({
             }
           >
             <StackedColumns
-              layout="grouped"
+              layout="stacked"
               series={[
                 { key: 'buy', label: 'Buys', color: 1 },
                 { key: 'sell', label: 'Sells', color: 6 }

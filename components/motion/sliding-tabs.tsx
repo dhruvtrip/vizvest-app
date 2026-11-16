@@ -168,7 +168,8 @@ export function SlidingTabs<T extends string>({
             onKeyDown={(event) => onKeyDown(event, index)}
             className={cn(
               't-tab inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-medium',
-              size === 'sm' ? 'h-7 px-3 text-xs' : 'h-9 px-4 text-sm',
+              // sm items are 28px; the pad lifts the hit area to 36px without changing the look.
+              size === 'sm' ? "h-7 px-3 text-xs before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']" : 'h-9 px-4 text-sm',
             )}
           >
             {item.icon}

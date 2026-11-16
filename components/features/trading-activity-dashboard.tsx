@@ -263,7 +263,7 @@ function CountFigure({ value }: { value: number }) {
 function ActionBadge({ action }: { action: string }) {
   const isBuy = isBuyAction(action)
   return (
-    <Badge variant={isBuy ? 'up' : 'down'} title={action} className="font-normal">
+    <Badge variant={isBuy ? 'up' : 'down'} title={action}>
       <span aria-hidden="true">{isBuy ? 'Buy' : 'Sell'}</span>
       <span className="sr-only">{action}</span>
     </Badge>
@@ -709,13 +709,19 @@ export function TradingActivityDashboard ({
 
                     return (
                       <TableRow key={transaction.ID || `${transaction.Time}-${transaction.Ticker}`}>
-                        <TableCell className="figure whitespace-nowrap ps-4 pe-2 sm:ps-5 sm:pe-3 xl:pe-4">{dateStr}</TableCell>
+                        <TableCell className="figure whitespace-nowrap ps-4 pe-2 sm:ps-5 sm:pe-3 xl:pe-4">
+                          {/* The year drops off on the narrowest phones so the four key columns fit. */}
+                          <span className="max-[359px]:hidden">{dateStr}</span>
+                          <span className="min-[360px]:hidden" title={dateStr}>
+                            {dateStr.replace(/,\s*\d{4}$/, '')}
+                          </span>
+                        </TableCell>
                         <TableCell className="px-2 sm:px-3 xl:px-4">
                           <ActionBadge action={transaction.Action} />
                         </TableCell>
                         <TableCell className="ticker whitespace-nowrap px-2 sm:px-3 xl:px-4">{transaction.Ticker || '-'}</TableCell>
                         <TableCell className="hidden px-3 text-muted-foreground md:table-cell xl:px-4">
-                          <span className="block max-w-[6rem] truncate xl:max-w-[16rem]" title={transaction.Name || undefined}>
+                          <span className="block max-w-[6rem] truncate lg:max-w-[10rem] xl:max-w-[16rem]" title={transaction.Name || undefined}>
                             {transaction.Name || '-'}
                           </span>
                         </TableCell>
@@ -727,7 +733,7 @@ export function TradingActivityDashboard ({
                             formatSignedCurrency(result, metrics.baseCurrency)
                           ) : (
                             <span className="text-muted-foreground">
-                              <span aria-hidden="true">–</span>
+                              <span aria-hidden="true">—</span>
                               <span className="sr-only">No result</span>
                             </span>
                           )}

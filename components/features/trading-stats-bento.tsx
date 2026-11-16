@@ -266,6 +266,8 @@ export function TradingStatsBento({ transactions, className }: TradingStatsBento
           label="Trades per active day"
           value={<AnimatedNumber value={stats.tradesPerActiveDay} decimals={1} />}
           sub="Average on days you traded"
+          // Fifth of five: in the two-column layout it takes the whole last row so its label never truncates.
+          className="min-[380px]:max-md:col-span-2"
         />
       </Reveal>
     </Region>

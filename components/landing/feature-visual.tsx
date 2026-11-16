@@ -18,8 +18,8 @@ const price = [118, 121, 117, 126, 131, 128, 137, 142, 139, 151, 158, 154, 166, 
  */
 export function FeatureVisual() {
   return (
-    <div className="panel-texture rounded-4xl p-4 sm:p-8 lg:p-10">
-      <div className="surface-glass p-5 text-foreground sm:p-6">
+    <div className="panel-texture rounded-4xl p-3 sm:p-8 lg:p-10">
+      <div className="surface-glass p-4 text-foreground sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="ticker text-lg leading-6">NVDA</p>
@@ -46,13 +46,13 @@ export function FeatureVisual() {
           ))}
         </dl>
 
-        <ul className="mt-4 flex flex-col">
+        <ul className="mt-4 flex flex-col rounded-xl bg-background px-2 sm:px-3">
           {trades.map((trade) => (
             <li
               key={trade.date}
-              className="flex items-center gap-3 border-t border-border/60 py-2.5 text-sm font-normal first:border-t-0"
+              className="flex items-center gap-2 border-t border-border/60 py-2.5 text-sm font-normal first:border-t-0 sm:gap-3"
             >
-              <Badge variant={trade.side === 'Buy' ? 'up' : 'down'} className="w-11 justify-center px-0">
+              <Badge variant={trade.side === 'Buy' ? 'up' : 'down'} className="w-10 justify-center px-0 sm:w-11">
                 {trade.side}
               </Badge>
               <span className="figure min-w-0 flex-1 truncate text-muted-foreground">

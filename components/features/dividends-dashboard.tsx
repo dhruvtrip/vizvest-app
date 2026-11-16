@@ -736,6 +736,7 @@ export function DividendsDashboard ({
             label="Average per payment"
             value={<AnimatedCurrency amount={averagePerPayment} currency={baseCurrency} formatFn={formatCurrency} />}
             sub="Net, per payment"
+            className="min-[380px]:max-md:col-span-2"
           />
         </div>
       </Region>

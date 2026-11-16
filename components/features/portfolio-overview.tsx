@@ -311,7 +311,7 @@ function AllocationChart({ holdings, baseCurrency }: { holdings: StockPosition[]
           detail="Allocation appears here while you hold shares you paid for in this export."
         />
       ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-6 py-2 min-[440px]:flex-row min-[440px]:justify-start">
+        <div className="flex h-full flex-col items-center justify-center gap-6 py-2 min-[440px]:flex-row min-[440px]:justify-start lg:flex-col lg:justify-center xl:flex-row xl:justify-start">
           <Donut
             segments={segments}
             aria-label="Allocation of net invested by holding"
