@@ -469,8 +469,8 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
                       role="region"
                       aria-label="Files ready to upload"
                     >
-                      <div className="flex items-center justify-between gap-3 pb-3 ps-2 pt-1">
-                        <div className="min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-3 ps-2 pt-1">
+                        <div className="min-w-[12rem] flex-1">
                           <p className="text-sm font-medium">
                             <span className="figure">{stagedFiles.length}</span> file{stagedFiles.length === 1 ? '' : 's'} ready
                           </p>
@@ -483,7 +483,7 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
                           variant="ghost"
                           size="sm"
                           onClick={handleAddMoreClick}
-                          className="shrink-0 ps-2.5"
+                          className="-ms-2.5 shrink-0 ps-2.5 min-[380px]:ms-0"
                         >
                           <Plus size={14} strokeWidth={2} />
                           Add more files

@@ -129,7 +129,6 @@ export function Donut({
       a += span
     }
     return out
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
   useIsoLayoutEffect(() => {
@@ -180,7 +179,6 @@ export function Donut({
     }
     step(t0)
     return () => cancelAnimationFrame(raf.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, size, thickness])
 
   const showTip = (id: string) => {
