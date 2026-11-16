@@ -670,14 +670,14 @@ export function TradingActivityDashboard ({
             <Table className="text-xs sm:text-sm">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="ps-4 pe-2 sm:ps-5 sm:pe-4">Date</TableHead>
-                  <TableHead className="px-2 sm:px-4">Action</TableHead>
-                  <TableHead className="px-2 sm:px-4">Ticker</TableHead>
-                  <TableHead className="hidden px-4 md:table-cell">Name</TableHead>
+                  <TableHead className="ps-4 pe-2 sm:ps-5 sm:pe-3 xl:pe-4">Date</TableHead>
+                  <TableHead className="px-2 sm:px-3 xl:px-4">Action</TableHead>
+                  <TableHead className="px-2 sm:px-3 xl:px-4">Ticker</TableHead>
+                  <TableHead className="hidden px-3 md:table-cell xl:px-4">Name</TableHead>
                   <TableHead className="hidden px-4 text-right xl:table-cell">Shares</TableHead>
-                  <TableHead className="hidden px-4 text-right sm:table-cell">Price</TableHead>
-                  <TableHead className="ps-2 pe-4 text-right sm:px-4">Total</TableHead>
-                  <TableHead className="hidden ps-4 pe-5 text-right sm:table-cell">Result</TableHead>
+                  <TableHead className="hidden px-3 text-right sm:table-cell xl:px-4">Price</TableHead>
+                  <TableHead className="ps-2 pe-4 text-right sm:px-3 xl:px-4">Total</TableHead>
+                  <TableHead className="hidden ps-3 pe-5 text-right sm:table-cell xl:ps-4">Result</TableHead>
                 </TableRow>
               </TableHeader>
               <AnimatePresence mode="wait" initial={false}>
@@ -709,20 +709,20 @@ export function TradingActivityDashboard ({
 
                     return (
                       <TableRow key={transaction.ID || `${transaction.Time}-${transaction.Ticker}`}>
-                        <TableCell className="figure whitespace-nowrap ps-4 pe-2 sm:ps-5 sm:pe-4">{dateStr}</TableCell>
-                        <TableCell className="px-2 sm:px-4">
+                        <TableCell className="figure whitespace-nowrap ps-4 pe-2 sm:ps-5 sm:pe-3 xl:pe-4">{dateStr}</TableCell>
+                        <TableCell className="px-2 sm:px-3 xl:px-4">
                           <ActionBadge action={transaction.Action} />
                         </TableCell>
-                        <TableCell className="ticker whitespace-nowrap px-2 sm:px-4">{transaction.Ticker || '-'}</TableCell>
-                        <TableCell className="hidden px-4 text-muted-foreground md:table-cell">
-                          <span className="block max-w-[8rem] truncate xl:max-w-[16rem]" title={transaction.Name || undefined}>
+                        <TableCell className="ticker whitespace-nowrap px-2 sm:px-3 xl:px-4">{transaction.Ticker || '-'}</TableCell>
+                        <TableCell className="hidden px-3 text-muted-foreground md:table-cell xl:px-4">
+                          <span className="block max-w-[6rem] truncate xl:max-w-[16rem]" title={transaction.Name || undefined}>
                             {transaction.Name || '-'}
                           </span>
                         </TableCell>
                         <TableCell className="figure hidden whitespace-nowrap px-4 text-right xl:table-cell">{shares}</TableCell>
-                        <TableCell className="figure hidden whitespace-nowrap px-4 text-right sm:table-cell">{price}</TableCell>
-                        <TableCell className="figure whitespace-nowrap ps-2 pe-4 text-right font-medium sm:px-4">{total}</TableCell>
-                        <TableCell className={cn('figure hidden whitespace-nowrap ps-4 pe-5 text-right sm:table-cell', resultTone)}>
+                        <TableCell className="figure hidden whitespace-nowrap px-3 text-right sm:table-cell xl:px-4">{price}</TableCell>
+                        <TableCell className="figure whitespace-nowrap ps-2 pe-4 text-right font-medium sm:px-3 xl:px-4">{total}</TableCell>
+                        <TableCell className={cn('figure hidden whitespace-nowrap ps-3 pe-5 text-right sm:table-cell xl:ps-4', resultTone)}>
                           {hasResult ? (
                             formatSignedCurrency(result, metrics.baseCurrency)
                           ) : (
