@@ -4,17 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-full border border-transparent px-2.5 text-xs font-medium leading-none",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+        default: "bg-primary text-primary-foreground",
+        secondary: "bg-muted text-foreground",
+        outline: "border-foreground/20 text-foreground",
+        up: "bg-up/10 text-up",
+        down: "bg-down/10 text-down",
+        warning: "bg-warning/10 text-warning",
+        destructive: "bg-destructive/10 text-destructive",
+        // For chips drawn on the dark panel.
+        panel: "rounded-lg bg-white/[0.12] text-white/80 font-normal",
       },
     },
     defaultVariants: {

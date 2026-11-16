@@ -1,69 +1,75 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { motion, AnimatePresence } from "framer-motion"
 
+import { Moon, Sun } from "@/components/icons"
 import { cn } from "@/lib/utils"
 
+/**
+ * Light / dark switch: a 72 by 36 pill whose knob springs between the moon
+ * and the sun. Before hydration the knob follows the `dark` class, so it is
+ * already on the right side on first paint.
+ */
 export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, setTheme, resolvedTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  // Knob side, set two frames after the theme flips. Theme changes switch
+  // every transition off for a frame; waiting lets the knob keep its spring.
+  const [knobDark, setKnobDark] = React.useState<boolean | null>(null)
+
+  React.useEffect(() => setMounted(true), [])
+
+  const isDark = mounted && resolvedTheme === "dark"
 
   React.useEffect(() => {
-    setMounted(true)
-  }, [])
+    if (!mounted) return
+    let second = 0
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setKnobDark(resolvedTheme === "dark"))
+    })
+    return () => {
+      cancelAnimationFrame(first)
+      cancelAnimationFrame(second)
+    }
+  }, [mounted, resolvedTheme])
 
-  if (!mounted) {
-    return (
-      <div className={cn(
-        "w-10 h-10 rounded-full bg-muted border border-border",
-        className
-      )} />
-    )
-  }
-
-  const isDark = resolvedTheme === "dark"
+  const knobSide =
+    knobDark === null
+      ? "translate-x-[18px] dark:-translate-x-[18px]"
+      : knobDark
+        ? "-translate-x-[18px]"
+        : "translate-x-[18px]"
 
   return (
-    <motion.button
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label="Dark theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "relative w-10 h-10 rounded-full",
-        "bg-card border border-border shadow-lg",
-        "flex items-center justify-center",
-        "hover:bg-muted transition-colors",
-        "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+        "relative inline-flex h-9 w-[4.5rem] shrink-0 items-center justify-center rounded-full border border-border bg-background/80 px-2 transition-[background-color,border-color] duration-150 ease-ui",
         className
       )}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {isDark ? (
-          <motion.div
-            key="moon"
-            initial={{ opacity: 0, rotate: -90, scale: 0 }}
-            animate={{ opacity: 1, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, rotate: 90, scale: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Moon className="w-4 h-4 text-foreground" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="sun"
-            initial={{ opacity: 0, rotate: 90, scale: 0 }}
-            animate={{ opacity: 1, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, rotate: -90, scale: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Sun className="w-4 h-4 text-foreground" />
-          </motion.div>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute size-7 rounded-full bg-muted shadow-[0_1px_3px_0_rgb(0_0_0/0.1),0_1px_2px_-1px_rgb(0_0_0/0.1)] motion-safe:transition-transform motion-safe:duration-355 motion-safe:ease-spring dark:bg-tile-hover",
+          knobSide
         )}
-      </AnimatePresence>
-    </motion.button>
+      />
+      <span className="relative z-10 flex w-full items-center justify-between">
+        <Moon
+          size={16}
+          className="opacity-35 transition-opacity duration-200 dark:text-amber dark:opacity-100"
+        />
+        <Sun
+          size={16}
+          className="transition-opacity duration-200 dark:opacity-35"
+        />
+      </span>
+    </button>
   )
 }

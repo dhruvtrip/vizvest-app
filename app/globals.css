@@ -1,59 +1,135 @@
+@import './styles/motion-tokens.css';
+@import './styles/transitions.css';
+@import './styles/charts.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Design tokens
+   Neutral, warm-grey palette with one bronze accent. Colour in the product
+   comes from data: the six chart hues and the up / down pair.
+   Surface colours are HSL channels, chart colours are RGB channels, so both
+   work with Tailwind opacity modifiers (bg-chart-1/40).
+   ========================================================================== */
+
 @layer base {
   :root {
-    --background: 40 30% 98%;
+    /* Surfaces */
+    --background: 0 0% 100%;
     --foreground: 0 0% 4%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 4%;
+    --tile: 0 0% 96%;            /* flat filled surface: KPI tiles, chart cards */
+    --tile-hover: 0 0% 92%;
+    --raised: 0 0% 100%;         /* tooltips and floating layers */
+
+    /* Text and lines */
+    --muted: 0 0% 96%;
+    --muted-foreground: 351 4% 33%;   /* warm grey, all secondary text */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 63%;
+    --ring-strong: 0 0% 40%;          /* keyboard focus outline, 3:1 on every surface */
+
+    /* Actions */
     --primary: 0 0% 4%;
-    --primary-foreground: 40 30% 98%;
-    --secondary: 40 15% 95%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 4%;
-    --muted: 40 15% 95%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 40 15% 95%;
+    --accent: 0 0% 96%;
     --accent-foreground: 0 0% 4%;
-    --destructive: 0 60% 38%;
-    --destructive-foreground: 40 30% 98%;
-    --success: 150 55% 26%;
-    --success-foreground: 40 30% 98%;
-    --brand: 134 58% 47%;
+    --brand: 39 38% 34%;              /* bronze: primary hover, link hover */
     --brand-foreground: 0 0% 100%;
-    --border: 38 15% 90%;
-    --input: 38 15% 90%;
-    --ring: 0 0% 4%;
-    --radius: 0.5rem;
+    --amber: 45 100% 50%;             /* small highlights only */
+
+    /* Meaning */
+    --up: 140 44% 33%;
+    --down: 5 46% 45%;
+    --success: 140 44% 33%;
+    --success-foreground: 0 0% 100%;
+    --destructive: 5 46% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 36 100% 35%;
+
+    /* Data colours, in fixed order. Never cycle past six: fold the rest into "Other". */
+    --chart-1: 34 0 255;
+    --chart-2: 79 138 16;
+    --chart-3: 122 63 224;
+    --chart-4: 10 143 128;
+    --chart-5: 179 107 0;
+    --chart-6: 208 52 127;
+
+    /* Hero glow and the dark photographic panel */
+    --glow-start: 40 49% 27%;
+    --glow-mid: 39 14% 62%;
+    --glow-opacity: 0.3;
+    --panel: 36 22% 8%;
+    --panel-foreground: 0 0% 100%;
+    --glass: 0 0% 100% / 0.85;
+    --image-outline: 0 0% 0% / 0.1;
+
+    /* Elevation */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-nav: 0 4px 20px -5px rgb(0 0 0 / 0.1);
+    --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.06), 0 10px 28px rgb(0 0 0 / 0.12);
+    --shadow-lift: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+    --radius: 0.625rem;
   }
 
   .dark {
     --background: 0 0% 4%;
-    --foreground: 40 15% 96%;
-    --card: 40 4% 8%;
-    --card-foreground: 40 15% 96%;
-    --popover: 40 4% 8%;
-    --popover-foreground: 40 15% 96%;
-    --primary: 40 15% 96%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    --tile: 0 0% 10%;
+    --tile-hover: 0 0% 14%;
+    --raised: 0 0% 12.5%;
+
+    --muted: 0 0% 9.5%;
+    --muted-foreground: 0 0% 63%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 32%;
+    --ring-strong: 0 0% 63%;
+
+    --primary: 0 0% 98%;
     --primary-foreground: 0 0% 4%;
-    --secondary: 40 4% 11%;
-    --secondary-foreground: 40 15% 96%;
-    --muted: 40 4% 11%;
-    --muted-foreground: 40 3% 60%;
-    --accent: 40 4% 11%;
-    --accent-foreground: 40 15% 96%;
-    --destructive: 0 75% 68%;
-    --destructive-foreground: 0 0% 4%;
-    --success: 142 71% 58%;
-    --success-foreground: 0 0% 4%;
-    --brand: 134 58% 47%;
+    --secondary: 0 0% 9.5%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 0 0% 9.5%;
+    --accent-foreground: 0 0% 98%;
+    --brand: 39 38% 34%;
     --brand-foreground: 0 0% 100%;
-    --border: 40 4% 15%;
-    --input: 40 4% 15%;
-    --ring: 40 15% 96%;
+
+    --up: 140 38% 59%;
+    --down: 6 65% 65%;
+    --success: 140 38% 59%;
+    --success-foreground: 0 0% 4%;
+    --destructive: 6 65% 65%;
+    --destructive-foreground: 0 0% 4%;
+    --warning: 40 90% 60%;
+
+    --chart-1: 111 140 255;
+    --chart-2: 163 230 53;
+    --chart-3: 185 140 255;
+    --chart-4: 45 212 191;
+    --chart-5: 245 184 61;
+    --chart-6: 244 114 182;
+
+    --glow-opacity: 0.22;
+    --glass: 0 0% 4% / 0.72;
+    --image-outline: 0 0% 100% / 0.1;
+
+    --shadow-nav: 0 4px 20px -5px rgb(0 0 0 / 0.6);
+    --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px rgb(0 0 0 / 0.5);
+    --shadow-lift: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
   }
 }
 
@@ -61,36 +137,215 @@
   * {
     @apply border-border;
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-sans), system-ui, sans-serif;
-  }
-  h1, h2, h3, h4, h5, h6,
-  .font-heading {
-    font-family: var(--font-heading), system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-weight: 300;
-    letter-spacing: -0.02em;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-feature-settings: 'kern' 1, 'calt' 1;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Keyboard focus. Buttons and inputs add their own soft ring on top. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring-strong));
+    outline-offset: 2px;
+  }
+
+  /* One stroke weight at every icon size (see components/icons/icon.tsx). */
+  .icon :is(path, circle, rect, line, polyline, polygon, ellipse) {
+    vector-effect: non-scaling-stroke;
+  }
+
+  ::selection {
+    background: hsl(var(--brand) / 0.22);
+  }
+
+  button,
+  a,
+  [role='button'] {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
+/* ==========================================================================
+   Type
+   One family at four weights: 300 text, 400 dense data, 500 headings,
+   600 figures. Sizes are the default Tailwind scale.
+   ========================================================================== */
 
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+@layer components {
+  .heading-display {
+    @apply text-[2.5rem] leading-[2.75rem] font-light tracking-[-0.05em] sm:text-6xl sm:leading-none lg:text-7xl;
+  }
+
+  .heading-section {
+    @apply text-3xl font-medium tracking-tight sm:text-4xl;
+  }
+
+  .heading-page {
+    @apply text-2xl font-medium tracking-tight sm:text-3xl;
+  }
+
+  .heading-card {
+    @apply text-lg font-medium leading-7;
+  }
+
+  .text-lead {
+    @apply text-lg font-light leading-7 lg:text-xl;
+  }
+
+  /* Small uppercase label that titles a dashboard region. Never above a marketing heading. */
+  .label-caps {
+    @apply text-[0.6875rem] font-medium uppercase leading-4 tracking-[0.05em] text-muted-foreground;
+  }
+
+  /* Any number that can sit in a column or change in place. */
+  .figure {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1, 'kern' 1;
+  }
+
+  .figure-stat {
+    @apply figure text-4xl font-semibold tracking-tight;
+  }
+
+  .figure-kpi {
+    @apply figure text-2xl font-semibold tracking-[-0.02em];
+  }
+
+  .ticker {
+    @apply font-medium tracking-[0.01em];
+  }
+
+  /* ------------------------------------------------------------------------
+     Surfaces
+     ------------------------------------------------------------------------ */
+
+  /* Outlined card: warm 20% border plus a 10% ring, no drop shadow. */
+  .surface-card {
+    @apply rounded-3xl border border-muted-foreground/20 bg-card text-card-foreground;
+    box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.1);
+  }
+
+  .dark .surface-card {
+    border-color: transparent;
+    background-color: hsl(0 0% 63% / 0.15);
+    box-shadow: none;
+  }
+
+  /* Frosted card that sits on the dark panel. */
+  .surface-glass {
+    @apply overflow-hidden rounded-2xl border border-transparent;
+    background-color: hsl(var(--glass));
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.1), var(--shadow-lift);
+  }
+
+  /* Bare 1px table used for logos, stats and steps: left and top on the
+     grid, right and bottom on each cell. */
+  .hairline-grid {
+    @apply border-l border-t border-border;
+  }
+
+  .hairline-grid > * {
+    @apply border-b border-r border-border;
+  }
+
+  /* The one piece of "photography": a dark, warm, grainy panel drawn in CSS. */
+  .panel-texture {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: hsl(var(--panel-foreground));
+    background-color: hsl(var(--panel));
+    background-image:
+      radial-gradient(90% 70% at 12% 0%, rgb(222 176 98 / 0.62) 0%, rgb(164 122 58 / 0.3) 34%, transparent 66%),
+      radial-gradient(80% 80% at 96% 104%, rgb(134 104 52 / 0.6) 0%, rgb(84 64 30 / 0.25) 40%, transparent 68%),
+      radial-gradient(50% 42% at 62% 34%, rgb(255 226 160 / 0.14) 0%, transparent 72%),
+      linear-gradient(160deg, #2b2215 0%, #17120b 55%, #0f0c07 100%);
+  }
+
+  .panel-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Soft bronze light pinned to the top-left corner of a marketing page. */
+  .page-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(65rem, 160vw);
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: var(--glow-opacity);
+    filter: blur(7.5rem);
+    background: radial-gradient(circle at center, hsl(var(--glow-start)) 0%, hsl(var(--glow-mid)) 100%);
+  }
+
+  /* Content images get a hairline so they hold their edge on any surface. */
+  .image-outline {
+    outline: 1px solid hsl(var(--image-outline));
+    outline-offset: -1px;
   }
 }
 
-/* Screen reader only class */
+@layer utilities {
+  .shadow-xs { box-shadow: var(--shadow-xs); }
+  .shadow-nav { box-shadow: var(--shadow-nav); }
+  .shadow-pop { box-shadow: var(--shadow-pop); }
+  .shadow-lift { box-shadow: var(--shadow-lift); }
+  .shadow-focus { box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5); }
+  .ring-hairline { box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.1); }
+
+  .font-tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+  }
+
+  .text-up { color: hsl(var(--up)); }
+  .text-down { color: hsl(var(--down)); }
+
+  /* Fade the right edge of a horizontally scrolling region. */
+  .scroll-fade-x {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+  }
+}
+
+/* Screen-reader only (kept outside layers so it always wins). */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -103,8 +358,8 @@ html {
   border-width: 0;
 }
 
-.sr-only:focus,
-.sr-only:focus-visible {
+.focus\:not-sr-only:focus,
+.focus-visible\:not-sr-only:focus-visible {
   position: static;
   width: auto;
   height: auto;
@@ -115,43 +370,19 @@ html {
   white-space: normal;
 }
 
-.focus\:not-sr-only:focus {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: inherit;
-  margin: inherit;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
 }
 
-/* Focus visible styles */
-*:focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
-}
-
-/* GPU-accelerated animations */
-.transform-gpu {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Theme transition */
-html.dark {
-  color-scheme: dark;
-}
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -159,245 +390,18 @@ html.dark {
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
-}
+/* Reduced motion: keyframe sequences stop, smooth scrolling stops. Colour and
+   opacity transitions stay; components drop movement, scale and blur themselves. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 
-/* Dark mode scrollbar */
-.dark::-webkit-scrollbar-track {
-  background: hsl(var(--background));
-}
-
-.dark::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-}
-
-.dark::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.3);
-}
-
-/* ==========================================================================
-   Typography System - Financial Dashboard
-   ========================================================================== */
-
-/* Base typography improvements */
-body {
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* --------------------------------------------------------------------------
-   Metric & Data Display
-   -------------------------------------------------------------------------- */
-
-.metric-value {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 1.875rem;
-  line-height: 1.1;
-  font-weight: 300;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "kern" 1;
-}
-
-.metric-value-lg {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 2.5rem;
-  line-height: 1.05;
-  font-weight: 300;
-  letter-spacing: -0.035em;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "kern" 1;
-}
-
-.metric-label {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
-}
-
-/* --------------------------------------------------------------------------
-   Tabular & Numeric Figures
-   -------------------------------------------------------------------------- */
-
-.font-tabular {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.font-oldstyle {
-  font-variant-numeric: oldstyle-nums;
-  font-feature-settings: "onum" 1;
-}
-
-.font-slashed-zero {
-  font-feature-settings: "zero" 1;
-}
-
-.font-numeric {
-  font-family: var(--font-mono), 'Geist Mono', monospace;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1;
-}
-
-/* --------------------------------------------------------------------------
-   Financial Data Utilities
-   -------------------------------------------------------------------------- */
-
-.ticker {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  font-feature-settings: "kern" 1;
-}
-
-.currency {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.percentage {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.change-positive {
-  color: hsl(var(--success));
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.change-negative {
-  color: hsl(var(--destructive));
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.change-neutral {
-  color: hsl(var(--muted-foreground));
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-/* --------------------------------------------------------------------------
-   Heading Utilities
-   -------------------------------------------------------------------------- */
-
-.heading-display {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 3rem;
-  line-height: 1.05;
-  font-weight: 300;
-  letter-spacing: -0.025em;
-}
-
-.heading-1 {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 2.25rem;
-  line-height: 1.1;
-  font-weight: 300;
-  letter-spacing: -0.02em;
-}
-
-.heading-2 {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 1.5rem;
-  line-height: 1.2;
-  font-weight: 300;
-  letter-spacing: -0.015em;
-}
-
-.heading-3 {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 1.25rem;
-  line-height: 1.3;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-/* --------------------------------------------------------------------------
-   Label & Caption Utilities
-   -------------------------------------------------------------------------- */
-
-.label-uppercase {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
-}
-
-.label-uppercase-sm {
-  font-size: 0.6875rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 500;
-}
-
-.caption {
-  font-size: 0.75rem;
-  line-height: 1.5;
-  font-weight: 400;
-  color: hsl(var(--muted-foreground));
-}
-
-/* --------------------------------------------------------------------------
-   Data Table Typography
-   -------------------------------------------------------------------------- */
-
-.table-header {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 600;
-  color: hsl(var(--muted-foreground));
-}
-
-.table-cell {
-  font-size: 0.875rem;
-  line-height: 1.5;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.table-cell-mono {
-  font-family: var(--font-mono), 'Geist Mono', monospace;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1;
-}
-
-/* --------------------------------------------------------------------------
-   Chart & Visualization Typography
-   -------------------------------------------------------------------------- */
-
-.chart-label {
-  font-size: 0.6875rem;
-  line-height: 1.3;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  fill: hsl(var(--muted-foreground));
-}
-
-.chart-value {
-  font-size: 0.75rem;
-  line-height: 1.3;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.chart-axis {
-  font-family: var(--font-mono), 'Geist Mono', monospace;
-  font-size: 0.625rem;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
