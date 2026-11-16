@@ -28,7 +28,7 @@ const buttonVariants = cva(
         link:
           "rounded-none text-foreground underline-offset-4 hover:underline",
         light:
-          "bg-white text-neutral-950 hover:bg-white/85",
+          "bg-white text-black hover:bg-white/85",
         "outline-light":
           "border-white/25 bg-transparent text-white hover:bg-white/10",
       },
