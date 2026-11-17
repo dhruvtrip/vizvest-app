@@ -35,7 +35,7 @@ export function FooterSignup() {
   }
 
   return (
-    <div className="flex w-full max-w-md flex-col items-center gap-3">
+    <div className="flex w-full max-w-md flex-col items-start gap-3 lg:max-w-none">
       <label htmlFor={inputId} className="text-sm text-muted-foreground">
         New features and portfolio insights, in your inbox.
       </label>
@@ -47,7 +47,7 @@ export function FooterSignup() {
         </p>
       ) : (
         <>
-          <form ref={formRef} onSubmit={handleSubmit} className="flex w-full flex-col gap-2 min-[400px]:flex-row">
+          <form ref={formRef} onSubmit={handleSubmit} className="flex w-full flex-col gap-2 min-[400px]:flex-row min-[400px]:items-center">
             <Input
               id={inputId}
               type="email"
