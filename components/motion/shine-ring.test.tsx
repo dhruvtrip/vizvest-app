@@ -7,10 +7,10 @@ describe('ShineRing', () => {
   it('wraps the child in the shine ring surface', () => {
     render(
       <ShineRing>
-        <a href="/dashboard">Try For Free</a>
+        <a href="/dashboard">Get Started</a>
       </ShineRing>
     )
-    const link = screen.getByRole('link', { name: 'Try For Free' })
+    const link = screen.getByRole('link', { name: 'Get Started' })
     expect(link.parentElement?.classList.contains('shine-ring')).toBe(true)
   })
 })

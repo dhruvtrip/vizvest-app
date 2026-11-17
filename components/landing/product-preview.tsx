@@ -189,7 +189,7 @@ export function ProductPreview() {
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 px-1">
-            <h2 className="text-sm font-medium">Sample portfolio</h2>
+            <h2 className="text-sm font-medium">Portfolio</h2>
             <p className="figure truncate text-xs font-normal text-muted-foreground">
               6 Jan 2025 to 30 Oct 2026 · base currency EUR
             </p>

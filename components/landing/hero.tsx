@@ -1,28 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/motion/reveal'
-import { MetalRing, parseMetalTone, type MetalTone } from '@/components/motion/metal-ring'
 import { ShineRing } from '@/components/motion/shine-ring'
 
 export function Hero() {
-  // Temporary: `?cta=silver|chromatic` previews the other metal tones and
-  // `?cta=css` the CSS-only ring.
-  const [tone, setTone] = useState<MetalTone | 'css'>('gold')
-  useEffect(() => {
-    const search = window.location.search
-    setTone(new URLSearchParams(search).get('cta') === 'css' ? 'css' : parseMetalTone(search))
-  }, [])
-
-  const cta = (
-    <Button asChild onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}>
-      <Link href="/dashboard">Try For Free</Link>
-    </Button>
-  )
-
   return (
     <Reveal>
       <section
@@ -40,7 +24,14 @@ export function Hero() {
           </p>
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
-              {tone === 'css' ? <ShineRing>{cta}</ShineRing> : <MetalRing tone={tone}>{cta}</MetalRing>}
+              <ShineRing>
+                <Button
+                  asChild
+                  onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
+                >
+                  <Link href="/dashboard">Get Started</Link>
+                </Button>
+              </ShineRing>
               <Button asChild variant="outline">
                 <Link href="#how-it-works">See how it works</Link>
               </Button>

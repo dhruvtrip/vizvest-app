@@ -43,6 +43,10 @@ Tone comparison: a temporary `?cta=gold|silver|chromatic` query parameter on `/`
 - Engine: metal-fx. Colour: owner picks from three tones.
 - The duplicate "Free" goes from the line under the buttons. It now reads "No account needed."
 
+## Outcome (2026-11-17)
+
+The owner compared the three metal-fx tones with a CSS-only ring added later (`?cta=css`) and picked the CSS ring. metal-fx and its wrapper were removed. The final build is `ShineRing` (`components/motion/shine-ring.tsx`, `app/styles/shine-ring.css`): a conic-gradient ring with two highlights derived from `--brand`, plus a blurred glow, with no dependency. The label became "Get Started". The demo card heading "Sample portfolio" became "Portfolio".
+
 ## Left to the builder
 
 - Whether to set `innerShadow`, and the `strength` value, after seeing the ring in both themes.
