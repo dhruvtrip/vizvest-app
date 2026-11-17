@@ -26,6 +26,12 @@ export interface SlidingTabsProps<T extends string> {
   tone?: 'default' | 'panel'
   /** `tile`: the control sits inside a Tile, so the track takes the page colour. */
   surface?: 'page' | 'tile'
+  /**
+   * Auto-advance cue: a line fills the active pill over `--tabs-progress-dur`,
+   * then `onDone` fires. It restarts on every change of `value` and freezes
+   * while `paused`. The animation is the clock, so cue and switch stay in step.
+   */
+  progress?: { paused: boolean; onDone: () => void } | null
   className?: string
 }
 
@@ -45,6 +51,7 @@ export function SlidingTabs<T extends string>({
   size = 'md',
   tone = 'default',
   surface = 'page',
+  progress = null,
   className,
 }: SlidingTabsProps<T>) {
   const autoId = useId()
@@ -145,7 +152,18 @@ export function SlidingTabs<T extends string>({
         ref={pillRef}
         aria-hidden="true"
         className={cn('t-tabs-pill rounded-full', tone === 'panel' ? '' : 'shadow-xs', size === 'sm' ? 'h-7' : 'h-9')}
-      />
+      >
+        {progress ? (
+          <span
+            key={value}
+            className="t-tabs-progress"
+            style={{ animationPlayState: progress.paused ? 'paused' : 'running' }}
+            onAnimationEnd={(event) => {
+              if (event.target === event.currentTarget) progress.onDone()
+            }}
+          />
+        ) : null}
+      </span>
       {items.map((item, index) => {
         const selected = item.value === value
         return (

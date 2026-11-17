@@ -53,8 +53,30 @@
   pointer-events: none;
 }
 
+/* Project addition: auto-advance cue, a line that fills the active pill.
+   SlidingTabs listens for its animationend to move to the next tab. */
+.t-tabs-pill:has(.t-tabs-progress) {
+  overflow: hidden;
+}
+.t-tabs-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: hsl(var(--foreground) / 0.35);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: tabs-progress var(--tabs-progress-dur) linear forwards;
+}
+@keyframes tabs-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .t-tabs-pill, .t-tab { transition: none !important; }
+  .t-tabs-progress { display: none; }
 }
 
 /* ── 21-accordion: Accordion expand ─────────────────────────────── */
