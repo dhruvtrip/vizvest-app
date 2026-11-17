@@ -14,7 +14,6 @@ const included = [
   'Trading activity heatmap, streaks and win rate',
   'Currency conversion fees added up',
   'Trades in any currency shown in your base currency',
-  'Light and dark themes',
 ]
 
 /** Closing call to action: the free plan, set as a glass card on the dark panel. */
@@ -37,7 +36,6 @@ export function CTA() {
             <div className="flex flex-col border-b border-border/40 p-5 sm:p-8 md:w-2/5 md:border-b-0 md:border-r lg:p-10">
               <h3 className="text-center text-4xl font-medium tracking-tight">Vizvest</h3>
               <p className="mt-1 text-center text-lg leading-7 text-muted-foreground">For Trading 212 investors</p>
-              <p className="mt-5 text-center text-xl font-medium sm:mt-8">Free</p>
               <div className="mt-5 flex flex-col gap-3 sm:mt-8">
                 <Button
                   asChild
