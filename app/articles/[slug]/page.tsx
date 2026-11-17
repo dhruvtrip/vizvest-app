@@ -114,17 +114,19 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {faqJsonLd && (
+      {/* PostHog inserts its add-on scripts before the first `body > script`.
+          Keeping JSON-LD inside this div stops that from breaking hydration. */}
+      <div className="relative overflow-x-clip">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      )}
-      <div className="relative overflow-x-clip">
+        {faqJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          />
+        )}
         <div className="page-glow" aria-hidden="true" />
         <Navbar />
         <main id="main-content" className="relative px-4 pb-28 pt-32 lg:pb-section lg:pt-40">

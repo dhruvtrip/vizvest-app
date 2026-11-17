@@ -29,11 +29,13 @@ const faqJsonLd = {
 export default function HomePage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {/* PostHog inserts its add-on scripts before the first `body > script`.
+          Keeping JSON-LD inside this div stops that from breaking hydration. */}
       <div className="relative overflow-x-clip">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
         <div className="page-glow" aria-hidden="true" />
         <Navbar />
         <main
