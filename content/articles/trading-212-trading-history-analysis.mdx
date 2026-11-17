@@ -1,0 +1,212 @@
+---
+title: "Trading 212 Trading History: How to Analyse Your Trades"
+description: "Find your Trading 212 trading history, download it as CSV and analyse your trades: win rate, trading frequency, holding periods and realised results by stock."
+date: "2026-11-24"
+lastModified: "2026-11-24"
+author: "TRIP"
+tags: ["trading-212", "trading-history", "win-rate", "analytics"]
+published: true
+faqs:
+  - question: "Where can I see my trading history on Trading 212?"
+    answer: "Open the Menu in your Invest or Stocks ISA account and choose History. It lists your orders, dividends and cash movements, newest first, and you can tap an order to see its details. Pies also have their own Pie History with type and date filters."
+  - question: "How do I download my Trading 212 trade history?"
+    answer: "Go to Menu, then History, and tap the export button. Choose the date range and the data you want, such as orders, dividends and transactions, and the CSV downloads to your device. Each file covers up to 12 months, so run one export per year for a longer history."
+  - question: "Does Trading 212 show my win rate?"
+    answer: "Trading 212 does not show a win rate figure. You can work one out from your CSV export by counting the sells with a positive value in the Result column and dividing by the total number of sells. Vizvest calculates this for you from the same column."
+  - question: "What is a good win rate for trading?"
+    answer: "There is no single good number, because win rate means little without the size of your wins and losses. A 40% win rate can make money if the average win is much bigger than the average loss, and a 70% win rate can lose money if a few large losses wipe out many small gains."
+  - question: "How do I see my realised profit per stock on Trading 212?"
+    answer: "Export your history as CSV and add up the Result column on the sell rows for each ticker, for example with a pivot table. Result is Trading 212's own profit or loss figure for each sale. Vizvest shows the same total per stock on its portfolio overview."
+  - question: "Can I analyse more than 12 months of Trading 212 history?"
+    answer: "Yes, but you need several files because each export covers at most 12 months. Export consecutive periods with no gaps, then combine them in a spreadsheet or upload them all to Vizvest, which merges them and removes duplicate rows."
+---
+
+Your Trading 212 trading history lives under **Menu → History**, but the app shows it as a list of events, not as analysis. To review your trades properly, export the history as a CSV (up to 12 months per file) and look at five things: how often you trade, your win rate, how long you hold, whether you overtrade, and which positions made or lost money.
+
+---
+
+## Where is your trading history in Trading 212?
+
+It's on the **History** screen. Open the Menu (☰) in your Invest or Stocks ISA account and choose History. Every order, dividend, deposit and withdrawal is listed there, newest first, and you can tap an order to see its details.
+
+A few other places hold parts of the same record:
+
+- **Pie History.** Each pie has its own history. Open the pie's overview, scroll to History and tap See all. Trading 212's [Pie History article](https://helpcentre.trading212.com/hc/en-us/articles/30850741291805-Pie-History) says you can filter it by type and date.
+- **AI Chat.** Trading 212's [AI Chat can answer questions about your account history](https://helpcentre.trading212.com/hc/en-us/articles/38710364614685-What-can-I-ask-AI-Chat-about-my-account-history) in Invest, ISA and SIPP accounts, such as "Show my recent trades in $AAPL" or "What did I buy last week?". It looks things up rather than analysing them.
+- **Account activity statements.** Trading 212 emails you when a [daily activity statement](https://helpcentre.trading212.com/hc/en-us/articles/15757156925469-What-is-an-account-activity-statement) is ready after a day with trades. It lists that day's executed trades and other transactions.
+
+## What can't the History screen tell you?
+
+The History screen answers "what happened?" one event at a time. It doesn't answer "how am I doing as a trader?". There's no win rate, no count of trades per month, no holding period and no total realised profit per stock across years.
+
+Trading 212's own performance views are built around your open positions. Its [Portfolio Charts](https://helpcentre.trading212.com/hc/en-us/articles/22435640547613-Portfolio-Charts) show either your unrealised result or your money-weighted rate of return. Both are useful, but neither looks back at the trades you closed.
+
+Here's what you can answer in the app, and what needs the export:
+
+| Question | In the app | From the CSV export |
+|---|---|---|
+| What did I buy or sell on a given day? | Yes, scroll History | Yes |
+| What did I pay for one order, including FX fees? | Yes, order details | Yes |
+| How many trades did I make this quarter? | Count them by hand | Yes, filter by date and count |
+| What share of my sells made a profit? | No | Yes, from the Result column |
+| How much did I make or lose on each stock overall? | No | Yes, sum Result by ticker |
+| How long did I hold before selling? | No | Yes, compare buy and sell dates |
+| Am I trading more after big market moves? | No | Yes, trades per day or week |
+
+## How do you download your Trading 212 trade history?
+
+Export it from the same History screen. Trading 212's help centre describes the steps in [Can I export the trading data from my account?](https://helpcentre.trading212.com/hc/en-us/articles/360016898917-Can-I-export-the-trading-data-from-my-account):
+
+1. Switch to the account you want (Invest or Stocks ISA). Each account exports separately.
+2. Tap **Menu (☰)**, then **History**.
+3. Tap the **export** button in the top-right corner.
+4. Choose the timeframe. Each file covers up to 12 months.
+5. Tick the data you want. For a trade review, include orders at minimum. Add dividends and transactions if you also want income and deposits in the picture.
+6. Confirm, and the CSV downloads to your device.
+
+For more than a year of history, repeat the export for consecutive 12-month periods with no gaps. Our guide on [how to export Trading 212 data](/articles/how-to-export-trading-212-data) covers the column meanings and common problems in detail.
+
+> **Export your full history, not just the quarter you're reviewing.** If a sale in your review period closes shares you bought two years ago, you want that buy in the file too. Otherwise holding periods and per-stock totals come out wrong.
+
+The columns that matter most for a trade review are `Action` (for example `Market buy` or `Limit sell`), `Time`, `Ticker`, `No. of shares`, `Price / share`, `Total` and `Result`.
+
+## What should you look for when you analyse your trades?
+
+Look at behaviour first and results second. Five measures cover most of it: trading frequency, win rate, holding periods, signs of overtrading and your buying patterns, then the realised result on each position.
+
+### Trading frequency
+
+Count your buys and sells per month. A steady pattern (say, one or two buys a month into the same funds) usually means you're following a plan. Sudden spikes are worth a closer look: what happened that month, and did those trades work out?
+
+Also look at **trades per active day**: on the days you trade, how many orders do you place? Several orders in a day can be a planned rebalance, or it can be reacting to every price move.
+
+### Win rate
+
+Your win rate is the share of your sells that closed at a profit. It's covered in its own section below, because how you define it matters.
+
+### Holding periods
+
+The holding period is the time between buying a stock and selling it. For each closed position, compare the date of the first buy with the date of the last sell. Then compare holding periods with results: do your quick in-and-out trades do better or worse than the positions you hold for months? Your own numbers are the only ones that matter here.
+
+Trading 212 uses a [weighted average price](https://helpcentre.trading212.com/hc/en-us/articles/28015150741149-What-is-weighted-average-in-financial-instrument-trading) for your holdings, so it doesn't track which individual lot you sold. Measuring from first buy to final sell is a simple, consistent way round that.
+
+### Overtrading
+
+Overtrading means trading more than your plan needs, usually on impulse. Signs to look for in your history:
+
+- Many trades in a short window, often right after a big market rise or fall.
+- Selling a stock and buying it back within days or weeks.
+- A high count of small sells with tiny results, positive or negative.
+- Currency conversion fees that keep growing. Each round trip in a US share from a GBP account costs about 0.3% in FX fees (see [Trading 212 fees explained](/articles/trading-212-fees-explained)).
+
+### Buying patterns
+
+Look at what you buy and when. Are most buys regular, similar-sized amounts, or occasional large ones? Do you tend to buy after a stock has already jumped? Do you add to losing positions (averaging down) and is that working? Your average buy size and your busiest weekdays and months tell you a lot about your habits.
+
+### Realised result by position
+
+Add up the `Result` column on sell rows for each ticker. This shows which stocks have actually made or lost you money after you sold. One or two positions often account for most of the total, in either direction. That's where your review should focus.
+
+Result is Trading 212's own profit or loss figure for each sale, worked out against your average price. It only covers trading: dividends and fees are separate lines in your export.
+
+## How is a Trading 212 win rate calculated?
+
+Trading 212 doesn't show a win rate, so you calculate it yourself: **win rate = sells with a positive Result ÷ all sells × 100**. Buys don't count, because they haven't won or lost anything yet.
+
+Three details change the number, so decide on them and stay consistent:
+
+1. **Each sell counts once.** If you sell a position in three parts, that's three sells. A position you trim often counts more than one you sell in one go.
+2. **Break-even sells.** A sell with a Result of exactly zero isn't a win. Counting it in the total (as above) lowers your win rate slightly. Leaving it out raises it.
+3. **Only closed trades.** Open positions that are up or down on paper aren't included. Your win rate can look good while you sit on large unrealised losses.
+
+Win rate on its own says nothing about money. Always put it next to your **average win** and **average loss**:
+
+- Average win = total of positive Results ÷ number of winning sells
+- Average loss = total of negative Results ÷ number of losing sells
+
+The win rate you need to break even is: average loss ÷ (average win + average loss). The worked example below shows why this matters.
+
+## Worked example: reviewing a year of trades
+
+This is a made-up example with round numbers to show the method. Sam has a GBP Invest account and exports a full year of orders: **64 trades**, made up of 41 buys and 23 sells.
+
+The sells break down like this:
+
+| | Count | Total Result |
+|---|---|---|
+| Winning sells (Result above zero) | 14 | +£1,120 |
+| Losing sells (Result below zero) | 8 | −£1,460 |
+| Break-even sells | 1 | £0 |
+| **All sells** | **23** | **−£340** |
+
+**Win rate:** 14 ÷ 23 = **60.9%**. That sounds healthy, but the year lost money.
+
+- **Average win:** £1,120 ÷ 14 = **£80**
+- **Average loss:** £1,460 ÷ 8 = **£182.50**
+- **Break-even win rate:** £182.50 ÷ (£80 + £182.50) = **69.5%**
+
+Sam's losses are more than twice the size of the wins, so even a 60.9% win rate isn't enough. That's what taking small profits quickly while letting losing positions run looks like in the numbers.
+
+Next, Sam groups the trades by stock:
+
+| Stock | Trades | Sells | Realised result | Typical holding period |
+|---|---|---|---|---|
+| Stock A (US tech) | 18 | 9 | −£610 | Under 2 weeks |
+| Stock B (UK retailer) | 10 | 5 | +£420 | 3 to 5 months |
+| Stock C (US bank) | 14 | 6 | −£290 | Under 1 month |
+| Stock D (US healthcare) | 10 | 3 | +£140 | 4 to 6 months |
+| Global ETF | 12 | 0 | No sells | Still held |
+| **Total** | **64** | **23** | **−£340** | |
+
+Three things stand out:
+
+1. **The two short-hold stocks lost money.** Stocks A and C were bought and sold within weeks, and they account for −£900 between them. The longer holds made money.
+2. **Stock A is the most traded and the biggest loser.** Eighteen trades in one stock is a sign of reacting to news rather than following a plan.
+3. **Frequency clusters.** Sorting by date, Sam finds 15 trades in March, 9 of them in one week after a sharp market fall. Most of those sells were losses.
+
+The ETF has no Result yet, because nothing was sold. Separately, Stock A's 18 round trips in a US share also added up in FX fees, which sit in the `Currency conversion fee` column rather than in Result.
+
+The takeaway for Sam's next quarter: fewer trades in Stocks A and C, a rule for when to cut a loss, and no trading in the week after a big market move.
+
+## How does Vizvest help you analyse your Trading 212 trades?
+
+Vizvest turns the same CSV into the figures above without a spreadsheet. You can [upload your Trading 212 export to Vizvest](/dashboard) for free, with no account. It runs in your browser, the file is never uploaded or stored, and it's cleared when you refresh.
+
+You can drop in several exports at once. Vizvest merges them and removes duplicate rows, and it warns you if the history looks partial (sells with no matching buys), which usually means an export window was too short.
+
+The **Trading activity** view shows, for all years or a single year you pick:
+
+- **Summary figures:** number of transactions with the average size per trade, buy and sell counts, buy and sell volume, realised profit (the sum of Result on your sells) and your most traded stock.
+- **Win rate:** the share of sells with a positive Result, out of all sells, with the wins, losses and break-even sells counted underneath. That's the same definition as above.
+- **A day-by-day heatmap:** a calendar of one year at a time, shaded by how many trades you made each day. Hover over a day to see its buys, sells and volume.
+- **Patterns:** trades by weekday, and buy and sell volume by month.
+- **A full transaction table:** every buy and sell with date, ticker, price, total and the Result on each sell.
+
+A **Highlights** row covers your whole history, whatever year you've picked: your longest streak (most calendar days in a row with at least one trade), your busiest single day, your favourite weekday, your most active month and your average trades per active day.
+
+For results by position, the portfolio overview has a **realised profit by stock** chart and a tile for each closed position with its total Result. Open any stock for its full buy, sell and dividend history.
+
+What Vizvest doesn't do: it doesn't calculate holding periods or average win and loss, and it has no live prices, so it can't show unrealised profit. Use the per-stock history for buy and sell dates, and the Trading 212 app for open positions. For a wider look at the options, see our [Trading 212 portfolio tracker comparison](/articles/trading-212-portfolio-tracker).
+
+## Quarterly Trading 212 trade review checklist
+
+A short review every three months is enough to catch bad habits before they get expensive. Work through these steps with your latest export.
+
+1. **Export your history.** Include orders (plus dividends and transactions if you want the full picture), and make sure older buys for anything you sold are covered.
+2. **Count your trades.** Buys and sells for the quarter, and compare with the previous quarter. Note the busiest week and what was happening in the market.
+3. **Work out your win rate.** Winning sells ÷ all sells. Write down the number of break-even sells too.
+4. **Compare average win and average loss.** If your average loss is bigger than your average win, check whether your win rate clears the break-even level.
+5. **Total the Result by stock.** Find the two best and two worst positions and ask why each went the way it did.
+6. **Check holding periods.** For each position you closed, note how long you held it and whether short holds did worse than long ones.
+7. **Look for overtrading.** Repeated buy-and-sell in the same stock, clusters of trades after big market moves, or several trades a day.
+8. **Add up your FX fees.** Total the `Currency conversion fee` column for the quarter and compare it with your realised result.
+9. **Check open positions in the app.** Your export shows closed trades. Look at unrealised results in Trading 212 so you don't miss a large paper loss.
+10. **Write one rule for next quarter.** One specific change, such as "no trades in the week after a market drop", is more useful than a long list.
+
+## Summary
+
+- Your Trading 212 trading history is under **Menu → History**. It lists events but doesn't analyse them.
+- Export it as CSV (up to 12 months per file) to review frequency, win rate, holding periods, overtrading and realised results by stock.
+- Win rate is winning sells ÷ all sells, from the `Result` column. Always read it next to your average win and average loss.
+- Short holding periods and clusters of trades after big market moves are the patterns most worth checking.
+- [Vizvest](/dashboard) shows your win rate, a day-by-day heatmap, streaks, busiest month and realised profit by stock from the same export, in your browser.
