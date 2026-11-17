@@ -1,0 +1,177 @@
+---
+title: "Trading 212 Fees Explained: FX, Stamp Duty and Hidden Costs"
+description: "Trading 212 fees explained: the 0.15% FX fee, 0.5% UK stamp duty, card deposit charges and fund costs, plus how to find every fee in your CSV and add it up."
+date: "2026-11-17"
+lastModified: "2026-11-17"
+author: "TRIP"
+tags: ["trading-212", "fees", "costs", "csv"]
+published: true
+faqs:
+  - question: "Is Trading 212 really free?"
+    answer: "Trading 212 charges no commission and no custody fee on Invest, Stocks and Shares ISA and SIPP accounts. You still pay a 0.15% FX fee on trades in another currency, government transaction taxes such as 0.5% UK stamp duty, and a 0.7% fee on card deposits once you pass £2,000 in total. Fund charges and spreads are indirect costs on top."
+  - question: "What is the Trading 212 FX fee?"
+    answer: "It is 0.15% of the trade value, charged when you buy or sell an asset priced in a different currency from the one you pay with, or when you convert cash between currencies. It is not charged on dividends, and it does apply to trades made through pies."
+  - question: "Does Trading 212 charge stamp duty?"
+    answer: "Trading 212 collects UK Stamp Duty Reserve Tax of 0.5% when you buy shares listed on the London Stock Exchange. It is a government tax, not a Trading 212 fee. ETFs, gilts and bonds are exempt, and so are most AIM shares."
+  - question: "Does Trading 212 charge for deposits?"
+    answer: "Bank transfers are free. Card deposits and other non-bank-transfer methods are free until your total deposits reach £2,000, then a 0.7% fee applies to the amount above that. Trading 212 shows the fee before you confirm the deposit."
+  - question: "How do I see how much I have paid in Trading 212 fees?"
+    answer: "Generate the annual costs and charges statement in the app under Documents, then Account statements, then Costs and charges. You can also export your history as CSV and add up the fee columns, such as Currency conversion fee and Stamp duty reserve tax."
+  - question: "Does Trading 212 charge ETF fees?"
+    answer: "No. Trading 212 does not add a fee for holding ETFs. Each ETF has its own ongoing charge set by the fund provider, which is taken inside the fund and shows up in the ETF's price rather than as a charge in your account."
+---
+
+Trading 212 fees are low but not zero. There's no commission or custody fee on Invest and ISA accounts. The main charge is a 0.15% FX fee whenever you trade something priced in another currency. On top of that you pay government taxes like 0.5% UK stamp duty, a 0.7% fee on card deposits after the first £2,000, and the ongoing charges built into any ETF you hold.
+
+---
+
+## Is Trading 212 really free?
+
+Trading 212 is commission-free, not cost-free. It charges no commission and no custody fee, but you can still pay currency conversion fees, transaction taxes collected on behalf of governments, card deposit fees and indirect costs like spreads and fund charges.
+
+Trading 212's help centre lists the fees for [Invest, ISA and SIPP accounts](https://helpcentre.trading212.com/hc/en-us/articles/11471996799517-What-are-the-fees-in-the-Invest-ISAs-and-SIPP) as:
+
+- **Trading commission:** free
+- **Custody fee:** free
+- **FX fee:** 0.15%
+
+Everything else on this page is either a tax Trading 212 passes on, a payment fee, or a cost that sits inside the price of what you buy. None of it is hidden as such: Trading 212 shows the expected costs on the review order screen before you confirm a trade, and it publishes a yearly costs and charges report. But these costs are easy to miss when you only look at the commission line.
+
+## Trading 212 fees at a glance
+
+Here's every cost a typical UK investor on Trading 212 might pay, how much it is, when it applies and where it appears in your CSV export.
+
+| Cost | Amount | When it applies | Where it shows in the CSV |
+|---|---|---|---|
+| Commission | Free | Every trade in Invest and ISA | Not applicable |
+| Custody fee | Free | Holding investments | Not applicable |
+| FX fee | 0.15% of the trade value | Trading an asset in a different currency from the one you pay with, or converting cash | `Currency conversion fee` |
+| UK Stamp Duty Reserve Tax | 0.5% of the purchase | Buying London Stock Exchange shares (not ETFs, gilts, bonds or most AIM shares) | `Stamp duty reserve tax` |
+| PTM levy | £1.50 | UK share trades worth more than £10,000 | No dedicated column confirmed |
+| French Financial Transaction Tax | 0.4% of the purchase | Buying shares of French companies worth over €1bn | `French transaction tax` (older exports) |
+| US regulatory fees (FINRA, SEC) | Fractions of a cent per share | Selling US shares | `Transaction fee` or `Finra fee` in some exports |
+| Card deposit fee | 0.7% of the amount above £2,000 | Card and other non-bank-transfer deposits once your total deposits pass £2,000 | Not a fee column; check the costs and charges report |
+| ETF ongoing charge | Set by each fund | While you hold an ETF | Not in the CSV (taken inside the fund) |
+| Spread | Market price gap | Every trade | Not in the CSV (part of the price) |
+| Withholding tax | Depends on the country | Dividends from foreign companies | `Withholding tax` |
+
+Withholding tax isn't a Trading 212 fee, but it's the biggest cost many dividend investors pay, so it belongs in any honest total. Column names vary between export versions (more on that below).
+
+## How much is the Trading 212 FX fee?
+
+The Trading 212 FX fee is 0.15% of the trade value. You pay it when you buy or sell an asset priced in a different currency from the one you're paying with, and when you convert cash between currencies in your account.
+
+According to Trading 212's [FX fee help article](https://helpcentre.trading212.com/hc/en-us/articles/360018909758-What-is-the-FX-fee-Invest-Stocks-ISA), a trade is converted at the spot exchange rate plus the 0.15% fee. A few details matter:
+
+- **It applies both ways.** Buying a US stock from a GBP account costs 0.15% on the way in, and selling it costs 0.15% on the way out.
+- **Pies aren't exempt.** If a pie holds instruments in another currency, each buy and sell inside the pie pays the fee.
+- **Dividends are exempt.** Payments from corporate events, such as dividends, don't carry the FX fee.
+- **Multi-currency accounts can reduce it.** Trading 212's [multi-currency feature](https://www.trading212.com/multi-currency) lets you hold cash in other currencies. You pay 0.15% when you convert the cash, but no FX fee when you trade an asset in the currency you already hold.
+
+The FX fee is the "Trading 212 currency conversion fee" most people mean, and it's the one that adds up fastest if you trade US shares often.
+
+## Does Trading 212 charge stamp duty?
+
+Yes, on UK shares. Trading 212 collects Stamp Duty Reserve Tax (SDRT) of 0.5% when you buy shares listed on the London Stock Exchange. It's a government charge rather than a Trading 212 fee, so every UK broker passes it on.
+
+Trading 212's page on [stock exchange fees](https://helpcentre.trading212.com/hc/en-us/articles/360007081637-What-are-the-applicable-stock-exchange-fees) sets out when it applies:
+
+- **Paid on buys only.** You don't pay stamp duty when you sell.
+- **ETFs, gilts and bonds are exempt.** Buying a London-listed ETF carries no stamp duty.
+- **Most AIM shares are exempt.** Shares on the London Stock Exchange's growth market usually don't carry SDRT.
+- **The PTM levy.** A flat £1.50 charge from the Panel on Takeovers and Mergers applies to UK share trades worth more than £10,000.
+
+Other countries have their own transaction taxes. Trading 212 lists the **French Financial Transaction Tax at 0.4%**, charged when you buy shares of French companies with a market value above €1bn. Any tax that applies to a specific stock appears on the review order screen before you confirm.
+
+US shares don't carry a stamp duty, but small regulatory fees from FINRA and the SEC are passed on when you sell. Trading 212 lists the FINRA fee at $0.000195 per share sold, so it's negligible unless you trade thousands of shares.
+
+## What are Trading 212 deposit fees?
+
+Bank transfers are always free. Card deposits and other non-bank-transfer methods are free until your total deposits reach £2,000, and then a 0.7% fee applies to the amount above that limit.
+
+Trading 212's article on [fees for funding your account](https://helpcentre.trading212.com/hc/en-us/articles/360007139838-What-are-the-fees-for-funding-my-account) explains that the £2,000 is a cumulative total, not a monthly or per-deposit allowance. Once you've passed it, every later card deposit pays 0.7%. The same applies to AutoInvest if it's funded by card rather than by bank transfer or direct debit. You see the fee before you confirm the payment.
+
+The fix is simple: once you're near £2,000 in total deposits, switch to bank transfers. On a £500 monthly card deposit, 0.7% is £3.50 a month, or £42 a year, for no benefit.
+
+## What other costs aren't Trading 212 fees?
+
+Two costs never show up as a fee in your account but still reduce your return: the ongoing charge of any fund you hold, and the spread between buying and selling prices.
+
+**ETF ongoing charges.** Every ETF has an ongoing charge (sometimes called the OCF or TER), set by the fund provider and listed in the fund's key information document. Trading 212 doesn't take it. The fund deducts it from its own assets, so it shows up as a slightly lower price rather than a line in your history. A 0.07% ongoing charge on £10,000 is about £7 a year, and it's taken whether the fund goes up or down.
+
+**The spread.** Every share has a buy price and a slightly lower sell price. The difference is a market cost, not a broker fee, but you pay it each time you trade. Large US and UK shares usually have tiny spreads. Small companies and trades outside market hours can have much wider ones.
+
+**Interest on cash.** This isn't a fee, but it affects the cost of keeping money idle. Trading 212 pays [interest on uninvested cash](https://helpcentre.trading212.com/hc/en-us/articles/15475153380637-What-is-interest-on-cash) if you opt in, so cash waiting to be invested isn't completely idle.
+
+## Worked example: buying $1,000 of a US stock from a GBP account
+
+Buying a US stock from a pound account costs 0.15% on the way in and 0.15% on the way out, with no commission and no stamp duty. Here's what that looks like with example numbers.
+
+Assume £1 buys $1.30 throughout, to keep the arithmetic simple.
+
+1. **Buy.** $1,000 of shares costs £769.23 at the spot rate.
+2. **FX fee on the buy.** 0.15% of £769.23 is £1.15. Total paid: £770.38.
+3. **Hold.** No custody fee. The shares rise to $1,100.
+4. **Sell.** $1,100 converts to £846.15.
+5. **FX fee on the sell.** 0.15% of £846.15 is £1.27, plus a FINRA fee of a fraction of a cent. You receive about £844.88.
+
+Total fees for the round trip: about **£2.42**, or roughly 0.3% of the amount invested. Here's how the same £770 compares across three common choices:
+
+| | US stock from a GBP account | UK share (LSE) | GBP-priced UK ETF |
+|---|---|---|---|
+| Commission | £0 | £0 | £0 |
+| FX fee (buy and sell) | about £2.42 | £0 | £0 |
+| Stamp duty on the buy | £0 | about £3.85 | £0 |
+| Fund ongoing charge | Not applicable | Not applicable | Depends on the fund |
+| **Trading fees for the round trip** | **about £2.42** | **about £3.85** | **£0** |
+
+In your CSV export, the buy appears as a `Market buy` row with the fee in the `Currency conversion fee` column and a `Total` that includes it. The sell appears as a `Market sell` row with its own fee.
+
+## How do I find the fees in my Trading 212 CSV export?
+
+Export your history as CSV and add up the fee columns. The main ones are `Currency conversion fee` and `Stamp duty reserve tax`, each with a matching currency column. Trading 212's yearly costs and charges report gives you an official total too.
+
+Trading 212 has changed its export columns over time, so the exact names in your file depend on when you downloaded it. Columns you may see include:
+
+- `Currency conversion fee` and `Currency (Currency conversion fee)`: the FX fee on each trade
+- `Stamp duty reserve tax` (and in some exports `Stamp duty`): UK SDRT on purchases
+- `Transaction fee`, `Finra fee` or `Charge amount`: regulatory and other charges, depending on export version
+- `French transaction tax`: in older exports
+- `Withholding tax` and `Currency (Withholding tax)`: tax taken from dividends at source
+
+Some newer exports put the currency inside the header itself, for example `Currency conversion fee (GBP)`. Most rows will have these columns empty, because a fee only applies to some transactions.
+
+### How to total your fees in a spreadsheet
+
+1. Export each year of history from Trading 212 (each file covers up to 12 months). Our guide on [how to export Trading 212 data](/articles/how-to-export-trading-212-data) walks through it.
+2. Open the files in Google Sheets or Excel and combine them into one sheet, removing any rows that appear in two files (the `ID` column helps).
+3. For each fee column, add a `SUM` at the bottom. If the currency column shows more than one currency, use `SUMIF` on the currency column to total each one separately.
+4. Add the totals together for your all-time cost, or filter the `Time` column to look at one year.
+
+For an official figure, open the app and go to **Menu → Documents → Account statements → Costs and charges**. Trading 212's [Annual Costs & Charges Statement](https://helpcentre.trading212.com/hc/en-us/articles/33526365263901-Annual-Costs-Charges-Statement) splits your costs into product costs (such as UK stamp duty) and service costs (such as FX fees and card deposit fees), and shows how they reduced your return.
+
+### Seeing your fees in Vizvest
+
+If you'd rather not build the spreadsheet, you can [upload your Trading 212 exports to Vizvest](/dashboard). It merges several files, removes duplicate rows and runs entirely in your browser, so your CSV is never uploaded or stored.
+
+On the portfolio overview, Vizvest adds up the `Currency conversion fee` column across all your files into a single "Currency fees" figure, converted to your base currency. The dividend views show the withholding tax taken at source next to your gross and net income. Vizvest doesn't currently total stamp duty or the other transaction tax columns, so add those from your spreadsheet or the costs and charges statement.
+
+## How can I reduce Trading 212 fees?
+
+Most Trading 212 fees can be avoided or reduced with a few habits. The biggest savings come from cutting unnecessary currency conversions and using bank transfers.
+
+1. **Fund your account by bank transfer**, especially once your total deposits are near £2,000.
+2. **Trade less often in foreign shares.** Each round trip on a US stock costs about 0.3% in FX fees. Buying and holding costs far less than frequent trading.
+3. **Hold foreign currency if you trade it a lot.** With a multi-currency account you convert once and avoid the fee on each later trade in that currency.
+4. **Consider London-listed ETFs.** A GBP-priced ETF has no FX fee and no stamp duty, though check its ongoing charge.
+5. **Check the review order screen.** It shows any FX fee and transaction tax before you confirm.
+
+> Fees and charges can change, so check Trading 212's current fee pages and your order preview before you trade.
+
+## Summary
+
+- Trading 212 charges no commission or custody fee. Its only own trading fee is 0.15% FX on trades in another currency.
+- Governments add transaction taxes: 0.5% UK stamp duty on LSE share purchases (not ETFs), the £1.50 PTM levy over £10,000, and 0.4% on large French companies.
+- Card deposits cost 0.7% once your total deposits pass £2,000. Bank transfers are free.
+- ETF ongoing charges and spreads are real costs that never appear as a fee line.
+- Your CSV export records each fee in its own column. Total them in a spreadsheet, use the costs and charges statement, or upload your files to Vizvest to see your currency fees and withholding tax in one place.

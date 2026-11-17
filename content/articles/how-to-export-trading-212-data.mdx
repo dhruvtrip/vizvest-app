@@ -1,173 +1,224 @@
 ---
-title: "How to Export Your Trading 212 Data (Step-by-Step Guide)"
-description: "Step-by-step guide to exporting your Trading 212 CSV data, including transaction history, dividends, and orders. Plus what every column means."
+title: "Trading 212 CSV Export (2026): Steps, Limits and Columns"
+description: "Where the Trading 212 export button is (Menu, History, export icon), how to get more than 12 months of history, and what every column in the CSV means."
 date: "2026-04-04"
-lastModified: "2026-04-04"
+lastModified: "2026-11-17"
 author: "TRIP"
 tags: ["trading-212", "export", "csv", "how-to"]
 published: true
 faqs:
-  - question: "Can I export more than 12 months of data at once?"
-    answer: "No. Trading 212 limits each export to one calendar year. For a longer history, run separate exports for each year and combine the files. Tools like Vizvest accept multiple CSV uploads and merge them automatically."
+  - question: "Where is the export button in Trading 212?"
+    answer: "Open the Menu in your Invest or Stocks ISA account, choose History, then tap the export icon in the top-right corner of the History screen. Pick a date range and the data types you want, confirm, and download the CSV once Trading 212 has prepared it."
+  - question: "Can I export more than 12 months of Trading 212 data at once?"
+    answer: "No. Each export covers at most 12 months. For a longer history, run one export per 12-month period with no gaps between them, then combine the files. Vizvest accepts several CSVs at once, merges them and removes duplicate rows."
   - question: "What file format does Trading 212 export?"
-    answer: "CSV (comma-separated values). The file is UTF-8 encoded and can be opened in any spreadsheet application or portfolio tracker."
-  - question: "Can I export from my ISA and Invest accounts separately?"
-    answer: "Yes. If you have both accounts, you need to export each one separately. Make sure you are viewing the correct account before initiating the export."
-  - question: "Does the export include fractional shares?"
-    answer: "Yes. Trading 212 supports fractional investing and the CSV records fractional quantities, for example 0.5 shares of a stock."
-  - question: "Is my exported data accurate for tax purposes?"
-    answer: "The CSV gives you the raw data, but Trading 212 does not calculate your tax for you. For CGT reporting, you need to apply HMRC share matching rules. A tax professional or specialist CGT calculator is recommended."
+    answer: "A CSV (comma-separated values) file. It opens in Excel, Google Sheets or Numbers, and it is the format most portfolio trackers import."
+  - question: "Do I need to export my ISA and Invest accounts separately?"
+    answer: "Yes. Each account has its own history, so switch to the account you want before you open History and export. Repeat the process for the other account."
+  - question: "Does the Trading 212 export include fractional shares?"
+    answer: "Yes. The No. of shares column records fractional quantities, for example 0.4127 shares, exactly as they were bought or sold."
+  - question: "Why are my dividends missing from my Trading 212 export?"
+    answer: "The Dividends option was probably not ticked when you requested the export. Run the export again for the same date range with Dividends selected. Each payment then appears as its own dividend row, with any withholding tax in its own column."
 ---
 
-Exporting your Trading 212 data is straightforward: go to **Menu → History → Export**, select your date range (up to one calendar year per export), choose which data to include, and download the CSV. The file contains your full transaction history, orders, dividends, deposits, and withdrawals, ready for analysis in any spreadsheet or portfolio tool.
-
----
-
-## What Data Can You Export From Trading 212?
-
-Trading 212 lets you export transaction history from your Invest and Stocks ISA accounts. The export covers:
-
-- **Orders**: all buy and sell transactions, including the price, quantity, and result
-- **Dividends**: every dividend payment received, including withholding tax
-- **Transactions**: deposits, withdrawals, and currency conversions
-- **Interest**: any interest earned on uninvested cash
-
-You can include or exclude each category before downloading. If you only want dividend data, turn off Orders and Transactions. If you want everything, leave all options enabled.
-
-> **Note:** CSV export is not available for CFD accounts, it works only for Invest and Stocks ISA accounts.
+To export your Trading 212 data, open the **Menu** in your Invest or Stocks ISA account, go to **History** and tap the **export icon** in the top-right corner. Choose a date range of up to 12 months, tick the data you want (orders, dividends, transactions, interest), confirm, and download the CSV when it is ready. For a longer history, repeat the export for each 12-month period.
 
 ---
 
-## How to Export From the Trading 212 Mobile App
+## Where is the export button in Trading 212?
 
-1. Open the Trading 212 app and tap the **menu icon** (top-left or bottom of screen, depending on your version)
-2. Tap **History**
-3. Tap the **export icon** (usually an arrow or download symbol in the top-right corner)
-4. Select your **start and end date**: Trading 212 limits each export to a maximum of one calendar year
-5. Toggle on or off the data types you want: Orders, Transactions, Dividends, Interest
-6. Tap **Export**: the CSV file will download to your device
+The export lives on the History screen: **Menu → History → export icon** (top right). This is the path in [Trading 212's own help centre article on exporting data](https://helpcentre.trading212.com/hc/en-us/articles/360016898917-Can-I-export-the-trading-data-from-my-account), and it is the same in the mobile app and on the web platform.
 
-The file downloads as a `.csv` and can be opened in Google Sheets, Excel, Numbers, or uploaded directly to a portfolio analysis tool like [Vizvest](/dashboard).
+It is not under Settings. If you go looking in the account settings or profile screens you will not find it. Start from History.
+
+> **Quick check:** if you hold both an Invest account and a Stocks ISA, make sure the account switcher shows the right one before you open History. Each account exports separately.
+
+---
+
+## How do I export from the Trading 212 mobile app?
+
+Open History from the Menu, tap the export icon and request the file. Step by step:
+
+1. Open the Trading 212 app and switch to the account you want (Invest or Stocks ISA).
+2. Tap **Menu**, then **History**.
+3. Tap the **export icon** in the top-right corner of the History screen.
+4. Set the **start and end date**. The range can be at most 12 months.
+5. Tick the data types you want included, such as orders, dividends, transactions and interest.
+6. Confirm the export. Trading 212 prepares the file and lets you know when it is ready to download.
+7. Download the `.csv` and save it somewhere you can find it.
+
+The file opens in Google Sheets, Excel or Numbers, or you can [upload your export to Vizvest](/dashboard) to see it as a dashboard.
 
 ![Trading 212 export guide showing History screen and Export options](/assets/trading212-export-guide.png)
 
 ---
 
-## How to Export From the Trading 212 Desktop (Web) App
+## How do I export from the Trading 212 web platform?
 
-1. Log in at [trading212.com](https://www.trading212.com)
-2. Click your **account name or avatar** in the top-right corner
-3. Select **History** from the dropdown
-4. Click the **Export** button
-5. Choose your date range (up to 12 months)
-6. Select which data categories to include
-7. Click **Export**: the file downloads immediately to your browser's default download folder
+The web platform uses the same path: Menu, History, then the export icon. Step by step:
 
-The process is identical to mobile, the same CSV format is produced either way.
+1. Log in at [trading212.com](https://www.trading212.com) and select the account you want.
+2. Open the **Menu** and choose **History**.
+3. Click the **export icon** at the top right of the History view.
+4. Choose a date range of up to 12 months and the data types to include.
+5. Confirm, then download the CSV once it has been generated.
+
+Mobile and web produce the same CSV format, so use whichever is more convenient.
+
+> **Note:** these steps cover Invest and Stocks ISA accounts. CFD accounts have their own export, described in a [separate help centre article](https://helpcentre.trading212.com/hc/en-us/articles/36243765206301-How-to-export-the-trading-data-from-my-CFD-account). Vizvest is built for Invest and ISA exports.
 
 ---
 
-## What's in the Trading 212 CSV? Column-by-Column Breakdown
+## What data can you export from Trading 212?
 
-Once you open the file, you'll see these columns:
+You can export your orders, dividends, account transactions and interest. You choose which of these go into the file before you confirm.
+
+| Data type | What it includes |
+|---|---|
+| **Orders** | Every buy and sell, with shares, price, exchange rate, result and any fees or stamp duty |
+| **Dividends** | Each dividend payment, with the withholding tax taken at source |
+| **Transactions** | Deposits, withdrawals and other cash movements |
+| **Interest** | Interest paid on uninvested cash |
+
+If you only want dividend data, untick everything else. For a portfolio tracker, include everything: missing deposits or orders make your totals look wrong.
+
+---
+
+## How do I export more than 12 months of Trading 212 history?
+
+You can't do it in one file. Each export is capped at 12 months, so you run one export per 12-month period and combine the files afterwards. Trading 212's help centre describes the same approach for CFD accounts: [up to 12 months per file, and consecutive 12-month periods for anything longer](https://helpcentre.trading212.com/hc/en-us/articles/36243765206301-How-to-export-the-trading-data-from-my-CFD-account). Invest and ISA exports work the same way.
+
+**Worked example.** Say you opened your account in March 2022 and today is 17 November 2026. Five exports cover everything:
+
+| Export | Start date | End date |
+|---|---|---|
+| 1 | 1 Mar 2022 | 28 Feb 2023 |
+| 2 | 1 Mar 2023 | 29 Feb 2024 |
+| 3 | 1 Mar 2024 | 28 Feb 2025 |
+| 4 | 1 Mar 2025 | 28 Feb 2026 |
+| 5 | 1 Mar 2026 | 17 Nov 2026 |
+
+That is five files, each no longer than 12 months, with no gaps between them. Calendar years (1 January to 31 December) work just as well and are easier to remember. What matters is that the ranges touch end to end.
+
+You can then upload all the files to Vizvest together. It merges them into one history and removes any rows that appear in two files, so a small overlap between ranges does no harm. A gap is the real problem.
+
+> **Why full history matters:** if your oldest buys are missing, any profit and loss figures built from the file will be off. Vizvest warns you when it sees sells with no matching buys, which usually means the export window was too short.
+
+---
+
+## What does each column in the Trading 212 CSV mean?
+
+Each row is one event (a trade, dividend, deposit and so on), and each column describes one part of it. The core columns are below. Vizvest reads every one of these.
 
 | Column | What it means |
 |---|---|
-| **Action** | Type of event: Market buy, Market sell, Dividend, Deposit, Withdrawal, etc. |
-| **Time** | Date and time of the transaction (UTC) |
-| **ISIN** | International Securities Identification Number for the stock or ETF |
-| **Ticker** | The stock's ticker symbol (e.g. AAPL, VUSA) |
+| **Action** | Type of event, for example `Market buy`, `Limit sell`, `Deposit`, `Withdrawal`, `Dividend (Dividend)` or `Interest on cash` |
+| **Time** | Date and time of the event |
+| **ISIN** | International Securities Identification Number of the share or ETF |
+| **Ticker** | Ticker symbol, for example AAPL or VUSA |
 | **Name** | Full name of the security |
-| **No. of shares** | Quantity of shares bought, sold, or held for dividend |
-| **Price / share** | Price per share at time of transaction, in the share's native currency |
-| **Currency (Price / share)** | The currency the share trades in (e.g. USD, GBP, EUR) |
-| **Exchange rate** | The FX rate applied to convert to your account's base currency |
-| **Result** | Profit or loss on the trade, after currency conversion |
-| **Total** | Total cash moved (including fees), in your base currency |
-| **Withholding tax** | Tax deducted at source on dividends (e.g. 15% US withholding tax) |
-| **Charge amount** | Any fee charged by Trading 212 (usually zero for standard trades) |
-| **Notes** | Additional context (e.g. "AutoInvest" for Pie transactions) |
-| **ID** | Trading 212's internal transaction reference |
-| **Currency conversion fee** | FX conversion cost, if applicable |
+| **Notes** | Extra context Trading 212 adds to some rows |
+| **ID** | Trading 212's reference for the transaction |
+| **No. of shares** | Quantity bought, sold or held for a dividend, including fractions |
+| **Price / share** | Price per share, in the share's own currency |
+| **Currency (Price / share)** | Currency of that price (USD, GBP, GBX for pence, EUR and so on) |
+| **Exchange rate** | Rate used to convert from the share's currency to your account currency |
+| **Result** | Realised profit or loss on a sell, worked out by Trading 212 |
+| **Currency (Result)** | Currency of the Result figure |
+| **Total** | Total cash that moved for the row, including fees |
+| **Currency (Total)** | Currency of the Total, normally your account currency |
+| **Withholding tax** | Tax deducted at source on a dividend |
+| **Currency (Withholding tax)** | Currency of the withholding tax, usually the share's own currency |
+| **Currency conversion fee** | Foreign exchange fee charged on the row, if any |
+| **Currency (Currency conversion fee)** | Currency of that fee |
 
-The most important columns for portfolio analysis are **Action**, **Time**, **Ticker**, **No. of shares**, **Price / share**, **Exchange rate**, **Result**, and **Withholding tax**.
+### Which other cost columns can also appear?
 
----
+Your file can also contain extra cost columns, filled in only on rows where that cost applied. Each has a matching `Currency (...)` column:
 
-## The One-Year Limit: How to Export Your Full History
+| Column | When you see it |
+|---|---|
+| **Stamp duty reserve tax** | Buying UK shares (UK stamp duty on share purchases) |
+| **French transaction tax** | Buying certain large French shares |
+| **Charge amount** | Other charges on a transaction, in some exports |
+| **Deposit fee** | A fee on a deposit, in some exports |
 
-Trading 212 caps each export at one calendar year. If you've been investing for longer, you need to run multiple exports and combine the files.
+Trading 212 has changed the column set and order over time, so two files from different years may not line up exactly. These cost columns are already included in **Total**, so don't add them on top when you sum the cash you spent. For what each charge is and when it applies, see our guide to [Trading 212 fees](/articles/trading-212-fees-explained).
 
-**How to get your full history:**
-
-1. Export Year 1 (e.g. 1 Jan 2022 – 31 Dec 2022)
-2. Export Year 2 (e.g. 1 Jan 2023 – 31 Dec 2023)
-3. Export Year 3 (e.g. 1 Jan 2024 – 31 Dec 2024)
-4. Export Year 4 (e.g. 1 Jan 2025 to today)
-
-You can then upload the files to a tool like [Vizvest](/dashboard) for analysis.
-
-> **Why this matters:** If you only upload a partial history, your average purchase prices and P&L calculations will be wrong. Vizvest will warn you if it detects incomplete data, for example, if you're selling shares with no corresponding buy transaction in the file.
-
----
-
-## Common Export Problems and How to Fix Them
-
-### "My dividends are missing"
-
-Make sure the **Dividends** toggle is switched on before exporting. It's off by default in some versions of the app.
-
-### "The file won't open in Excel"
-
-The CSV uses UTF-8 encoding. In Excel, use **Data → From Text/CSV** rather than double-clicking the file. This prevents special characters (€, £, accented letters in company names) from displaying incorrectly.
-
-### "My P&L looks wrong after uploading"
-
-You almost certainly have a partial export. Trading 212 limits exports to 12 months, if you've held a stock for longer, the cost basis from your original purchase won't be in the file. Export your full history year by year and upload all files together.
-
-### "I can't find the export button"
-
-The app interface occasionally changes between updates. If History → Export isn't visible, try updating the Trading 212 app to the latest version, or use the desktop web interface instead.
-
-### "The exchange rate column is blank"
-
-This happens for transactions in your base currency (e.g. buying a GBP-denominated stock if your account is in GBP). No conversion is needed, so Trading 212 leaves the column empty.
+The columns that matter most for analysis are **Action**, **Time**, **Ticker**, **No. of shares**, **Price / share**, **Exchange rate**, **Result**, **Total** and **Withholding tax**.
 
 ---
 
-## What to Do With Your Exported Data
+## Why does my Trading 212 export look wrong?
 
-The CSV on its own is raw data. To get useful insights, dividend income totals, true P&L, yield on cost, trading patterns, you need to run it through an analysis tool.
+Most problems come from a missing data type, a short date range or how the file was opened. Here are the common ones.
 
-**Options:**
+### Why are my dividends missing?
 
-- **Google Sheets / Excel**: manual analysis; flexible but time-consuming
-- **Vizvest**: upload your CSV and get instant dashboards for holdings, dividends, and trading activity. [Try it on the Vizvest dashboard →](/dashboard)
-- **Sharesight**: paid tool with tax reporting, supports Trading 212 imports
-- **Portseido**: another paid option with multi-broker support
+The Dividends option was probably not ticked when you exported. Run the export again with it selected.
 
-For most Trading 212 investors who want dividend breakdowns, yield on cost, and P&L without building their own spreadsheets, Vizvest is the fastest way to go from raw CSV to actionable insights.
+### Why won't the file open properly in Excel?
+
+Double-clicking can garble characters such as £, € or accented company names. In Excel, use **Data → From Text/CSV** and choose UTF-8 so the file is read correctly.
+
+### Why is my profit and loss wrong after uploading?
+
+You almost certainly have a partial history. If you bought a share before the start of your export, the buy is not in the file. Export every 12-month period back to your first deposit and upload all the files together.
+
+### Why can't I find the export button?
+
+You are probably looking in Settings. The export icon is on the **History** screen (Menu → History, top right). If it still isn't there, update the app or use the web platform.
+
+### Why is the exchange rate column blank or 1?
+
+The trade was already in your account currency, so no conversion was needed.
 
 ---
 
-## Frequently Asked Questions
+## What can I do with my exported Trading 212 data?
 
-### Can I export more than 12 months of data at once?
+The CSV is raw data. To get totals, charts and per-stock breakdowns you either build them yourself in a spreadsheet or use a tool that reads the file.
 
-No. Trading 212 limits each export to one calendar year. For a longer history, run separate exports for each year and combine the files. Tools like Vizvest accept multiple CSV uploads and merge them automatically.
+- **A spreadsheet**: flexible and free, but you build every formula and pivot table yourself.
+- **Vizvest**: [upload your Trading 212 CSV](/dashboard) to see realised profit per position, dividends by month and quarter net of withholding tax, your currency conversion fees and withholding tax totals, allocation and your trading activity. It is free, needs no account, and the file is processed in your browser and never uploaded.
+- **A paid tracker**: tools such as Sharesight import Trading 212 data and add features like live prices. We compare the options in our [Trading 212 portfolio tracker guide](/articles/trading-212-portfolio-tracker).
+
+If you mainly care about income, our [Trading 212 dividend tracker guide](/articles/trading-212-dividend-tracker) shows how to turn the dividend rows into a yearly income figure.
+
+---
+
+## Summary
+
+- The export is at **Menu → History → export icon**, not in Settings, on both mobile and web.
+- Each export covers at most 12 months. Run one per period, with no gaps, for your full history.
+- Export Invest and Stocks ISA accounts separately.
+- Besides the core columns, files can include stamp duty, French transaction tax, currency conversion fee and other charge columns. These are already inside **Total**.
+- Upload several files to [Vizvest](/dashboard) at once and it merges them and removes duplicates.
+
+---
+
+## Frequently asked questions
+
+### Where is the export button in Trading 212?
+
+Open the Menu in your Invest or Stocks ISA account, choose History, then tap the export icon in the top-right corner of the History screen. Pick a date range and the data types you want, confirm, and download the CSV once Trading 212 has prepared it.
+
+### Can I export more than 12 months of Trading 212 data at once?
+
+No. Each export covers at most 12 months. For a longer history, run one export per 12-month period with no gaps between them, then combine the files. Vizvest accepts several CSVs at once, merges them and removes duplicate rows.
 
 ### What file format does Trading 212 export?
 
-CSV (comma-separated values). The file is UTF-8 encoded and can be opened in any spreadsheet application or portfolio tracker.
+A CSV (comma-separated values) file. It opens in Excel, Google Sheets or Numbers, and it is the format most portfolio trackers import.
 
-### Can I export from my ISA and Invest accounts separately?
+### Do I need to export my ISA and Invest accounts separately?
 
-Yes. If you have both accounts, you'll need to export each one separately. Make sure you're viewing the correct account before initiating the export.
+Yes. Each account has its own history, so switch to the account you want before you open History and export. Repeat the process for the other account.
 
-### Does the export include fractional shares?
+### Does the Trading 212 export include fractional shares?
 
-Yes. Trading 212 supports fractional investing and the CSV records fractional quantities (e.g. 0.5 shares of Amazon).
+Yes. The No. of shares column records fractional quantities, for example 0.4127 shares, exactly as they were bought or sold.
 
-### Is my exported data accurate for tax purposes?
+### Why are my dividends missing from my Trading 212 export?
 
-The CSV gives you the raw data, but Trading 212 does not calculate your tax for you. For CGT reporting, you'll need to apply HMRC's share matching rules (same-day, 30-day, and Section 104) to determine your taxable gain. A tax professional or a specialist CGT calculator is recommended for this.
+The Dividends option was probably not ticked when you requested the export. Run the export again for the same date range with Dividends selected. Each payment then appears as its own dividend row, with any withholding tax in its own column.

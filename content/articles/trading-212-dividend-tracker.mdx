@@ -1,185 +1,185 @@
 ---
-title: "Trading 212 Dividend Tracker: How to Track and Analyse Your Dividend Income"
-description: "Trading 212 doesn't give you a full dividend income breakdown. Here's how to track dividends properly, including tax, yield, and income projections."
+title: "Trading 212 Dividend Tracker: Monthly and Yearly Income"
+description: "Track Trading 212 dividends for free: income by month, quarter, year and stock, gross and net totals, and growth year on year, all from your CSV export."
 date: "2026-04-21"
-lastModified: "2026-04-21"
+lastModified: "2026-11-17"
 author: "TRIP"
 tags: ["trading-212", "dividends", "dividend-tracker", "income-investing"]
 image: "/assets/dividends-chart-preview.png"
 published: true
 faqs:
-  - question: "When do dividends get paid on Trading 212?"
-    answer: "Dividends are credited on the official payment date set by the company. Trading 212 typically processes these within a day of that date, and the payment appears as a separate line in your account history with the action type Dividend."
-  - question: "Are dividends automatically reinvested on Trading 212?"
-    answer: "It depends on your setup. Trading 212 has an auto-reinvest toggle in the Dividends section of the app. When it's on, dividends buy more shares, allocated across a Pie's holdings if the stock sits in one. When it's off, the dividend arrives as cash and stays in your account until you invest it."
   - question: "How do I see my total dividend income for the year on Trading 212?"
-    answer: "Trading 212 does not aggregate annual dividend totals in the app. Export your CSV for the year with the Dividends category enabled, then sum the values in a spreadsheet or upload to a dividend tracker like Vizvest for an automatic breakdown."
-  - question: "Do I pay tax on dividends in my Trading 212 ISA?"
-    answer: "There is no UK income tax on dividends inside a Stocks ISA. US-listed stocks and ETFs still incur a 15 percent withholding tax at source, reduced from 30 percent via the W-8BEN treaty rate Trading 212 applies automatically. This 15 percent cannot be reclaimed."
-  - question: "Does dividend income count towards my ISA allowance?"
-    answer: "No. The £20,000 annual ISA allowance applies only to new cash contributions. Dividends and capital gains generated inside the ISA do not count against your allowance, so reinvested income does not reduce how much new money you can add."
+    answer: "Export your history for the year from Menu, History and the export icon, with dividends ticked. Then add up the dividend rows in a spreadsheet, or upload the CSV to a dividend tracker such as Vizvest, which totals them by month, quarter, year and stock."
+  - question: "When do dividends get paid on Trading 212?"
+    answer: "Dividends are paid around the payment date the company or fund sets. Each payment appears in your History, and in your CSV export, as its own dividend row."
+  - question: "Are dividends automatically reinvested on Trading 212?"
+    answer: "Only if you have turned on dividend reinvestment. Otherwise dividends arrive as cash. For holdings in a Pie, reinvested dividends go towards the Pie's target allocation rather than back into the stock that paid them, so check the setting in your own account."
+  - question: "Why is my Trading 212 dividend less than the amount announced?"
+    answer: "Trading 212 credits dividends net of any tax withheld at source, and foreign dividends are converted into your account currency. Your CSV export shows the deducted amount in the Withholding tax column and the rate used in the Exchange rate column, so you can see the difference row by row."
+  - question: "How can I see which stocks pay me the most dividends?"
+    answer: "Trading 212 shows payments one at a time, so you need to total them by stock. Export your history with dividends ticked, then sum the Total column for each ticker in a spreadsheet, or upload the CSV to Vizvest, which shows your dividend income by stock."
+  - question: "How do I work out yield on cost for my Trading 212 dividends?"
+    answer: "Divide the dividends you received per share over the last 12 months by your average purchase price. If you paid £10 a share and now receive £1 a share a year, your yield on cost is 10 percent. Your CSV export has both the dividend rows and your buy prices."
 ---
 
-Trading 212 pays dividends directly to your account when a company or ETF you hold makes a distribution. The app shows individual dividend payments in your history, but it doesn't aggregate them, show income trends, or calculate yield on cost. To properly track your dividend income, you need to export your Trading 212 CSV and analyse it with a dedicated tool.
-
----
-
-## How Dividends Work on Trading 212
-
-When a company pays a dividend, Trading 212 credits the amount to your account on the payment date set by the company. This applies to both the **Invest** account and the **Stocks ISA** account.
-
-Dividends appear in your transaction history as a separate line item with the action type "Dividend". They include:
-- The gross dividend amount in the share's native currency
-- Withholding tax deducted at source (if applicable)
-- The exchange rate used to convert to your account currency
-- The net amount credited to your account
-
-Trading 212 supports a **Dividend Reinvestment (DRIP)** option, but it doesn't behave the same way for every holding. Auto-reinvest is toggled in the **Dividends** section of the app, and the default state can vary depending on your account setup, some users find it enabled out of the box, others don't. It's worth checking yours directly rather than assuming.
-
-When auto-reinvest is **on** and the dividend comes from a stock held inside a Pie, the cash is allocated across that Pie's holdings according to your target weights rather than going back into the same stock. For standalone holdings, it buys more of the share that paid the dividend. When auto-reinvest is **off**, the dividend simply arrives as cash in your account balance and stays there until you invest it manually.
-
-The practical takeaway: if you want every dividend to automatically buy more shares, open the Dividends settings and confirm auto-reinvest is enabled. If it's off, expect cash, not new buy transactions, in your history.
-
-Trading 212 reported over [4.5 million funded accounts by the end of 2024](https://www.trading212.com/press), a large share of which are UK investors using the Stocks ISA, meaning dividend tracking is a recurring pain point for a substantial user base.
+A Trading 212 dividend tracker takes the dividend rows from your Trading 212 CSV export and adds them up by month, quarter, year and stock, showing the tax withheld at source. Trading 212 lists each payment in your History but gives no full income breakdown. Export your history with dividends included, then upload it to a tracker or a spreadsheet.
 
 ---
 
-## What Dividend Data Trading 212 Shows You (and What It Doesn't)
+## How do dividends work on Trading 212?
 
-**What Trading 212 shows:**
-- Individual dividend payments in your history feed
-- The amount credited for each payment
-- Which stock the dividend came from
+When a company or fund you hold pays a dividend, Trading 212 credits it to your account, net of any tax withheld at source. This works the same in the **Invest** account and the **Stocks ISA**.
 
-**What Trading 212 doesn't show:**
-- Total dividend income for a month, quarter, or year
-- Income breakdown by stock across your whole history
-- Year-on-year dividend growth
-- Forward dividend income projection
-- Comparison of dividend income across your portfolio
+Each payment appears in your History and in the CSV export as its own row. In the export, a dividend row carries:
 
-For a dividend investor trying to understand whether their income is growing, or which stocks are contributing most, these gaps make the built-in tools inadequate.
+- the **Action**, such as `Dividend (Dividend)`
+- the **No. of shares** you held and the dividend **Price / share**
+- the **Withholding tax** deducted at source, and its currency
+- the **Exchange rate** used to convert into your account currency
+- the **Total** credited to your account, after withholding tax
+
+Trading 212 is a big platform, so a lot of people need this. In May 2025 it said it had passed [£25 billion in client assets and around 4.5 million clients](https://www.trading212.com/legal-documentation/Trading-212-Press-release-21.05.2025_EN.pdf).
+
+### Are Trading 212 dividends reinvested automatically?
+
+Only if you have switched reinvestment on. Trading 212 explains the options in its help centre articles on [how you receive dividends](https://helpcentre.trading212.com/hc/en-us/articles/360007327218-How-can-I-receive-dividends-Invest-Stocks-ISA) and [Pie dividend reinvesting](https://helpcentre.trading212.com/hc/en-us/articles/30673839245981-Pie-Dividend-reinvesting-DRIP).
+
+- **Reinvestment on:** the dividend is used to buy more shares, including fractions.
+- **Reinvestment off:** the dividend arrives as cash and waits in your account until you invest it.
+- **Holdings in a Pie:** reinvested dividends go towards the Pie's target allocation, not necessarily back into the stock that paid them.
+
+The app's behaviour has changed over time, so check the setting in your own account rather than assuming. Either way, the dividend still shows up as a dividend row in your export, so your income total is not affected.
 
 ---
 
-## Dividend Tax: ISA vs Invest Account
+## What dividend data does Trading 212 show you, and what is missing?
 
-Understanding the tax treatment of dividends is critical for UK investors, and it differs significantly between account types.
+Trading 212 shows each payment as it arrives, but not the totals and trends a dividend investor needs.
 
-### Stocks ISA Account
-
-Dividends received inside a Stocks ISA are **completely free from UK income tax**. You do not need to declare them on a self-assessment tax return.
-
-**Important exception:** US-listed stocks and ETFs are subject to a **15% withholding tax** at source, even inside an ISA. This is because the US taxes dividends before they leave the country, and the UK-US tax treaty reduces this from 30% to 15%. Trading 212 handles the W-8BEN form automatically, so you pay 15% rather than 30%, but you cannot reclaim this 15% even in an ISA.
-
-### Invest Account
-
-Dividends received outside an ISA are subject to UK dividend tax once you exceed the annual dividend allowance. [HMRC reduced this allowance from £2,000 to £1,000 in April 2023, and again to £500 from April 2024](https://www.gov.uk/tax-on-dividends), the lowest it has ever been since dividend allowances were introduced.
-
-Above this allowance, dividend tax rates (2024/25 and 2025/26) are:
-
-| Tax band | Dividend tax rate |
+| Question | In the Trading 212 app? |
 |---|---|
-| Basic rate (up to ~£50,270) | 8.75% |
-| Higher rate (~£50,270–£125,140) | 33.75% |
-| Additional rate (above £125,140) | 39.35% |
+| Which stock paid me, and how much? | Yes, one payment at a time in History |
+| How much did I get this month, quarter or year? | Not as a total |
+| Which holdings pay me the most over time? | No |
+| Is my income growing year on year? | No |
+| How much withholding tax was taken in total? | No |
 
-You must report taxable dividends via self-assessment if they exceed the allowance. Trading 212 does not submit this data to HMRC, it's your responsibility to track and report it.
-
-The ISA contribution limit is **£20,000 per tax year** across all your ISAs combined. For dividend investors, maximising ISA contributions is usually the first priority.
-
-> "The shrinking dividend allowance means more retail investors are being pulled into self-assessment for the first time. If you hold dividend-paying stocks outside an ISA, you need a clear record of every payment you received in the tax year, because the platform won't produce it for you." This view is echoed across UK tax guidance from [MoneySavingExpert](https://www.moneysavingexpert.com/savings/tax-free-savings/) and HMRC's own self-assessment notes.
+Every one of those answers is in your CSV export. The data is there; it just needs adding up.
 
 ---
 
-## How to Track Your Trading 212 Dividends Properly
+## How do I track my Trading 212 dividends?
 
-### Step 1: Export Your Full Transaction History
+Export your history with dividends included, then total it in a spreadsheet or a dividend tracker. Here is the quickest route.
 
-Go to **Menu → History → Export** in the Trading 212 app. Select your date range (maximum one year per export), make sure the **Dividends** category is toggled on, and download the CSV. Repeat for each year if you have a longer history.
+1. **Export your history.** In Trading 212, go to **Menu → History** and tap the export icon. Choose a range of up to 12 months and make sure **Dividends** is ticked. Repeat for each 12-month period you want. The full walkthrough is in [how to export your Trading 212 data](/articles/how-to-export-trading-212-data).
+2. **Upload the files.** [Upload your Trading 212 CSV to Vizvest](/dashboard). You can drop in several files at once; Vizvest merges them and removes duplicate rows. Nothing is uploaded to a server.
+3. **Open the Dividends view.** It shows your dividend income laid out by period and by stock.
 
-Full walkthrough with screenshots: [How to Export Your Trading 212 Data](/articles/how-to-export-trading-212-data).
+### What does the Vizvest dividend view show?
 
-### Step 2: Upload to Vizvest
+The Dividends view in Vizvest shows:
 
-Go to [the Vizvest dashboard](/dashboard) and upload your CSV files. Vizvest processes dividend rows separately from buy/sell transactions and aggregates them into a dedicated dividend view.
+- **Gross dividends**, **withholding tax** and **net dividends** (what actually reached your account)
+- the number of **payments** and the **average per payment**
+- **income over time** as a running total
+- **dividends by month or by quarter**
+- a **year-over-year** comparison
+- **income by stock**, so you can see which holdings pay you most
 
-### Step 3: Analyse Your Dividend Dashboard
-
-The Vizvest dividend view shows:
-
-- **Total dividend income**: aggregated across your full history
-- **Income by stock**: which holdings are paying you the most
-- **Year-on-year comparison**: whether your income is growing
-
-This takes your raw CSV data and turns it into the income picture that Trading 212 itself doesn't provide.
-
----
-
-## Dividend Yield: What the Number Actually Means
-
-Dividend yield is simply a stock's annual dividend divided by its current share price. A share trading at £20 that pays £1 per year in dividends has a 5% yield.
-
-The figure is useful for comparison, but it moves with the share price. If the price falls and the dividend holds, yield rises, which is why a rising yield is not automatically a good sign. Context matters: a stable dividend history and payout ratio tell you more than yield alone.
-
-The S&P 500 Dividend Aristocrats, companies with 25+ years of consecutive dividend growth, yielded approximately [2.5–3.0% on current prices as of 2025 (S&P Dow Jones Indices)](https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-dividend-aristocrats/), which gives a useful benchmark for a diversified dividend-growth portfolio.
+All amounts are converted to your account's base currency at the exchange rate recorded in your CSV.
 
 ---
 
-## Building a Dividend Income Projection
+## What does a year of dividend tracking look like?
 
-Once you know your current dividend income, you can project future income based on historical dividend growth rates. This is useful for:
+Here is an example. Say your 2025 export contains these dividend rows (figures are illustrative, already converted to pounds):
 
-- Estimating when you might reach an income target (e.g. £500/month from dividends)
-- Understanding which holdings contribute most to income growth vs capital appreciation
-- Deciding whether to add to high-yield positions or dividend-growth positions
+| Holding | Payments in year | Gross | Withholding tax | Net received |
+|---|---|---|---|---|
+| US stock A | 4 | £120.00 | £18.00 | £102.00 |
+| US stock B | 4 | £80.00 | £12.00 | £68.00 |
+| UK stock C | 2 | £150.00 | £0.00 | £150.00 |
+| Ireland-domiciled ETF D | 4 | £90.00 | £0.00 | £90.00 |
+| **Total** | **14** | **£440.00** | **£30.00** | **£410.00** |
 
-A simple projection approach:
+From this you can read off that:
 
-1. Calculate total annual dividend income from your CSV (Vizvest does this automatically)
-2. Estimate the average annual dividend growth rate for your holdings
-3. Compound forward: Income × (1 + growth rate)^years
+- net dividend income for the year was **£410**, or about **£34 a month**
+- withholding tax took **£30**, all of it from the two US stocks
+- the UK stock paid twice a year (interim and final), while the US stocks and ETF paid quarterly
 
-**Example:** If you currently receive £2,400/year in dividends and your portfolio grows dividends at an average 5% per year, in 10 years you'd receive approximately £3,910/year, without adding any new capital.
+In this example the UK stock and the ETF show nothing in the **Withholding tax** column, so their gross and net figures are the same. Your own export shows the exact amount deducted on every payment, and Vizvest totals it next to your gross and net income.
 
----
-
-## Dividend Income Calendar
-
-One thing serious dividend investors track is their dividend calendar, which months payments arrive. This helps smooth income across the year rather than receiving large payments in some months and nothing in others.
-
-UK stocks often pay dividends in April/May and October/November (interim and final dividends). US stocks typically pay quarterly. ETFs vary widely.
-
-To see your dividend payment timing, look at the **Time** column in your Trading 212 CSV. Sorting by month shows your historical payment pattern. [Vizvest's dividend dashboard](/dashboard) surfaces this automatically.
+> Vizvest doesn't cover tax. For anything tax-related, speak to a qualified tax adviser.
 
 ---
 
-## Common Questions About Trading 212 Dividends
+## What is the difference between dividend yield and yield on cost?
+
+Dividend yield compares a year's dividends with today's share price. Yield on cost compares them with the price you paid. Both are easy to work out yourself.
+
+- **Dividend yield** = annual dividend per share ÷ current share price. A share at £20 paying £1 a year yields 5%. If the price falls and the dividend holds, the yield rises, so a high yield is not automatically good news.
+- **Yield on cost** = annual dividend per share ÷ your average purchase price. If you bought at £10 and it now pays £1 a year, your yield on cost is 10%, whatever the price does today.
+
+Your CSV gives you the dividends received and your buy prices, so you can calculate yield on cost in a spreadsheet. Vizvest does not calculate yield on cost or dividend yield, because it has no live price feed; it focuses on the income you actually received.
+
+---
+
+## How do I project my future dividend income?
+
+Start with last year's net income and compound it at a growth rate you think is realistic. This is a simple calculation you can do in a spreadsheet.
+
+1. Take your total net dividends for the last full year (Vizvest shows this in the year-over-year view).
+2. Pick a growth rate for your holdings' dividends. Be conservative.
+3. Compound forward: **income × (1 + growth rate)^years**.
+
+**Example:** £2,400 a year in dividends growing at 5% a year becomes about £3,909 a year after 10 years (£2,400 × 1.05¹⁰), before any new money you add. Dividends can be cut as well as raised, so treat any projection as a rough guide.
+
+---
+
+## When do Trading 212 dividends arrive during the year?
+
+It depends on what you hold. Many US companies pay quarterly, many UK companies pay twice a year (an interim and a final dividend), and ETFs vary from monthly to annually.
+
+To see your own pattern, look at the **Time** column on your dividend rows, or switch the Vizvest dividend chart between months and quarters. If most of your income lands in a few months, you can see that at a glance.
+
+For the cost side, including the currency conversion fee on US shares, see [Trading 212 fees explained](/articles/trading-212-fees-explained). And if you want more than dividends, our [Trading 212 portfolio tracker comparison](/articles/trading-212-portfolio-tracker) looks at the wider options.
+
+---
+
+## Summary
+
+- Trading 212 lists dividends one by one but doesn't total them by month, year or stock.
+- Your CSV export (Menu → History → export icon, dividends ticked) has every payment, with withholding tax and exchange rate.
+- [Upload it to Vizvest](/dashboard) to see gross, tax withheld and net income by month, quarter, year and stock, for free and without an account.
+- Dividends arrive net of any tax withheld at source. The **Withholding tax** column shows the amount on each payment.
+- Yield on cost and income projections are simple spreadsheet sums using the same export.
+
+---
+
+## Frequently asked questions
+
+### How do I see my total dividend income for the year on Trading 212?
+
+Export your history for the year from Menu, History and the export icon, with dividends ticked. Then add up the dividend rows in a spreadsheet, or upload the CSV to a dividend tracker such as [Vizvest](/dashboard), which totals them by month, quarter, year and stock.
 
 ### When do dividends get paid on Trading 212?
 
-Dividends are credited on the payment date set by the company. Trading 212 typically processes these within a day of the official payment date. You'll see the amount appear in your account history.
+Dividends are paid around the payment date the company or fund sets. Each payment appears in your History, and in your CSV export, as its own dividend row.
 
-### Are dividends automatically reinvested?
+### Are dividends automatically reinvested on Trading 212?
 
-It depends on your settings. Trading 212 has an auto-reinvest toggle in the **Dividends** section of the app. When it's on, dividend cash is used to buy more shares, and for holdings inside a Pie, it's allocated across the Pie's targets rather than the single stock that paid out. When it's off, the dividend arrives as cash and sits in your account balance until you invest it manually.
+Only if you have turned on dividend reinvestment. Otherwise dividends arrive as cash. For holdings in a Pie, reinvested dividends go towards the Pie's target allocation rather than back into the stock that paid them, so check the setting in your own account.
 
-### How do I see my total dividend income for the year?
+### Why is my Trading 212 dividend less than the amount announced?
 
-Trading 212 doesn't aggregate this for you. Export your CSV for the year with Dividends enabled, then either sum the values manually in a spreadsheet or upload to [Vizvest](/dashboard) for an automatic breakdown.
+Trading 212 credits dividends net of any tax withheld at source, and foreign dividends are converted into your account currency. Your CSV export shows the deducted amount in the Withholding tax column and the rate used in the Exchange rate column, so you can see the difference row by row.
 
-### Do I pay tax on dividends in my ISA?
+### How can I see which stocks pay me the most dividends?
 
-No UK tax on dividends inside your Stocks ISA. US stocks still have 15% withholding tax at source (reduced from 30% via W-8BEN), but no additional UK tax.
+Trading 212 shows payments one at a time, so you need to total them by stock. Export your history with dividends ticked, then sum the Total column for each ticker in a spreadsheet, or [upload the CSV to Vizvest](/dashboard), which shows your dividend income by stock.
 
-### Does dividend income count towards my ISA allowance?
+### How do I work out yield on cost for my Trading 212 dividends?
 
-No. The £20,000 ISA allowance applies only to new contributions (cash you put in), not to dividends or gains generated inside the account.
-
-### How do I account for currency when tracking dividends?
-
-If you hold US or European stocks, dividends are paid in the local currency (USD, EUR) and converted to your base currency using the exchange rate at the time of payment. The exchange rate is included in your CSV. Vizvest uses the exchange rates from your CSV to calculate your total dividend income in a single currency.
-
----
-
-Ready to see your full dividend picture? [Upload your Trading 212 CSV to Vizvest →](/dashboard)
+Divide the dividends you received per share over the last 12 months by your average purchase price. If you paid £10 a share and now receive £1 a share a year, your yield on cost is 10%. Your CSV export has both the dividend rows and your buy prices.

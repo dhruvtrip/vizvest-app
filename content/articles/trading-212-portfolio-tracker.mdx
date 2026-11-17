@@ -1,183 +1,192 @@
 ---
-title: "Trading 212 Portfolio Tracker: Free Tools to Visualise Your Investments"
-description: "Trading 212's built-in analytics are limited. Here are the best free portfolio trackers for Trading 212 investors, with a feature-by-feature comparison."
+title: "Trading 212 Portfolio Tracker: 6 Options Compared (2026)"
+description: "Compare Trading 212 portfolio trackers for 2026: Vizvest, Sharesight, Snowball, Getquin and more, by free plan, how they get your data and what they track."
 date: "2026-04-04"
-lastModified: "2026-04-04"
+lastModified: "2026-11-17"
 author: "TRIP"
 tags: ["trading-212", "portfolio-tracker", "analytics", "tools"]
 published: true
 faqs:
+  - question: "What is the best free portfolio tracker for Trading 212?"
+    answer: "It depends on what you need. Vizvest is free with no account and reads your Trading 212 CSV in the browser for realised profit, dividends, fees and trading activity. Sharesight, Snowball Analytics and Getquin have free plans with limits and add live prices, but you need an account and paid plans unlock more."
   - question: "Is Vizvest free?"
-    answer: "Yes. Vizvest is free with no account required. Upload your Trading 212 CSV and analyse your portfolio immediately."
+    answer: "Yes. Vizvest is free and needs no account. You upload your Trading 212 CSV export and the dashboard is built in your browser straight away."
   - question: "Is my data safe with Vizvest?"
-    answer: "Vizvest processes your CSV data locally in your browser. Your financial data is not sent to or stored on any server."
-  - question: "What platforms does Vizvest support?"
-    answer: "Currently Trading 212 (Invest and Stocks ISA accounts). The CSV export format from Trading 212 is the only input format supported."
+    answer: "Vizvest processes your CSV entirely in your browser. The file is never uploaded to or stored on a server, and it is cleared when you refresh or close the page."
+  - question: "Does Vizvest show unrealised gains or live prices?"
+    answer: "No. Vizvest works only from your CSV export and has no price feed, so it shows realised profit, dividends, fees and activity rather than today's market value. Trackers with a price feed, such as Sharesight or Snowball Analytics, show unrealised gains."
   - question: "Do I need to re-upload my CSV every time?"
-    answer: "Yes, Vizvest doesn't store your data between sessions. Re-upload your latest export when you want updated figures. This is a deliberate privacy trade-off."
-  - question: "Can I use Vizvest alongside Sharesight?"
-    answer: "Yes. They serve different purposes. Vizvest is best for quick dividend and P&L analysis. Sharesight is best for formal tax reporting. Many investors use both."
+    answer: "Yes. Vizvest keeps nothing between sessions, so upload your latest export whenever you want updated figures. This is a deliberate privacy choice."
+  - question: "Can I upload several Trading 212 CSV files to Vizvest at once?"
+    answer: "Yes. Each Trading 212 export covers at most 12 months, so drop in one file per period to see your full history. Vizvest merges the files and removes duplicate rows, and it warns you if sells outrun buys, which usually means an export is missing."
 ---
 
-A Trading 212 portfolio tracker is a third-party tool that analyses your investment data beyond what the Trading 212 app provides. Trading 212 shows you live prices and basic account value, but it doesn't break down your dividend income, calculate your true yield on cost, or show you when you trade most. External trackers fill that gap by importing your CSV export and surfacing deeper insights.
-
----
-
-## Why Trading 212's Built-In Analytics Fall Short
-
-Trading 212 has grown rapidly, the platform now serves over 4.5 million funded accounts with more than £6.6 billion in client assets (Trading 212, 2024). But its analytics tools have not kept pace with that growth.
-
-What Trading 212 shows you:
-- Current portfolio value
-- Unrealised gain/loss per holding
-- Basic transaction history
-
-What Trading 212 doesn't show you:
-- Total dividend income over time
-- Yield on cost (dividend income relative to what you paid)
-- P&L broken down by realised vs unrealised
-- Trading patterns and activity heatmaps
-- Performance vs benchmark (e.g. FTSE 100 or S&P 500)
-- Multi-year return calculations
-
-For a passive investor holding dividend stocks or ETFs, this missing data matters. Knowing your yield on cost, your actual total return including dividends, and whether your income is growing year-on-year is fundamental to making informed decisions.
+A Trading 212 portfolio tracker is a separate tool that reads your Trading 212 data, from a CSV export or an API connection, and shows what the app doesn't: dividend totals, realised profit per stock, fees paid and how you trade. The main options are Vizvest (free, no account, CSV only), Sharesight, Snowball Analytics, Getquin and AllInvestView.
 
 ---
 
-## Comparison Table: Portfolio Trackers for Trading 212 Investors
+## Why do Trading 212 investors use a portfolio tracker?
 
-| Tool | Price | Dividend tracking | Yield on cost | P&L | Privacy | CSV import |
-|---|---|---|---|---|---|---|
-| **Vizvest** | Free | Yes | Yes | Yes | Local, no account needed | Yes |
-| Trading 212 (built-in) | Free | Basic | No | Unrealised only | N/A | N/A |
-| Portseido | Free / paid | Yes | No | Yes | Account required | Yes |
-| Simple Portfolio | Free / paid | Yes | No | Yes | Account required | Yes |
-| Sharesight | Paid (free trial) | Yes | No | Yes | Account required | Yes |
-| PinkLion | ~€5/month | Yes | Yes | Yes | Account required | Yes |
-| AllInvestView | Free / paid | Yes | No | Yes | Account required | Yes (via API) |
+Because the app is built for buying and selling, not for analysis. It shows your current value and the return on each holding, but not the totals you need to understand your results over time.
 
----
+Trading 212 is a big platform: in May 2025 it said it had passed [£25 billion in client assets and around 4.5 million clients](https://www.trading212.com/legal-documentation/Trading-212-Press-release-21.05.2025_EN.pdf). Many of those investors want answers the app doesn't give directly:
 
-## Vizvest
+- How much have I received in dividends this year, and from which stocks?
+- What profit or loss did I actually lock in on the shares I sold?
+- How much have currency conversion fees and withholding tax cost me?
+- When do I trade most, and how often do my sells end in profit?
 
-**Best for:** Trading 212 investors who want dividend and yield-on-cost analysis without creating an account.
-
-Vizvest is built specifically for Trading 212 CSV exports. Upload your file, or multiple files if you have several years of history, and get three dashboards immediately:
-
-**Portfolio Overview**: current holdings, total market value, and realised/unrealised P&L.
-
-**Dividends**: total dividend income by stock, year-on-year dividend growth, and yield on cost for each holding.
-
-**Trading Activity**: a heatmap showing which days and months you trade most, useful for spotting impulsive patterns.
-
-No account required. Your data is processed in the browser and never stored on a server. For investors who care about data privacy, this is a meaningful difference from tools that require sign-up and data upload.
-
-[Analyse your Trading 212 data on Vizvest →](/dashboard)
+All of that is in your [Trading 212 CSV export](/articles/how-to-export-trading-212-data). A tracker turns it into figures and charts.
 
 ---
 
-## Portseido
+## Which Trading 212 portfolio trackers are there?
 
-**Best for:** Multi-broker investors who want a clean interface and solid P&L reporting.
+Here are the main options, compared on what matters for Trading 212 users. Details were checked in November 2026; plans change, so confirm current pricing on each provider's site.
 
-Portseido supports multiple brokers and manual entry alongside CSV imports. The free tier is reasonable for casual tracking. Paid plans unlock more accounts and advanced features. It does not calculate yield on cost, so for dividend-focused investors it's less useful than Vizvest for that specific metric.
+| Tool | Free option | Paid plans | How Trading 212 data gets in | Account needed | Live prices |
+|---|---|---|---|---|---|
+| **Vizvest** | Yes, everything | None | CSV upload, processed in your browser | No | No |
+| Trading 212 app | Yes | N/A | Built in | Yes | Yes |
+| [Sharesight](https://www.sharesight.com/partners/trading-212/) | Yes, limited | Starter, Standard, Premium | Automatic sync (via SnapTrade, with a Trading 212 API key) or CSV | Yes | Yes |
+| [Snowball Analytics](https://snowball-analytics.com/portfolio-tracker) | Yes, limited | Starter, Investor, Expert | Broker report import; automatic sync on paid plans | Yes | Yes |
+| [Getquin](https://help.getquin.com/en/articles/6996559-trading212) | Yes | Premium, Wealth | Manual import of your Trading 212 file | Yes | Yes |
+| [AllInvestView](https://www.allinvestview.com/how-to-import/trading-212/) | Check site | Check site | Broker sync or CSV import | Yes | Yes |
 
----
-
-## Sharesight
-
-**Best for:** Investors who need formal tax reporting.
-
-Sharesight is the most established name in UK portfolio tracking. It calculates CGT reports and dividend income statements suitable for HMRC self-assessment. It's overkill for casual tracking, and the paid plans are expensive (starting around £18/month). Trading 212 imports are supported via CSV.
-
----
-
-## Simple Portfolio
-
-**Best for:** Long-term investors who want clean performance charts.
-
-Simple Portfolio focuses on total return performance over time. The interface is minimal and easy to use. Tax reporting is available on paid plans. Less dividend-focused than Vizvest but good for seeing how your overall portfolio performs vs a benchmark.
+Free plans are usually capped by number of portfolios or holdings. Sharesight and Snowball, for example, both describe a free plan for one portfolio with up to 10 holdings.
 
 ---
 
-## PinkLion
+## What does Vizvest show for Trading 212?
 
-**Best for:** Investors who want AI-powered portfolio insights.
+Vizvest is a free, CSV-based analyser built only for Trading 212 Invest and Stocks ISA exports. You [upload your Trading 212 export to Vizvest](/dashboard), several files at once if you have years of history, and it builds the dashboard in your browser.
 
-PinkLion includes AI tools for portfolio optimisation and stress testing using historical market events (e.g. "how would my portfolio have performed during the 2020 crash?"). At ~€5/month it's affordable, but it's a paid tool where Vizvest covers the core dividend and P&L analysis for free.
+**Best for:** Trading 212 investors who want to understand their realised results, income and costs without creating an account or handing over their data.
 
----
+What you get:
 
-## AllInvestView
+- **Portfolio overview:** buy and sell volume, realised profit, dividends, currency conversion fees, deposits and allocation by holding.
+- **Realised profit per position**, taken from Trading 212's own **Result** figures.
+- **Costs:** currency conversion fees and withholding tax added up.
+- **Dividends:** by month and quarter, year over year and by stock, net of tax withheld at source.
+- **Per-stock pages** with the full buy, sell and dividend history of any holding.
+- **Trading activity:** a day-by-day heatmap, streaks, your busiest month and your win rate.
+- **Multi-currency:** every row converted to your base currency at the rate in your CSV, pence included.
+- **Partial data warnings** when sells outrun buys, a sign that your export window is too short.
 
-**Best for:** Investors who want automatic syncing via API.
+What it doesn't do: Vizvest has no price feed, so it does not show today's market value, unrealised gains, yield on cost or benchmark comparisons. It does not connect to your Trading 212 account. Nothing is uploaded or stored, and refreshing the page clears your data.
 
-AllInvestView connects to Trading 212 via SnapTrade for automatic trade imports rather than manual CSV uploads. This is convenient if you want live data without re-exporting regularly. The free tier is generous. Less focused on dividend metrics than Vizvest.
-
----
-
-## Feature-by-Feature Breakdown
-
-### Dividend Tracking
-
-Most trackers show total dividend income. Vizvest goes further by showing yield on cost, the dividend return relative to what you originally paid, not the current price. For long-term dividend investors, yield on cost is a more meaningful metric than current dividend yield. An investor who bought Unilever at £30 years ago and receives £1.50/share in dividends has a 5% yield on cost, regardless of where the stock trades today.
-
-### Privacy
-
-Tools that require account creation store your financial data on their servers. If that concerns you, Vizvest processes your CSV locally in the browser, your data stays on your device.
-
-### P&L Accuracy
-
-Trading 212's built-in P&L only shows unrealised gains (what you'd make if you sold today). It doesn't clearly show realised gains from completed trades, and it can be distorted by currency movements. Dedicated trackers calculate both realised and unrealised P&L separately and handle multi-currency portfolios more transparently.
-
-### Tax Reporting
-
-None of the free tools listed above produce HMRC-ready CGT reports. For tax reporting, Sharesight's paid plans or a specialist CGT calculator are better options.
+Vizvest doesn't cover tax. For anything tax-related, speak to a qualified tax adviser.
 
 ---
 
-## How to Get Started With Vizvest (3 Steps)
+## How does Sharesight work with Trading 212?
 
-1. **Export your Trading 212 CSV**: go to Menu → History → Export. Select your date range (up to 12 months per export). Repeat for each year if you have a longer history.
+Sharesight connects to Trading 212 automatically or takes a CSV, and is strongest on performance and income reporting.
 
-2. **Upload to Vizvest**: go to [vizvest.cc](/dashboard) and drag your CSV into the upload area. Upload multiple files at once for full history.
+**Best for:** investors who want automatic syncing, live prices and dividend income reports across several brokers.
 
-3. **Explore your dashboards**: your portfolio, dividend income, yield on cost, and trading activity load immediately.
-
-No account, no email, no password. Your data doesn't leave your device.
+According to its [Trading 212 partner page](https://www.sharesight.com/partners/trading-212/), Sharesight syncs through SnapTrade using your Trading 212 API key, imports new trades daily, and can pull in past trades at setup. The integration imports standard buys and sells only. You can also upload Trading 212 CSV exports.
 
 ---
 
-## Who Each Tool Is Best For
+## How does Snowball Analytics work with Trading 212?
 
-| Investor type | Best tool |
+Snowball Analytics is a dividend-focused tracker with a free plan and paid tiers. You import your Trading 212 broker report, and paid plans add automatic broker sync.
+
+**Best for:** dividend investors who want live prices and multi-broker tracking.
+
+Snowball's [free plan](https://snowball-analytics.com/portfolio-tracker) covers one portfolio with up to 10 holdings, including dividend tracking and broker report import. Paid tiers (Starter, Investor and Expert) raise the limits and add features. If you hold more than 10 positions, expect to need a paid plan.
+
+---
+
+## How does Getquin work with Trading 212?
+
+Getquin is a portfolio tracker with a social community feed. Its help centre lists [manual import](https://help.getquin.com/en/articles/6996559-trading212) as the method for Trading 212.
+
+**Best for:** investors who want a tracker with a community feed and don't mind importing files.
+
+You upload your Trading 212 export and review the records before confirming. There is a free plan, with paid Premium and Wealth tiers for more analysis. For Trading 212, plan on importing files rather than a live connection.
+
+---
+
+## What about AllInvestView and other trackers?
+
+AllInvestView publishes a [Trading 212 import guide](https://www.allinvestview.com/how-to-import/trading-212/) covering both broker sync and CSV import, and suits investors who want one dashboard across many brokers. Simple Portfolio, PinkLion and Portfolio Dividend Tracker also publish Trading 212 import guides. Check each provider's current plans and Trading 212 support before you commit, because both change often.
+
+---
+
+## What can I calculate myself from my Trading 212 export?
+
+Anything a CSV-only tool can't show, you can work out in a spreadsheet. Two examples:
+
+**Unrealised gain.** Take the shares you still hold, multiply by today's price, and subtract what you paid. If you hold 40 shares bought for a total of £1,000 and the price is now £30, the holding is worth £1,200, an unrealised gain of £200.
+
+**Yield on cost.** Divide the last 12 months of dividends per share by your average purchase price. If you paid £25 a share on average and received £1.50 a share in dividends over the year, your yield on cost is 6%.
+
+Vizvest gives you the inputs for both: your buys per stock on the per-stock page and your dividend totals by stock. It also shows the costs that eat into returns. For a full breakdown of those, see [Trading 212 fees explained](/articles/trading-212-fees-explained).
+
+---
+
+## How do I start tracking my Trading 212 portfolio with Vizvest?
+
+Export your history, upload it and open the dashboard. It takes a few minutes.
+
+1. **Export your Trading 212 CSV.** Go to **Menu → History** and tap the export icon. Choose up to 12 months per export and repeat for each period of your history. The [step-by-step export guide](/articles/how-to-export-trading-212-data) has the details.
+2. **Upload it.** Go to [the Vizvest dashboard](/dashboard) and drop in your CSV files. Upload them all at once; duplicates are removed automatically.
+3. **Explore.** Your portfolio overview, dividends, per-stock history and trading activity load straight away.
+
+No account, no email, no password. Your data stays on your device.
+
+---
+
+## Which Trading 212 tracker is best for you?
+
+Choose by what you need most.
+
+| If you want... | Consider |
 |---|---|
-| Dividend investor on Trading 212 | Vizvest |
-| Multi-broker investor | Portseido or AllInvestView |
-| Needs HMRC CGT report | Sharesight (paid) |
-| Wants AI portfolio analysis | PinkLion |
-| Performance vs benchmark focus | Simple Portfolio |
+| Free analysis of realised profit, dividends, fees and activity, without an account | Vizvest |
+| A focused view of dividend income from your export | Vizvest (see our [dividend tracker guide](/articles/trading-212-dividend-tracker)) |
+| Automatic syncing and live prices | Sharesight, Snowball Analytics (paid) or AllInvestView |
+| A dividend-focused tracker with live prices | Snowball Analytics |
+| A community feed alongside your portfolio | Getquin |
+
+Many investors combine tools: a free CSV analyser for a quick look at results and costs, plus a synced tracker for day-to-day prices.
 
 ---
 
-## Frequently Asked Questions
+## Summary
+
+- Trading 212's app shows current values, but not dividend totals, realised profit per stock or fees paid over time.
+- [Vizvest](/dashboard) is free, needs no account and keeps your data in your browser. It shows realised profit, dividends, fees, allocation and trading activity, but not live prices or unrealised gains.
+- Sharesight, Snowball Analytics, Getquin and AllInvestView add live prices and multi-broker tracking, with free plans that have limits and paid tiers above them.
+- Many investors combine the two: a free CSV analyser for realised results and costs, plus a synced tracker for live prices.
+
+---
+
+## Frequently asked questions
+
+### What is the best free portfolio tracker for Trading 212?
+
+It depends on what you need. Vizvest is free with no account and reads your Trading 212 CSV in the browser for realised profit, dividends, fees and trading activity. Sharesight, Snowball Analytics and Getquin have free plans with limits and add live prices, but you need an account and paid plans unlock more.
 
 ### Is Vizvest free?
 
-Yes. Vizvest is free with no account required. Upload your Trading 212 CSV and analyse your portfolio immediately.
+Yes. Vizvest is free and needs no account. You upload your Trading 212 CSV export and the dashboard is built in your browser straight away.
 
 ### Is my data safe with Vizvest?
 
-Vizvest processes your CSV data locally in your browser. Your financial data is not sent to or stored on any server.
+Vizvest processes your CSV entirely in your browser. The file is never uploaded to or stored on a server, and it is cleared when you refresh or close the page.
 
-### What platforms does Vizvest support?
+### Does Vizvest show unrealised gains or live prices?
 
-Currently Trading 212 (Invest and Stocks ISA accounts). The CSV export format from Trading 212 is the only input format supported.
+No. Vizvest works only from your CSV export and has no price feed, so it shows realised profit, dividends, fees and activity rather than today's market value. Trackers with a price feed, such as Sharesight or Snowball Analytics, show unrealised gains.
 
 ### Do I need to re-upload my CSV every time?
 
-Yes, Vizvest doesn't store your data between sessions. Re-upload your latest export when you want updated figures. This is a deliberate privacy trade-off.
+Yes. Vizvest keeps nothing between sessions, so upload your latest export whenever you want updated figures. This is a deliberate privacy choice.
 
-### Can I use Vizvest alongside Sharesight?
+### Can I upload several Trading 212 CSV files to Vizvest at once?
 
-Yes. They serve different purposes. Vizvest is best for quick dividend and P&L analysis. Sharesight is best for formal tax reporting. Many investors use both.
+Yes. Each Trading 212 export covers at most 12 months, so drop in one file per period to see your full history. Vizvest merges the files and removes duplicate rows, and it warns you if sells outrun buys, which usually means an export is missing.
