@@ -1,11 +1,17 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/motion/reveal'
+import { MetalRing, parseMetalTone, type MetalTone } from '@/components/motion/metal-ring'
 
 export function Hero() {
+  // Temporary: `?cta=silver|chromatic` previews the other ring tones.
+  const [tone, setTone] = useState<MetalTone>('gold')
+  useEffect(() => setTone(parseMetalTone(window.location.search)), [])
+
   return (
     <Reveal>
       <section
@@ -23,17 +29,19 @@ export function Hero() {
           </p>
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
-              <Button
-                asChild
-                onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
-              >
-                <Link href="/dashboard">Open the dashboard</Link>
-              </Button>
+              <MetalRing tone={tone}>
+                <Button
+                  asChild
+                  onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
+                >
+                  <Link href="/dashboard">Try For Free</Link>
+                </Button>
+              </MetalRing>
               <Button asChild variant="outline">
                 <Link href="#how-it-works">See how it works</Link>
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">Free to use. No account needed.</p>
+            <p className="text-sm text-muted-foreground">No account needed.</p>
           </div>
         </div>
       </section>

@@ -34,6 +34,9 @@ export function MetalRing({ tone, children }: MetalRingProps) {
   const reduced = useReducedMotionSafe()
 
   useEffect(() => {
+    // In dev the ring renders but stays still. Strict Mode remounts it, and
+    // metal-fx 2.0.11's late `webglcontextlost` event from the torn-down
+    // context marks the new shared context as lost. Production animates.
     let cancelled = false
     import('metal-fx')
       .then((mod) => {
@@ -47,8 +50,13 @@ export function MetalRing({ tone, children }: MetalRingProps) {
 
   if (!MetalFx) return children
 
+  // metal-fx strips the child's background and border (`!important`) and
+  // paints its own grey or white fill on the wrapper, so our pill fill, hover
+  // and press move onto the wrapper, marked important to win. `px-px` stands
+  // in for the removed 1px border so the button keeps its width.
   return (
     <MetalFx
+      className="!bg-primary px-px transition-[background-color,transform] duration-150 ease-ui has-[:hover]:!bg-brand/90 motion-safe:has-[:active]:scale-[0.96]"
       variant="button"
       preset={tone}
       theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
