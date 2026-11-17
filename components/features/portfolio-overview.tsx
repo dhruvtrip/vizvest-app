@@ -7,7 +7,7 @@ import { Tile } from '@/components/ui/tile'
 import { badgeVariants } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { BarRows, ChartCard, Donut, Legend, foldSeries, isOther, seriesAt, type BarRow, type Segment } from '@/components/charts'
+import { BarRows, ChartCard, Donut, ShareList, foldSeries, isOther, seriesAt, type BarRow, type Segment } from '@/components/charts'
 import { AutoHeight } from '@/components/motion'
 import { ChartBar, ChartPie, ChevronRight, Folder } from '@/components/icons'
 import { Region, chartGrid } from '@/components/features/dashboard-layout'
@@ -311,25 +311,31 @@ function AllocationChart({ holdings, baseCurrency }: { holdings: StockPosition[]
           detail="Allocation appears here while you hold shares you paid for in this export."
         />
       ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-6 py-2 min-[440px]:flex-row min-[440px]:justify-start lg:flex-col lg:justify-center xl:flex-row xl:justify-start">
+        <div className="flex h-full flex-col items-center justify-center gap-8 py-4 min-[520px]:flex-row min-[520px]:gap-10 lg:flex-col lg:gap-8 xl:flex-row xl:gap-10">
           <Donut
             segments={segments}
             aria-label="Allocation of net invested by holding"
-            size={168}
-            thickness={16}
+            size={208}
+            thickness={22}
             activeId={activeId}
             onActiveChange={setActiveId}
           >
-            <span className="flex flex-col items-center px-4 text-center">
-              <span className="text-xs font-normal text-muted-foreground">Net invested</span>
-              <span className="figure mt-0.5 whitespace-nowrap text-base font-semibold tracking-[-0.01em]">
+            <span className="flex flex-col items-center px-3 text-center">
+              <span className="text-sm font-normal text-muted-foreground">Net invested</span>
+              <span className="figure mt-1 whitespace-nowrap text-xl font-semibold tracking-[-0.01em]">
                 {formatCurrency(total, baseCurrency)}
               </span>
             </span>
           </Donut>
-          <Legend
-            className="w-full min-w-0 flex-1 flex-col gap-y-2.5"
-            items={segments.map((s) => ({ id: s.id, label: s.label, color: s.color, value: s.display }))}
+          <ShareList
+            className="w-full min-w-0 max-w-sm flex-1"
+            items={segments.map((s) => ({
+              id: s.id,
+              label: s.label,
+              color: s.color,
+              share: total > 0 ? s.value / total : 0,
+              value: s.display
+            }))}
             activeId={activeId}
             onActiveChange={setActiveId}
           />
