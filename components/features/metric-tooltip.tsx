@@ -55,8 +55,8 @@ export const METRIC_EXPLANATIONS = {
   sellVolume: 'Total amount received from selling shares in the uploaded timeframe. Always positive.',
   netCashFlow: 'Difference between buy and sell volumes. Negative (green) means you received more cash from selling than you spent buying. Positive (muted) means you spent more buying than you received from selling.',
   netShareFlow: 'Net change in share count. Positive means you increased your position (net buying). Negative means you reduced your position (net selling). For partial data, negative values indicate you sold shares that were purchased before the start of this data period.',
-  avgBuyPrice: 'Average price per share for all buy transactions in this period.',
-  avgSellPrice: 'Average price per share for all sell transactions in this period.',
+  avgBuyPrice: 'Average price per share for all buy transactions in this period, split-adjusted to today\'s share terms.',
+  avgSellPrice: 'Average price per share for all sell transactions in this period, split-adjusted to today\'s share terms.',
   buyTransactions: 'Number of buy transactions and total shares purchased.',
   sellTransactions: 'Number of sell transactions and total shares sold.',
   partialData: 'Your CSV appears to contain only part of your trading history. Metrics reflect activity within the uploaded date range only. Shares or positions from before this period are not included.'

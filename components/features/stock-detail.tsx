@@ -15,7 +15,7 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { NormalizedTransaction, StockMetrics } from '@/types/trading212'
+import type { AppliedSplit, NormalizedTransaction, StockMetrics } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { ChartCard, KpiTile, Legend, StackedColumns } from '@/components/charts'
 import { DashboardPage, PageHeader, Region } from '@/components/features/dashboard-layout'
@@ -26,7 +26,15 @@ const DividendSection = dynamic(
   { ssr: false }
 )
 import { isTickerPartialData, getTickerPartialDataExplanation } from '@/lib/partial-data-detector'
-import { isBuyAction, isSellAction, isTradeAction } from '@/lib/transaction-utils'
+import {
+  isBuyAction,
+  isSellAction,
+  isTradeAction,
+  getAdjustedShares,
+  getAdjustedPricePerShare
+} from '@/lib/transaction-utils'
+import { formatSplitPhrase } from '@/lib/split-format'
+import { compareSplitTimes } from '@/lib/split-csv-events'
 
 /**
  * Currency symbols for common currencies
@@ -112,11 +120,11 @@ function calculateMetrics(
   const sells = tickerTransactions.filter(t => isSellAction(t.Action))
 
   // Calculate buy metrics
-  const buyShares = buys.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
+  const buyShares = buys.reduce((sum, t) => sum + getAdjustedShares(t), 0)
   const buyVolume = buys.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
 
   // Calculate sell metrics
-  const sellShares = sells.reduce((sum, t) => sum + (t['No. of shares'] || 0), 0)
+  const sellShares = sells.reduce((sum, t) => sum + getAdjustedShares(t), 0)
   const sellVolume = sells.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
 
   // Calculate realized profit/loss from CSV Result column
@@ -216,6 +224,37 @@ function monthlyFlows(trades: NormalizedTransaction[]): MonthlyFlow[] {
 }
 
 /**
+ * "Pre-split" chip for a trade made before a later stock split, with the
+ * trade in today's share terms in a tooltip that also opens on tap.
+ */
+function PreSplitBadge ({ note }: { note: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip open={open} onOpenChange={setOpen}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={(event) => {
+              // A tap focuses the badge (which opens the tooltip) and then clicks it:
+              // keep it open and stop Radix from closing it on that same click.
+              event.preventDefault()
+              setOpen(true)
+            }}
+            className={cn(badgeVariants({ variant: 'outline' }), 'relative h-5 px-2 font-normal text-muted-foreground before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[\'\']')}
+          >
+            Pre-split
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          {note}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+/**
  * Stock Detail Component
  * Displays comprehensive analytics for a single stock position
  */
@@ -229,6 +268,7 @@ export function StockDetail ({
   const storeTransactions = useDashboardStore((state) => state.normalizedTransactions)
   const storeBackToOverview = useDashboardStore((state) => state.backToOverview)
   const partialDataWarning = useDashboardStore((state) => state.partialDataWarning)
+  const appliedSplits = useDashboardStore((state) => state.appliedSplits)
   const ticker = tickerProp ?? storeSelectedTicker
   const transactions = transactionsProp ?? storeTransactions
   const onBack = onBackProp ?? storeBackToOverview
@@ -265,6 +305,11 @@ export function StockDetail ({
   const partialDataExplanation = ticker && isPartialDataForTicker
     ? getTickerPartialDataExplanation(ticker, transactions)
     : ''
+
+  const tickerSplits = useMemo<AppliedSplit[]>(
+    () => (ticker ? appliedSplits.filter(s => s.tickers.includes(ticker)) : []),
+    [appliedSplits, ticker]
+  )
 
   const tableTransactions = useMemo(() => {
     if (!ticker) return []
@@ -392,15 +437,20 @@ export function StockDetail ({
             label="Average buy price"
             value={avgBuyPrice !== null ? formatCurrency(avgBuyPrice, currency) : '—'}
             sub="Per share bought"
-            hint="Buy volume divided by shares bought, in your base currency."
+            hint="Buy volume divided by shares bought, in your base currency. Share counts are split-adjusted, so this is in today's share terms."
           />
           <KpiTile
             label="Average sell price"
             value={avgSellPrice !== null ? formatCurrency(avgSellPrice, currency) : '—'}
             sub="Per share sold"
-            hint="Sell volume divided by shares sold, in your base currency."
+            hint="Sell volume divided by shares sold, in your base currency. Share counts are split-adjusted, so this is in today's share terms."
           />
         </div>
+        {tickerSplits.length > 0 && (
+          <TileNote className="mt-3">
+            Share counts and average prices are adjusted for {formatSplitPhrase(tickerSplits)}.
+          </TileNote>
+        )}
       </Region>
 
       {/* Buys and sells */}
@@ -486,6 +536,14 @@ export function StockDetail ({
                   const resultStr = hasResult
                     ? `${result >= 0 ? '+' : ''}${formatCurrency(result, metrics.baseCurrency)}`
                     : '—'
+                  const isPreSplit = transaction.splitFactor !== undefined && transaction.splitFactor !== 1
+                  const laterSplitCount = tickerSplits.filter(s => compareSplitTimes(transaction.Time, s.cutoff) < 0).length
+                  const preSplitNote = isPreSplit
+                    ? `Equals ${formatShares(getAdjustedShares(transaction))} shares at ${formatCurrency(
+                        getAdjustedPricePerShare(transaction),
+                        transaction['Currency (Price / share)'] || metrics.baseCurrency
+                      )} after the ${laterSplitCount > 1 ? 'splits' : 'split'}`
+                    : ''
 
                   return (
                     <TableRow key={transaction.ID || index}>
@@ -497,8 +555,16 @@ export function StockDetail ({
                           {isBuy ? 'Buy' : 'Sell'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="figure hidden whitespace-nowrap text-right sm:table-cell" aria-label={`${shares} shares`}>
-                        {shares}
+                      <TableCell
+                        className="figure hidden whitespace-nowrap text-right sm:table-cell"
+                        aria-label={isPreSplit ? `${shares} shares, pre-split. ${preSplitNote}` : `${shares} shares`}
+                      >
+                        {isPreSplit ? (
+                          <span className="inline-flex items-center justify-end gap-2">
+                            <PreSplitBadge note={preSplitNote} />
+                            {shares}
+                          </span>
+                        ) : shares}
                       </TableCell>
                       <TableCell className="figure hidden whitespace-nowrap text-right text-muted-foreground md:table-cell" aria-label={`Price per share: ${price}`}>
                         {price}

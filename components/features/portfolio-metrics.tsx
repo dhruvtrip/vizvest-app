@@ -6,7 +6,7 @@ import { KpiTile } from '@/components/charts'
 import { PageHeader, Region } from '@/components/features/dashboard-layout'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
-import { isBuyAction, isSellAction, isDividendAction, isDepositAction } from '@/lib/transaction-utils'
+import { isBuyAction, isSellAction, isDividendAction, isDepositAction, getAdjustedShares } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -89,7 +89,7 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
       // Track shares per ticker
       if (t.Ticker) {
         const current = tickerStatus.get(t.Ticker) || { shares: 0 }
-        current.shares += t['No. of shares'] || 0
+        current.shares += getAdjustedShares(t)
         tickerStatus.set(t.Ticker, current)
       }
     } else if (isSellAction(t.Action)) {
@@ -99,7 +99,7 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
       // Track shares per ticker
       if (t.Ticker) {
         const current = tickerStatus.get(t.Ticker) || { shares: 0 }
-        current.shares -= t['No. of shares'] || 0
+        current.shares -= getAdjustedShares(t)
         tickerStatus.set(t.Ticker, current)
       }
     } else if (isDepositAction(t.Action)) {

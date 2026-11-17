@@ -21,10 +21,12 @@ import { DashboardPage as DashboardPageShell } from '@/components/features/dashb
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { DotLoader, ShimmerText } from '@/components/motion'
-import { CircleAlert, CircleCheck, GitMerge, TriangleAlert, X } from '@/components/icons'
+import { CircleAlert, CircleCheck, GitMerge, Split, TriangleAlert, X } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { getPartialDataExplanation } from '@/lib/partial-data-detector'
+import { countSplitSecurities, formatSplitSummary } from '@/lib/split-format'
+import type { AppliedSplit } from '@/types/trading212'
 import { EmailSignupDialog } from '@/components/features/email-signup-dialog'
 
 const EASE_OUT = [0, 0, 0.58, 1] as const
@@ -46,6 +48,18 @@ const NOTICE_TONES: Record<NoticeTone, { surface: string; icon: string }> = {
   warning: { surface: 'bg-warning/10', icon: 'text-warning' },
   destructive: { surface: 'bg-destructive/10', icon: 'text-destructive' }
 }
+
+/** Split entries shown in the split notice before "Show all" */
+const SPLIT_NOTICE_PREVIEW_COUNT = 6
+
+/**
+ * appliedSplits arrays already reported to analytics. Module-level so that a
+ * remount of this page (strict mode, navigating away and back) cannot report
+ * the same upload twice; a WeakSet so old uploads are not kept in memory.
+ */
+const trackedSplitAdjustments = new WeakSet<AppliedSplit[]>()
+
+const UNPAIRED_SPLIT_ADVICE = 'Upload the export for the neighbouring period to include it.'
 
 function NoticeBody ({
   tone,
@@ -107,10 +121,14 @@ export default function DashboardPage () {
     isPartialDataDismissed,
     mergeBanner,
     isMergeBannerDismissed,
+    appliedSplits,
+    unpairedSplitRows,
+    isSplitBannerDismissed,
     uploadAnother,
     dismissAlert,
     dismissPartialDataAlert,
-    dismissMergeBanner
+    dismissMergeBanner,
+    dismissSplitBanner
   } = useDashboardStore(
     useShallow((state) => ({
       normalizedTransactions: state.normalizedTransactions,
@@ -126,10 +144,14 @@ export default function DashboardPage () {
       isPartialDataDismissed: state.isPartialDataDismissed,
       mergeBanner: state.mergeBanner,
       isMergeBannerDismissed: state.isMergeBannerDismissed,
+      appliedSplits: state.appliedSplits,
+      unpairedSplitRows: state.unpairedSplitRows,
+      isSplitBannerDismissed: state.isSplitBannerDismissed,
       uploadAnother: state.uploadAnother,
       dismissAlert: state.dismissAlert,
       dismissPartialDataAlert: state.dismissPartialDataAlert,
-      dismissMergeBanner: state.dismissMergeBanner
+      dismissMergeBanner: state.dismissMergeBanner,
+      dismissSplitBanner: state.dismissSplitBanner
     }))
   )
 
@@ -159,6 +181,25 @@ export default function DashboardPage () {
       return () => clearTimeout(timer)
     }
   }, [uploadInfo, normalizedTransactions.length, isAlertDismissed, dismissAlert])
+
+  // Report once per upload that split adjustments were applied: counts only
+  useEffect(() => {
+    if (appliedSplits.length === 0 || trackedSplitAdjustments.has(appliedSplits)) return
+    trackedSplitAdjustments.add(appliedSplits)
+    posthog.capture('split_adjustments_applied', {
+      csv_count: appliedSplits.filter(s => s.source === 'csv').length,
+      table_count: appliedSplits.filter(s => s.source === 'table').length,
+      unpaired_count: unpairedSplitRows
+    })
+  }, [appliedSplits, unpairedSplitRows])
+
+  // "Show all" in the split notice, remembered for the current upload only
+  const [expandedSplits, setExpandedSplits] = useState<AppliedSplit[] | null>(null)
+  const showAllSplits = expandedSplits === appliedSplits
+  const visibleSplits = showAllSplits
+    ? appliedSplits
+    : appliedSplits.slice(0, SPLIT_NOTICE_PREVIEW_COUNT)
+  const splitSecurityCount = countSplitSecurities(appliedSplits)
 
   const handleUploadAnother = useCallback(() => {
     posthog.capture('upload_another_file_clicked', { location: 'dashboard_banner' })
@@ -232,6 +273,67 @@ export default function DashboardPage () {
                   onDismiss={dismissMergeBanner}
                   dismissLabel="Dismiss merge summary"
                 />
+              </motion.div>
+            )}
+
+            {(appliedSplits.length > 0 || unpairedSplitRows > 0) && !isSplitBannerDismissed && hasData && (
+              <motion.div
+                key="splits"
+                {...noticeMotion}
+                className="overflow-hidden"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                {appliedSplits.length > 0 ? (
+                  <NoticeBody
+                    tone="neutral"
+                    icon={Split}
+                    lead={<>Adjusted <span className="figure">{splitSecurityCount}</span> {splitSecurityCount === 1 ? 'stock' : 'stocks'} for stock splits.</>}
+                    detail={
+                      <>
+                        <span className="figure">
+                          {visibleSplits.map((split, index) => (
+                            <span key={split.id}>
+                              {/* Each entry wraps as a unit where it fits on one line. */}
+                              <span className="inline-block">
+                                {formatSplitSummary(split)}
+                                {index < visibleSplits.length - 1 ? ' ·' : '.'}
+                              </span>{' '}
+                            </span>
+                          ))}
+                        </span>
+                        {unpairedSplitRows > 0 && (
+                          <>A stock split row was found without its matching row. {UNPAIRED_SPLIT_ADVICE}</>
+                        )}
+                      </>
+                    }
+                    action={
+                      appliedSplits.length > SPLIT_NOTICE_PREVIEW_COUNT && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedSplits(showAllSplits ? null : appliedSplits)}
+                          className="-my-1 -ms-3 hover:bg-background/60"
+                          aria-expanded={showAllSplits}
+                        >
+                          {showAllSplits ? 'Show less' : <>Show all (<span className="figure">{appliedSplits.length}</span>)</>}
+                        </Button>
+                      )
+                    }
+                    onDismiss={dismissSplitBanner}
+                    dismissLabel="Dismiss stock split summary"
+                  />
+                ) : (
+                  <NoticeBody
+                    tone="warning"
+                    icon={TriangleAlert}
+                    lead="Stock split row found without its match."
+                    detail={UNPAIRED_SPLIT_ADVICE}
+                    onDismiss={dismissSplitBanner}
+                    dismissLabel="Dismiss stock split summary"
+                  />
+                )}
               </motion.div>
             )}
 

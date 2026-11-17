@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import type { NormalizedTransaction, StockPosition } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { isTickerPartialData } from '@/lib/partial-data-detector'
-import { isBuyAction, isSellAction, isDividendAction } from '@/lib/transaction-utils'
+import { isBuyAction, isSellAction, isDividendAction, getAdjustedShares } from '@/lib/transaction-utils'
 
 /**
  * Currency symbols for common currencies
@@ -104,7 +104,7 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
         continue
       }
 
-      const shares = transaction['No. of shares'] || 0
+      const shares = getAdjustedShares(transaction)
       const amount = transaction.totalInBaseCurrency || 0
 
       if (isBuyAction(transaction.Action)) {
