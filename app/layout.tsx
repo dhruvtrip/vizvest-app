@@ -7,6 +7,15 @@ import { PostHogProvider } from '@/app/providers/ph-provider'
 import { PostHogConsentBanner } from '@/components/posthog-consent-banner'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
+import {
+  LOGO_URL,
+  ORGANIZATION_ID,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+  WEBSITE_ID,
+} from '@/lib/site'
 
 // One family for the whole product. Inter is a variable font, so every weight ships in one file.
 const inter = Inter({
@@ -15,49 +24,73 @@ const inter = Inter({
   display: 'swap',
 })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vizvest.cc'
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Vizvest - Free Trading 212 Portfolio Analysis & Dividend Tracker',
-  description:
-    'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance — all in your browser.',
+  title: {
+    default: SITE_TITLE,
+    template: '%s',
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: 'Vizvest', url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: 'finance',
+  formatDetection: { telephone: false, address: false, email: false },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     type: 'website',
-    title: 'Vizvest - Free Trading 212 Portfolio Analysis & Dividend Tracker',
-    description:
-      'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance — all in your browser.',
-    url: SITE_URL,
-    siteName: 'Vizvest',
+    siteName: SITE_NAME,
     locale: 'en_GB',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vizvest - Free Trading 212 Portfolio Analysis & Dividend Tracker',
-    description:
-      'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance.',
   },
   alternates: {
-    canonical: '/',
+    types: {
+      'application/rss+xml': [{ url: '/feed.xml', title: 'Vizvest articles' }],
+    },
   },
 }
 
-const organizationJsonLd = {
+// Site-wide entities. Pages reference these by @id instead of repeating them.
+const siteJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Vizvest',
-  url: SITE_URL,
-  description:
-    'Free portfolio analysis tool for Trading 212 users. Visualize holdings, track dividends, and analyze trading performance.',
-}
-
-const websiteJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'Vizvest',
-  url: SITE_URL,
-  description:
-    'Free portfolio analysis tool for Trading 212. Upload your CSV to visualize holdings, track dividends, and analyze trading performance.',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': ORGANIZATION_ID,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: LOGO_URL,
+        width: 2008,
+        height: 2008,
+      },
+      description:
+        'Vizvest makes a free, browser-based portfolio analyser for Trading 212 investors. It turns a Trading 212 CSV export into dividends, profit, fees and trading activity without uploading the file anywhere.',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': WEBSITE_ID,
+      name: SITE_NAME,
+      url: SITE_URL,
+      inLanguage: 'en-GB',
+      description: SITE_DESCRIPTION,
+      publisher: { '@id': ORGANIZATION_ID },
+    },
+  ],
 }
 
 export default function RootLayout({
@@ -66,15 +99,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-GB" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
         />
       </head>
       <body className={`${inter.variable} font-sans`}>

@@ -1,0 +1,156 @@
+---
+title: "Trading 212 Pie Performance: What Your Pie Return Means"
+description: "Trading 212 pie performance explained: what Return and Rate of return include, why AutoInvest deposits skew the %, and how to check your pies with the CSV."
+date: "2026-12-01"
+lastModified: "2026-12-01"
+author: "TRIP"
+tags: ["trading-212", "pies", "autoinvest", "performance", "returns"]
+published: true
+faqs:
+  - question: "How is Trading 212 pie return calculated?"
+    answer: "Trading 212 shows two figures on a pie. Return is the total profit or loss from current and past investments in the pie, including dividends, according to its help centre. Rate of return is a money-weighted rate of return (MWRR), which adjusts for the size and timing of each amount you add or take out."
+  - question: "Why is my Trading 212 pie return percentage so low when the market is up?"
+    answer: "If you add money regularly, much of it has only been invested for a short time, so a simple return divided by everything you have put in looks smaller than the market's move. The opposite happens if you add a large amount just before a fall. A money-weighted rate of return accounts for this timing."
+  - question: "Do Trading 212 pies include dividends in the return?"
+    answer: "Trading 212's help centre says the pie's Return includes dividends. Dividends are reinvested into the pie by default. If you switch auto reinvest off, future dividends go to your free funds outside the pie, so check whether your pie's figures still count them."
+  - question: "Can I see which pie a trade belongs to in the Trading 212 CSV?"
+    answer: "Not directly. Pie orders appear as ordinary buy and sell rows in the history export, and there is no column that names the pie. You can rebuild a pie's history by filtering the export for the tickers in that pie, as long as you do not hold the same ticker outside it or in another pie."
+  - question: "How often can Trading 212 AutoInvest buy into a pie?"
+    answer: "Trading 212's help centre lists daily, weekly, every two weeks, monthly, every two months and every six months for pies. Single-stock AutoInvest, available in Invest, Stocks ISA and SIPP accounts, supports daily, weekly, every two weeks and monthly schedules."
+  - question: "How do I track Trading 212 pie performance myself?"
+    answer: "Export your full history, filter the rows for the pie's tickers, add up buys, sells and dividends, and compare them with the pie's current value from the app. That gives you the total return in pounds. For a percentage that respects deposit timing, use a spreadsheet XIRR function on the dated cash flows."
+---
+
+Trading 212 shows two numbers for a pie: **Return**, the total profit or loss in pounds including dividends, and **Rate of return**, a money-weighted percentage that adjusts for when you added or withdrew money. If you drip-feed money with AutoInvest, a simple "return divided by amount invested" will understate how well the pie's holdings did, so read the two figures together.
+
+---
+
+## What are Trading 212 Pies and AutoInvest?
+
+A Pie is a group of investments held as one portfolio with target weights, and AutoInvest is the scheduler that adds money to it. Trading 212 describes Pies as free to use, starting from £1 ([Pies & AutoInvest](https://www.trading212.com/auto-invest)).
+
+From Trading 212's help centre ([Pies & AutoInvest, Introduction](https://helpcentre.trading212.com/hc/en-us/articles/30661163244317-Pies-AutoInvest-Introduction) and [Creating a Pie](https://helpcentre.trading212.com/hc/en-us/articles/30663577432477-Creating-a-Pie)):
+
+- A custom pie can hold **up to 50 instruments**, such as stocks or ETFs, each with a target percentage.
+- **AutoInvest schedules for pies:** daily, weekly, every two weeks, monthly, every two months or every six months.
+- **Single-stock AutoInvest** also exists for Invest, Stocks ISA and SIPP accounts, with daily, weekly, every two weeks or monthly schedules.
+- Each pie has a **minimum investment threshold**, set by its lowest target weight. Money below that threshold waits as **Pie cash** until there is enough to invest.
+- Instruments priced in another currency are converted, and Trading 212's FX fee applies (see [Trading 212 fees explained](/articles/trading-212-fees-explained)).
+
+Editing a pie doesn't trade straight away. Per the help centre ([Editing a Pie](https://helpcentre.trading212.com/hc/en-us/articles/30673480292637-Editing-a-Pie-Adding-Removing-slices)), new target percentages and newly added slices take effect when you rebalance manually, and a removed slice is sold when you withdraw from the pie or rebalance. Model pies from asset managers are updated roughly quarterly, and you can accept or dismiss the changes.
+
+---
+
+## What does the Trading 212 pie return include?
+
+According to Trading 212, the pie's **Return** is the total profit or loss from your current and past investments within the pie, including dividends ([Portfolio Charts help article](https://helpcentre.trading212.com/hc/en-us/articles/22435640547613-Portfolio-Charts)). When the metric launched in October 2024, Trading 212 described it as covering realised profit from shares sold, dividend income and the unrealised result on current positions.
+
+The **Rate of return** is a money-weighted rate of return (MWRR). Trading 212 says it is adjusted for the size and timing of each investment or withdrawal, and for its portfolio screen it describes the method as an internal rate of return (IRR) calculation.
+
+| Figure | Unit | What it answers |
+|---|---|---|
+| Value | £ | What the pie is worth now |
+| Return | £ | How much you have made or lost, including sold shares and dividends |
+| Rate of return (MWRR) | % | How well your money did, given when you put it in |
+
+What Trading 212 doesn't spell out in detail is worth checking for yourself:
+
+- **Dividends taken as cash.** If you switch auto reinvest off, dividends leave the pie for your free funds. Check whether your pie's Return still counts those payments.
+- **The same stock in two places.** If you hold a ticker in a pie and outside it, or in two pies, check whether the pie's figure and the holding's own figure agree. Users regularly report differences between pie and instrument views.
+- **Fees and withholding tax.** Dividends arrive net of withholding tax, and buys in foreign currencies carry an FX fee. Check whether the figure you're looking at is before or after these.
+
+---
+
+## Why can the pie return percentage mislead with regular deposits?
+
+Because a simple percentage treats every pound as if it was invested for the whole period. With AutoInvest, most of your money arrived recently, so it had less time to grow. A money-weighted return fixes this, but it can still look worse or better than the pie's holdings because it reflects your timing, not just theirs.
+
+There are three ways to put a percentage on a pie:
+
+1. **Simple return:** Return ÷ total amount invested. Easy, but ignores timing.
+2. **Money-weighted return (MWRR):** the rate that makes all your dated deposits and withdrawals grow into today's value. It answers "how did my money do?"
+3. **Time-weighted return (TWRR):** strips out the effect of deposits. It answers "how did the holdings do?", and it's how funds usually report performance. Trading 212's [Learn article](https://www.trading212.com/learn/investing-101/money-weighted-rate-of-return-mwrr-vs-time-weighted-rate-of-return-twrr) compares the two.
+
+### Worked example: same pie, three investors
+
+These are illustrative numbers, not real pie results. In scenarios A and B, the pie's holdings rise steadily by 10% over the year. In scenario C, they rise 20% by July then fall 10% by December, which is +8% overall.
+
+| | A: lump sum | B: AutoInvest monthly | C: big top-up in July |
+|---|---|---|---|
+| Money in | £6,000 on 1 January | £500 at the start of each month | £1,000 in January, £5,000 in July |
+| Total invested | £6,000 | £6,000 | £6,000 |
+| Value at year end | £6,600 | £6,320 | £5,580 |
+| Return (£) | +£600 | +£320 | −£420 |
+| Simple return (Return ÷ invested) | 10.0% | 5.3% | −7.0% |
+| Money-weighted return (annual) | 10.0% | about 10% | about −12% |
+| Holdings' own performance (TWRR) | 10% | 10% | 8% |
+
+What this shows:
+
+- **Investor B** did nothing wrong. The pie grew 10%, but on average only about £3,250 was invested over the year, so £320 looks like 5.3% of £6,000. The money-weighted figure correctly shows about 10% a year.
+- **Investor C** owned holdings that rose 8%, yet lost money, because most of the cash went in at the peak. Here the money-weighted return is the honest number for C's experience, and the simple and time-weighted figures each tell a different story.
+
+So when your pie's Rate of return and its Return in pounds seem to disagree, timing is usually the reason. Neither number is wrong. They answer different questions.
+
+---
+
+## How do dividends work inside a Trading 212 pie?
+
+Dividends from pie holdings are paid into the pie and reinvested by default. Trading 212's help centre ([Pie Dividend reinvesting](https://helpcentre.trading212.com/hc/en-us/articles/30673839245981-Pie-Dividend-reinvesting-DRIP)) explains:
+
+- **Auto reinvest is on by default.** You can switch it off from the gear icon in the pie's Dividends section, after which future dividends go to your account's free funds instead.
+- **Dividends first land in Pie cash.** They're invested once Pie cash passes the pie's minimum threshold, so small dividends can wait for the next deposit.
+- **Reinvestment follows the pie's targets.** The cash is spread across slices according to your target weights, not put back into the stock that paid it.
+- **The pie that receives it** depends on where the shares were held on the ex-dividend date.
+
+For tracking, this matters in two ways. Reinvested dividends show up as extra buys in your history, which inflates "amount invested" if you just add up buys. And dividends are paid net of any withholding tax, so the amount reinvested is the net figure in the `Total` column, not the gross dividend. Our [Trading 212 dividend tracker guide](/articles/trading-212-dividend-tracker) covers tracking the income itself.
+
+---
+
+## How do pie trades appear in the Trading 212 CSV?
+
+As ordinary order rows. Pie buys and sells use the same `Market buy` and `Market sell` style actions as manual trades, and there is no column in the history export that names the pie. A few things to know:
+
+- **Each slice is its own row.** One AutoInvest run into a 10-slice pie typically produces a cluster of buy rows with the same timestamp, usually for fractional share amounts.
+- **The Notes column** is sometimes filled in. Open your own export and check whether pie orders carry anything there, but don't rely on it to separate pies.
+- **Dividends** appear as `Dividend` rows per ticker, with the tax withheld in the `Withholding tax` column, whether or not the shares sit in a pie.
+- **Deposits** are account-level rows. Money paid in for AutoInvest appears as a deposit, then as the buys it funded.
+
+The upshot: from the export alone you can rebuild a pie's history by ticker, but only if each of its tickers is held in that pie and nowhere else. If you hold the same ETF in two pies, the CSV can't tell them apart. See [how to export your Trading 212 data](/articles/how-to-export-trading-212-data) for the export steps and column list.
+
+---
+
+## How to analyse Trading 212 pie performance with your export
+
+You can work out a pie's total return and money-weighted return yourself with the export, a spreadsheet and the pie's current value from the app.
+
+1. **List the pie's slices.** Note every ticker in the pie from its holdings screen in the app.
+2. **Export your full history.** Each Trading 212 export covers up to 12 months, so export every year since you created the pie.
+3. **Check the history is complete.** [Upload the exports to Vizvest](/dashboard). It merges the files, removes duplicate rows, and warns you if the data looks partial (sells with no matching buys), which means an export is missing.
+4. **Review each slice.** Open each pie ticker's stock page in Vizvest to see its full buy, sell and dividend history in your base currency, plus realised profit taken from Trading 212's own Result figures for anything sold.
+5. **Add up the cash flows.** In a spreadsheet, filter the export for the pie's tickers and total the `Total` column separately for buys, sells and dividends.
+6. **Add today's value.** Take the pie's current value from the app, plus any Pie cash.
+7. **Calculate total return:** current value + sell proceeds + dividends − buy costs. Counting dividends as income and reinvested buys as costs is correct, because the two cancel out and only the growth remains.
+8. **Calculate the money-weighted return.** List each buy as a negative amount on its date, each sell and dividend as a positive amount on its date, and today's value as a positive amount on today's date. Use `XIRR` in Excel or Google Sheets.
+9. **Compare with the app.** If your figure differs from the pie's Return, check for shared tickers, dividends paid out as cash, and Pie cash you left out.
+
+Vizvest doesn't fetch live prices, so it won't show the pie's current value or unrealised gain. That's why step 6 uses the app. What it does give you is a clean, merged, single-currency history of every slice, including dividends net of withholding tax, without your data leaving the browser.
+
+| Cash flow | Sign in XIRR | Where it comes from |
+|---|---|---|
+| Buy (including AutoInvest and reinvested dividends) | Negative | `Market buy` rows, `Total` column |
+| Sell (including rebalances and withdrawals) | Positive | `Market sell` rows, `Total` column |
+| Dividend | Positive | `Dividend` rows, `Total` column |
+| Current value + Pie cash | Positive, dated today | Trading 212 app |
+
+For whole-portfolio tracking beyond a single pie, see our [Trading 212 portfolio tracker guide](/articles/trading-212-portfolio-tracker).
+
+---
+
+## Summary
+
+- **Return** on a Trading 212 pie is a £ figure that Trading 212 says includes sold shares and dividends. **Rate of return** is money-weighted, so it reflects when you added money.
+- **Regular AutoInvest deposits** make a simple "return ÷ invested" look low, because recent deposits had little time to grow.
+- **Dividends** reinvest into the pie by default, spread by target weights, once Pie cash passes the minimum threshold.
+- **The CSV doesn't label pies.** Rebuild a pie by filtering its tickers, which works when no ticker is shared with another pie or held outside it.
+- **To check it yourself**, combine the export's buys, sells and dividends with today's value from the app, then use XIRR for a money-weighted percentage.

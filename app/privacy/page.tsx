@@ -6,19 +6,14 @@ import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Check } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { pageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Privacy Policy | Vizvest',
   description:
     'Vizvest processes your financial data locally in your browser. Your data never leaves your device. Read how we handle the small amount of analytics data we do collect.',
-  openGraph: {
-    title: 'Privacy Policy | Vizvest',
-    description:
-      'Vizvest processes your financial data locally in your browser. Your data never leaves your device.',
-    url: `${process.env.NEXT_PUBLIC_SITE_URL}/privacy`,
-    type: 'website',
-  },
-}
+  path: '/privacy',
+})
 
 const section = 'mt-12 border-t border-border pt-12'
 

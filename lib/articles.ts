@@ -10,77 +10,95 @@ function getSlugFromFilename(filename: string): string {
   return filename.replace(/\.mdx$/, '')
 }
 
-export function getArticles(): ArticleMeta[] {
-  if (!fs.existsSync(ARTICLES_DIR)) return []
-
-  const files = fs.readdirSync(ARTICLES_DIR).filter((f) => f.endsWith('.mdx'))
-
-  const articles: ArticleMeta[] = []
-
-  for (const filename of files) {
-    const slug = getSlugFromFilename(filename)
-    const raw = fs.readFileSync(path.join(ARTICLES_DIR, filename), 'utf-8')
-    const { data, content } = matter(raw)
-    const frontmatter = data as Record<string, unknown>
-
-    if (!frontmatter.published) continue
-
-    const article: ArticleMeta = {
-      slug,
-      title: frontmatter.title as string,
-      description: frontmatter.description as string,
-      date: frontmatter.date as string,
-      lastModified: frontmatter.lastModified as string | undefined,
-      author: frontmatter.author as string | undefined,
-      tags: (frontmatter.tags as string[]) ?? [],
-      image: frontmatter.image as string | undefined,
-      published: true,
-      faqs: frontmatter.faqs as ArticleMeta['faqs'],
-      readingTime: readingTime(content).text,
-    }
-
-    articles.push(article)
-  }
-
-  return articles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+/**
+ * An article is live once it is marked published and its date has arrived.
+ * A future `date` schedules it: pages that list articles revalidate hourly,
+ * so it appears on the site, the sitemap, RSS and llms.txt on that day
+ * without a redeploy.
+ */
+export function isLive(frontmatter: Record<string, unknown>, now: Date = new Date()): boolean {
+  if (frontmatter.published !== true) return false
+  const date = frontmatter.date
+  if (typeof date !== 'string') return false
+  const publishAt = new Date(`${date}T00:00:00Z`)
+  if (Number.isNaN(publishAt.getTime())) return false
+  return publishAt.getTime() <= now.getTime()
 }
 
-export function getArticleBySlug(slug: string): { meta: ArticleMeta; content: string } | null {
-  const filepath = path.join(ARTICLES_DIR, `${slug}.mdx`)
-  if (!fs.existsSync(filepath)) return null
-
-  const raw = fs.readFileSync(filepath, 'utf-8')
-  const { data, content } = matter(raw)
-  const frontmatter = data as Record<string, unknown>
-
-  if (!frontmatter.published) return null
-
-  const meta: ArticleMeta = {
+function toMeta(slug: string, data: Record<string, unknown>, content: string): ArticleMeta {
+  return {
     slug,
-    title: frontmatter.title as string,
-    description: frontmatter.description as string,
-    date: frontmatter.date as string,
-    lastModified: frontmatter.lastModified as string | undefined,
-    author: frontmatter.author as string | undefined,
-    tags: (frontmatter.tags as string[]) ?? [],
-    image: frontmatter.image as string | undefined,
+    title: data.title as string,
+    description: data.description as string,
+    date: data.date as string,
+    lastModified: data.lastModified as string | undefined,
+    author: data.author as string | undefined,
+    tags: (data.tags as string[]) ?? [],
+    image: data.image as string | undefined,
     published: true,
-    faqs: frontmatter.faqs as ArticleMeta['faqs'],
+    faqs: data.faqs as ArticleMeta['faqs'],
     readingTime: readingTime(content).text,
   }
-
-  return { meta, content }
 }
 
-export function getAllSlugs(): string[] {
+function readArticle(slug: string): { data: Record<string, unknown>; content: string } | null {
+  const filepath = path.join(ARTICLES_DIR, `${slug}.mdx`)
+  if (!fs.existsSync(filepath)) return null
+  const { data, content } = matter(fs.readFileSync(filepath, 'utf-8'))
+  return { data: data as Record<string, unknown>, content }
+}
+
+function listSlugs(): string[] {
   if (!fs.existsSync(ARTICLES_DIR)) return []
   return fs
     .readdirSync(ARTICLES_DIR)
     .filter((f) => f.endsWith('.mdx'))
     .map(getSlugFromFilename)
-    .filter((slug) => {
-      const raw = fs.readFileSync(path.join(ARTICLES_DIR, `${slug}.mdx`), 'utf-8')
-      const { data } = matter(raw)
-      return (data as Record<string, unknown>).published === true
-    })
+}
+
+/** Live articles, newest first. */
+export function getArticles(now: Date = new Date()): ArticleMeta[] {
+  const articles: ArticleMeta[] = []
+
+  for (const slug of listSlugs()) {
+    const article = readArticle(slug)
+    if (!article || !isLive(article.data, now)) continue
+    articles.push(toMeta(slug, article.data, article.content))
+  }
+
+  return articles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+}
+
+export function getArticleBySlug(
+  slug: string,
+  now: Date = new Date()
+): { meta: ArticleMeta; content: string } | null {
+  const article = readArticle(slug)
+  if (!article || !isLive(article.data, now)) return null
+  return { meta: toMeta(slug, article.data, article.content), content: article.content }
+}
+
+export function getAllSlugs(now: Date = new Date()): string[] {
+  return getArticles(now).map((a) => a.slug)
+}
+
+/** Up to `limit` other live articles, preferring ones that share tags. */
+export function getRelatedArticles(slug: string, limit = 3, now: Date = new Date()): ArticleMeta[] {
+  const articles = getArticles(now)
+  const current = articles.find((a) => a.slug === slug)
+  const generic = new Set(['trading-212'])
+  const tags = new Set((current?.tags ?? []).filter((t) => !generic.has(t)))
+
+  return articles
+    .filter((a) => a.slug !== slug)
+    .map((a, index) => ({ a, index, shared: a.tags.filter((t) => tags.has(t)).length }))
+    .sort((x, y) => y.shared - x.shared || x.index - y.index)
+    .slice(0, limit)
+    .map(({ a }) => a)
+}
+
+/** Most recent date any live article was published or updated. */
+export function getLatestArticleDate(now: Date = new Date()): Date | undefined {
+  const times = getArticles(now).map((a) => new Date(a.lastModified ?? a.date).getTime())
+  return times.length > 0 ? new Date(Math.max(...times)) : undefined
 }

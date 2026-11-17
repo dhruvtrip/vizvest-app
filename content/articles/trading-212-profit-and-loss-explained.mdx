@@ -1,0 +1,201 @@
+---
+title: "Trading 212 Profit and Loss: Realised vs Unrealised"
+description: "Trading 212 profit and loss explained: realised vs unrealised, average price, the Result column, FX impact and why your return differs from your own maths."
+date: "2026-12-08"
+lastModified: "2026-12-08"
+author: "TRIP"
+tags: ["trading-212", "profit-and-loss", "returns", "analytics"]
+published: true
+faqs:
+  - question: "What is the difference between realised and unrealised profit on Trading 212?"
+    answer: "Realised profit is the gain or loss you locked in by selling shares. Unrealised profit is the paper gain or loss on shares you still hold, based on today's price and exchange rate. Unrealised profit changes every time the price moves, while realised profit is fixed once the sale settles."
+  - question: "What does the Result column mean in a Trading 212 CSV export?"
+    answer: "Result is the profit or loss Trading 212 reports on each sell, shown in the currency named in the Currency (Result) column. It is blank on buys, deposits and dividends. Adding up the Result values on your sells gives your realised profit or loss from trading for that period."
+  - question: "How does Trading 212 calculate average price?"
+    answer: "Trading 212 uses a weighted average: the total cost of all the shares you hold divided by the number of shares. Selling part of a position does not change the average price of the shares you keep. Buying more at a different price moves the average up or down."
+  - question: "Why is my Trading 212 return different from my own calculation?"
+    answer: "The most common reasons are deposits and withdrawals being counted as gains or losses, dividends being left in or out, currency movements on foreign shares, and fees such as the FX fee or stamp duty. Different return methods, like simple, time-weighted and money-weighted, also give different answers for the same account."
+  - question: "Does Trading 212 include dividends in my return?"
+    answer: "A Trading 212 staff reply on the community forum says the realised profit in History reflects trade results only and excludes dividends and FX fees. To see your total return you need to add dividends back in yourself, or use a tool that shows dividends alongside realised profit."
+  - question: "Can Vizvest show my unrealised profit?"
+    answer: "No. Vizvest works from your CSV export and does not use a live price feed, so it shows realised profit, dividends, fees and deposits but not the current value of open positions. Check unrealised profit on each holding in the Trading 212 app."
+---
+
+Trading 212 profit and loss comes in two parts. Realised profit is what you locked in by selling, and Trading 212 reports it on each sale in the Result column of your export. Unrealised profit is the paper gain on shares you still hold, based on today's price and exchange rate. Your total return is both of those, plus dividends, minus fees.
+
+---
+
+## What is the difference between realised and unrealised P&L?
+
+Realised P&L is the profit or loss on shares you have sold. Unrealised P&L is the profit or loss on shares you still own, measured against the current price.
+
+The distinction matters because the two behave very differently:
+
+| | Realised P&L | Unrealised P&L |
+|---|---|---|
+| Comes from | Shares you have sold | Shares you still hold |
+| Changes over time? | No, fixed once the sale settles | Yes, every time the price or exchange rate moves |
+| Where Trading 212 shows it | The Result on each sell in History and your CSV export | The Return on each open position in the app |
+
+A position can be up on paper for years and still end in a realised loss if you sell at the wrong time. Equally, a stock you sold at a profit last year has no unrealised figure at all, because you no longer hold it. Looking at only one side gives you half the picture.
+
+---
+
+## How does Trading 212 work out your average price?
+
+Trading 212 uses a weighted average cost: the total amount you paid for the shares you hold, divided by the number of shares. Its help centre article on [weighted average](https://helpcentre.trading212.com/hc/en-us/articles/28015150741149-What-is-weighted-average-in-financial-instrument-trading) describes this method, and its example shows a partial sale being costed at that same average.
+
+Two rules follow from this:
+
+1. **Buying more moves the average.** Buy at a lower price and the average falls. Buy higher and it rises.
+2. **Selling does not move the average.** When you sell part of a position, the shares you keep stay at the same average price.
+
+### Worked example: a partial sell
+
+This is an illustration with round numbers, ignoring fees.
+
+1. You buy 10 shares at £50. Cost £500.
+2. Later you buy 10 more at £70. Cost £700.
+3. You now hold 20 shares that cost £1,200, so your average price is **£60**.
+4. You sell 5 shares at £80, receiving £400.
+5. Realised profit on that sale = 5 × (£80 − £60) = **£100**. This is the figure that appears in the Result column for that sell.
+6. You keep 15 shares, still at an average of £60, so their cost is £900.
+7. If the price is now £75, your unrealised profit = 15 × (£75 − £60) = **£225**.
+
+Your profit from price movements so far is £100 realised plus £225 unrealised, £325 in total. Notice that Trading 212 did not ask which shares you sold. Under average cost, every share in the position is treated as costing £60.
+
+> If you transferred a holding in from another provider as stock (in specie), Trading 212 asks you to enter the quantity and price, and its [ISA transfer article](https://helpcentre.trading212.com/hc/en-us/articles/360007081097-Can-I-transfer-my-ISA-from-another-bank-or-provider-to-Trading-212) notes this resets your profit and loss. Your average price and later Results are based on the price you entered, not what you originally paid.
+
+---
+
+## What does the Result column in the Trading 212 CSV mean?
+
+Result is the profit or loss Trading 212 reports on each sell, in the currency shown in the `Currency (Result)` column. It is empty on buys, deposits, interest and dividend rows. Add up the Results on your sells and you have your realised trading profit or loss for the period you exported.
+
+A few things worth knowing about it:
+
+- **It is Trading 212's own figure.** It is calculated against the average price Trading 212 holds for the position, using your full history with them, not just the months in your export.
+- **It covers trading only.** A Trading 212 staff reply on the [community forum](https://community.trading212.com/t/isa-realised-profit-loss-does-it-included-dividend/49797/4) says the realised profit in History reflects trade results and excludes dividends and FX fees. Treat dividends and fees as separate lines.
+- **Trading 212 has not published a formal definition** of every column in the Invest and Stocks ISA export. If a figure matters for something important, check a sale of your own against the app.
+
+If you are not sure where to find the file, the guide on [how to export Trading 212 data](/articles/how-to-export-trading-212-data) walks through it and explains the other columns.
+
+---
+
+## How do exchange rates affect your Trading 212 return?
+
+On a foreign stock, your return in pounds depends on both the share price and the exchange rate. A share can rise in dollars and still lose you money in pounds if the pound strengthens over the same period.
+
+Trading 212's help centre article on [how return and gain/loss are calculated](https://helpcentre.trading212.com/hc/en-us/articles/11703149198237-How-are-my-return-and-gain-loss-calculated-Invest-Stocks-ISA) for Invest and Stocks ISA accounts splits the Return on a position into two parts: Gain/Loss (the price move, converted at today's rate) and FX impact (the effect of the exchange rate moving since you bought).
+
+### Worked example: up in dollars, down in pounds
+
+An illustration, ignoring fees:
+
+| | When you buy | Today |
+|---|---|---|
+| Share price | $100 | $110 |
+| GBP/USD rate | 1.25 | 1.40 |
+| Value of 10 shares in dollars | $1,000 | $1,100 |
+| Value of 10 shares in pounds | £800.00 | £785.71 |
+
+In dollars you are up 10%. In pounds you are down £14.29, about 1.8%. Using Trading 212's split:
+
+- **Gain/Loss:** ($110 − $100) × 10 ÷ 1.40 = **+£71.43**
+- **FX impact:** −£14.29 − £71.43 = **−£85.72**
+- **Return:** **−£14.29**
+
+On top of this, Trading 212 charges an [FX fee of 0.15%](https://helpcentre.trading212.com/hc/en-us/articles/360018909758-What-is-the-FX-fee-Invest-Stocks-ISA) when it converts currency to buy or sell an instrument priced in another currency. On the £800 purchase above, that is £1.20 each way. Small per trade, but it adds up if you trade often. Our [Trading 212 fees explained](/articles/trading-212-fees-explained) guide covers the full list.
+
+---
+
+## Why is my Trading 212 return different from my own calculation?
+
+Usually because you and the app are measuring different things. The common causes are deposits, dividends, fees, currency and the return method itself.
+
+1. **Deposits and withdrawals.** If your account value went from £5,000 to £8,000, that is not a £3,000 gain if you paid in £2,500 along the way. Comparing account value with a starting balance mixes your own money with investment growth.
+2. **Dividends.** Dividends arrive as cash, not as a change in the share's average price. If you leave them out, your return looks lower than it really is. If you count them twice (once as cash and once in the account value), it looks higher.
+3. **Fees and charges.** FX fees, UK stamp duty on UK shares, and withholding tax on foreign dividends all reduce what you keep. Whether they sit inside the cost figure or outside it changes the percentage you see.
+4. **Currency.** As in the example above, a foreign holding can show a gain in its own currency and a loss in pounds.
+5. **Average price after transfers or corporate actions.** In specie transfers reset to the price you entered. Splits and spin-offs can also move the average in ways that are not obvious from your own records.
+6. **Partial exports.** If your own spreadsheet only covers the last 12 months but you have held a stock for three years, you are missing the original buys. Trading 212's Result still uses the full history, so the two will not match.
+7. **Different return methods.** Simple, time-weighted and money-weighted returns answer different questions. The next section shows how far apart they can be.
+
+---
+
+## Simple vs time-weighted vs money-weighted return: which should you use?
+
+Use time-weighted return to judge how well your investments performed, and money-weighted return to see how your actual money did, including when you added it. Simple return is fine for a single purchase with no extra deposits.
+
+| Method | Question it answers | Affected by when you deposit? |
+|---|---|---|
+| Simple return | How much did I gain compared with what I put in? | Yes, and it ignores timing entirely |
+| Time-weighted return (TWR) | How did the investments themselves perform? | No |
+| Money-weighted return (MWR) | What annual rate did my actual money earn? | Yes, deliberately |
+
+### Worked example: one year, two deposits
+
+An illustration:
+
+1. On 1 January you deposit **£1,000** and invest it.
+2. By 30 June it has grown 20% to **£1,200**.
+3. On 1 July you deposit another **£5,000**. The account is now £6,200.
+4. In the second half of the year the market falls 10%. On 31 December the account is worth **£5,580**.
+
+Now the three methods:
+
+- **Simple return:** you paid in £6,000 and have £5,580. That is a loss of £420, or **−7.0%**.
+- **Time-weighted return:** chain the two periods together and ignore the deposit: 1.20 × 0.90 = 1.08, so **+8.0%**. This is how the investments did. A fund manager is judged this way, because they do not control when money arrives.
+- **Money-weighted return:** the single annual rate that turns £1,000 for a full year plus £5,000 for half a year into £5,580. It works out at roughly **−11.7%**. Most of your money arrived just before the fall, so your personal experience was worse than the investments' performance.
+
+All three are correct. They answer different questions. If a tracker and your spreadsheet disagree, check which method each one uses before assuming one is wrong.
+
+---
+
+## How do you calculate your total return on Trading 212?
+
+Total return = realised profit + unrealised profit + dividends − fees. Price gains alone leave out income and costs, so they flatter some portfolios and undersell others.
+
+Using the numbers from the partial sell example, plus some dividends and fees:
+
+| Component | Amount |
+|---|---|
+| Realised profit (sum of Result on sells) | +£100 |
+| Unrealised profit on shares still held | +£225 |
+| Dividends received, net of withholding tax | +£40 |
+| FX fees paid | −£6 |
+| **Total return** | **+£359** |
+
+To turn that into a percentage, divide by the money you actually put in. If you made several deposits at different times, the time-weighted or money-weighted methods above give a fairer answer than a simple division.
+
+For a dividend-heavy portfolio, the dividend line can be a large share of the total, so it is worth tracking properly. See our [Trading 212 dividend tracker](/articles/trading-212-dividend-tracker) guide for that. If you invest through Pies, read [Trading 212 Pie performance](/articles/trading-212-pie-performance) as well.
+
+---
+
+## How does Vizvest show your realised profit and loss?
+
+Vizvest covers the realised side of your P&L, plus the dividends and fees you need for total return. It does not use a live price feed, so it does not show unrealised profit or the current value of your holdings. Check those on each position in the Trading 212 app.
+
+When you [upload your export to Vizvest](/dashboard), it reads the file in your browser (nothing is uploaded or stored) and shows:
+
+- **Realised profit** for the whole export, taken directly from the Result column on every sell. Vizvest does not recalculate it, so it matches Trading 212's own figures.
+- **Profit per position**, listing each stock's realised Result so you can see which trades made or lost the most.
+- **A per-stock page** with every buy, sell and dividend for that holding, and the Result next to each sell.
+- **Win rate**, the share of your sells that closed at a profit, on the trading activity view.
+- **Dividends** by month and quarter, net of the tax withheld at source.
+- **Currency conversion fees and withholding tax** added up, so you can subtract them from your realised profit.
+- **Deposits**, so you can see how much of your account is money you paid in rather than growth.
+
+Because Result is calculated by Trading 212 against your full history, the realised figure stays accurate even if your export does not include the original buys. Vizvest will still warn you when sells outrun buys in the file, because other figures such as buy volume will be incomplete. Trading 212 limits each export to 12 months, so for a longer view, export each year and drop all the files in together. Vizvest merges them and removes duplicates. The [portfolio tracker comparison](/articles/trading-212-portfolio-tracker) covers other tools if you also need live valuations.
+
+> Vizvest doesn't cover tax. For anything tax-related, speak to a qualified tax adviser.
+
+---
+
+## Summary
+
+- **Realised** P&L is locked in when you sell. Trading 212 reports it per sale in the Result column. **Unrealised** P&L is the paper gain on what you still hold.
+- Trading 212 uses a **weighted average price**. Partial sells do not change the average of the shares you keep.
+- On foreign shares, **FX impact** can turn a gain in dollars into a loss in pounds, and the 0.15% FX fee applies on conversions.
+- Your figure and the app's can differ because of **deposits, dividends, fees, currency and the return method**. Time-weighted and money-weighted returns answer different questions.
+- **Total return = realised + unrealised + dividends − fees.** Vizvest gives you the realised, dividend and fee lines from your export, and the Trading 212 app gives you the unrealised part.

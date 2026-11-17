@@ -725,3 +725,23 @@
 .t-shimmer::before {
   content: attr(data-text) / "";
 }
+
+/* ── Page-load rise: the first block on a page ─────────────────────────────── */
+/* Same look as <Reveal>, but CSS-only so it starts at first paint instead of
+   waiting for JavaScript to hydrate. Use it for above-the-fold content,
+   where waiting on JS delays Largest Contentful Paint. */
+.t-rise-in {
+  animation: t-rise-in var(--duration-very-slow) var(--ease-reveal) both;
+}
+@keyframes t-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-rise-in { animation-name: t-fade-in; }
+}
+@keyframes t-fade-in {
+  from { opacity: 0; }
+}

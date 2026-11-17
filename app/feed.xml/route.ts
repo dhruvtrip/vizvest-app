@@ -1,8 +1,8 @@
-import { getArticles } from '@/lib/articles'
+import { getArticles, getLatestArticleDate } from '@/lib/articles'
+import { SITE_URL } from '@/lib/site'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vizvest.cc'
-
-export const dynamic = 'force-dynamic'
+// Hourly, so scheduled articles enter the feed on their publish date.
+export const revalidate = 3600
 
 export function GET() {
   const articles = getArticles()
@@ -29,10 +29,10 @@ export function GET() {
   <channel>
     <title>Vizvest Articles</title>
     <link>${SITE_URL}/articles</link>
-    <description>Portfolio tracking and dividend investing insights for Trading 212 users.</description>
+    <description>Guides for Trading 212 investors: exports, dividends, tax, fees and portfolio tracking.</description>
     <language>en-gb</language>
     <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <lastBuildDate>${(getLatestArticleDate() ?? new Date()).toUTCString()}</lastBuildDate>
     ${items}
   </channel>
 </rss>`
