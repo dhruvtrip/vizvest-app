@@ -2,6 +2,7 @@
 @import './styles/transitions.css';
 @import './styles/charts.css';
 @import './styles/orbit.css';
+@import './styles/landing.css';
 
 @tailwind base;
 @tailwind components;

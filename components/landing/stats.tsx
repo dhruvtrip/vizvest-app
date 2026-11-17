@@ -17,17 +17,17 @@ export function Stats() {
           title="Your numbers stay yours"
           description="Your CSV is read on your device and held in memory only. Close the tab and it is gone."
         />
-        <div className="mx-auto mt-12 w-full max-w-5xl lg:mt-16">
-          <ul className="hairline-grid grid grid-cols-1 sm:grid-cols-3">
+        <div className="mx-auto mt-8 w-full max-w-5xl sm:mt-12 lg:mt-16">
+          <ul className="hairline-grid grid grid-cols-3">
             {stats.map((stat) => (
-              <li key={stat.label} className="flex flex-col items-center justify-center px-6 py-12 text-center">
+              <li key={stat.label} className="flex flex-col items-center justify-center px-2 py-6 text-center sm:px-6 sm:py-12">
                 <CountUp
                   value={stat.value}
                   prefix={stat.prefix}
                   suffix={stat.suffix}
-                  className="figure-stat"
+                  className="figure text-2xl font-semibold tracking-tight sm:text-4xl"
                 />
-                <p className="mt-2 text-sm text-muted-foreground">{stat.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground sm:mt-2 sm:text-sm">{stat.label}</p>
               </li>
             ))}
           </ul>

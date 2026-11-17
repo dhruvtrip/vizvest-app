@@ -4,51 +4,79 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { ManageAnalyticsButton } from '@/components/manage-analytics-button'
 import { FooterSignup } from './footer-signup'
 
-const footerLinks = [
-  { label: 'Features', href: '/#features' },
-  { label: 'How it works', href: '/#how-it-works' },
-  { label: 'FAQ', href: '/#faqs' },
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Articles', href: '/articles' },
-  { label: 'Privacy policy', href: '/privacy' },
+const columns = [
+  {
+    heading: 'Product',
+    links: [
+      { label: 'Features', href: '/#features' },
+      { label: 'How it works', href: '/#how-it-works' },
+      { label: 'Dashboard', href: '/dashboard' },
+    ],
+  },
+  {
+    heading: 'Resources',
+    links: [
+      { label: 'Articles', href: '/articles' },
+      { label: 'FAQ', href: '/#faqs' },
+    ],
+  },
+  {
+    heading: 'Legal',
+    links: [{ label: 'Privacy policy', href: '/privacy' }],
+  },
 ]
 
 const linkClass =
-  'inline-flex min-h-9 items-center rounded-sm text-base text-muted-foreground transition-colors duration-150 ease-ui hover:text-brand dark:hover:text-foreground'
+  'inline-flex min-h-9 items-center rounded-sm text-base text-muted-foreground min-[360px]:whitespace-nowrap transition-colors duration-150 ease-ui hover:text-brand dark:hover:text-foreground'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
     <footer className="px-4 pt-8">
-      {/* Brand and links on the left, signup on the right, on the same edges
-          as the bottom bar. The last rows of each side share a baseline. */}
-      <div className="mx-auto grid w-full max-w-shell gap-10 pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-end lg:gap-16 lg:pb-16">
-        <div className="flex flex-col items-start gap-4">
+      {/* Brand and signup first, then three link columns: in one row under
+          the brand on small screens, beside it on wide ones. All of it sits
+          on the same edges as the bottom bar. */}
+      <div className="mx-auto grid w-full max-w-shell grid-cols-[repeat(3,auto)] justify-between gap-x-3 gap-y-8 pb-10 sm:grid-cols-3 sm:justify-normal sm:gap-x-6 sm:gap-y-10 sm:pb-12 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] lg:gap-x-12 lg:pb-16">
+        <div className="col-span-3 flex flex-col items-start gap-4 lg:col-span-1 lg:max-w-md">
           <Link href="/" aria-label="Vizvest home" className="inline-flex h-10 items-center rounded-md">
             <Logo height={18} />
           </Link>
-          <nav aria-label="Footer">
-            <ul className="flex flex-wrap items-center gap-x-6 gap-y-1">
-              {footerLinks.map((link) => (
+          <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+            See what your Trading 212 portfolio really earned, from one CSV export.
+          </p>
+          <FooterSignup />
+        </div>
+
+        {columns.map((column) => (
+          <nav key={column.heading} aria-label={column.heading}>
+            <h2 className="flex h-10 items-center text-sm font-medium">{column.heading}</h2>
+            <ul className="flex flex-col">
+              {column.links.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className={linkClass}>
                     {link.label}
                   </Link>
                 </li>
               ))}
-              <li>
-                <ManageAnalyticsButton className={linkClass} />
-              </li>
+              {column.heading === 'Legal' ? (
+                <li>
+                  <ManageAnalyticsButton className={`${linkClass} text-left`} />
+                </li>
+              ) : null}
             </ul>
           </nav>
-        </div>
-
-        <FooterSignup />
+        ))}
       </div>
 
       <div className="mx-auto flex w-full max-w-shell items-center justify-between gap-4 border-t border-border py-4">
-        <p className="text-sm text-muted-foreground">&copy; {currentYear} Vizvest. All rights reserved.</p>
+        <div className="flex flex-col gap-x-6 gap-y-1 sm:flex-row sm:items-center">
+          <p className="text-sm text-muted-foreground">&copy; {currentYear} Vizvest. All rights reserved.</p>
+          <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+            <span aria-hidden="true" className="ml-[3px] size-1.5 rounded-full bg-up shadow-[0_0_0_3px_hsl(var(--up)/0.18)]" />
+            Runs entirely in your browser
+          </p>
+        </div>
         <ThemeToggle />
       </div>
     </footer>

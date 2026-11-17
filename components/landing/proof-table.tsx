@@ -28,7 +28,7 @@ const items: { label: string; icon: Icon; hue: number }[] = [
 export function ProofTable() {
   return (
     <Reveal>
-      <section aria-labelledby="proof-heading" className="flex flex-col gap-8">
+      <section aria-labelledby="proof-heading" className="flex flex-col gap-6 sm:gap-8">
         <SectionHeading
           id="proof-heading"
           title="Reads everything in your export"
@@ -40,7 +40,7 @@ export function ProofTable() {
               <li
                 key={label}
                 style={{ '--hue': `rgb(var(--chart-${hue}))` } as React.CSSProperties}
-                className="group flex min-h-32 flex-col items-center gap-3 px-3 pb-7 pt-9 text-center"
+                className="group flex min-h-24 flex-col items-center gap-2 px-3 pb-3.5 pt-4 text-center sm:min-h-32 sm:gap-3 sm:pb-7 sm:pt-9"
               >
                 <IconComponent
                   size={24}

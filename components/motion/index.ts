@@ -5,6 +5,7 @@ export { MotionProvider } from './motion-provider'
 export { Reveal, PopGroup, PopItem } from './reveal'
 export { CountUp } from './count-up'
 export { useReducedMotionSafe } from './use-reduced-motion-safe'
+export { useOnScreen } from './use-on-screen'
 
 export { SlidingTabs } from './sliding-tabs'
 export type { SlidingTabsItem, SlidingTabsProps } from './sliding-tabs'

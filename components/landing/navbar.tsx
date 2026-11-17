@@ -67,13 +67,13 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        'nav-enter fixed inset-x-0 top-0 z-50 transition-[opacity,transform] duration-300 ease-reveal',
+        'nav-enter fixed inset-x-0 top-0 z-50 px-4 transition-[opacity,transform] duration-300 ease-reveal',
         isHidden && 'pointer-events-none opacity-0 motion-safe:-translate-y-5'
       )}
       // Keep hidden links out of the tab order.
       inert={isHidden || undefined}
     >
-      <div className="mx-auto w-full max-w-content px-4 pt-4">
+      <div className="mx-auto w-full max-w-shell pt-4">
         <div className={cn('transition-transform duration-200 ease-glide', compact && 'motion-safe:scale-[0.98]')}>
           <nav
             aria-label="Main"

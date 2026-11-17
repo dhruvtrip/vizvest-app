@@ -1,75 +1,65 @@
 import { Reveal } from '@/components/motion/reveal'
-import { FeatureVisual } from './feature-visual'
+import { features } from './feature-list'
 import { SectionHeading } from './section-heading'
+import { SnapRail } from './snap-rail'
 
-const left = [
-  {
-    title: 'Dividends, net of tax',
-    description: 'Monthly and quarterly income, the tax withheld at source and what actually reached your account.',
-  },
-  {
-    title: 'Profit per position',
-    description: 'Realised results taken straight from Trading 212’s own figures, position by position.',
-  },
-  {
-    title: 'Trading habits, mapped',
-    description: 'A day-by-day heatmap with streaks, your busiest month and your win rate.',
-  },
-]
-
-const right = [
-  {
-    title: 'What trading cost you',
-    description: 'Currency conversion fees and withholding tax added up, so the return you see is the one you kept.',
-  },
-  {
-    title: 'Every trade in a stock',
-    description: 'Open any holding for its full buy, sell and dividend history in one place.',
-  },
-  {
-    title: 'Many exports, one history',
-    description: 'Upload a file per year. Vizvest merges them and drops the rows that overlap.',
-  },
-]
-
-function Feature({ title, description }: { title: string; description: string }) {
+/** A hairline that runs through the card, with a diamond where it meets each edge. */
+function Hairline() {
   return (
-    <div className="lg:max-w-60">
-      <h3 className="heading-card mb-2">{title}</h3>
-      <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-    </div>
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0">
+      <span className="absolute -inset-x-96 top-1/2 h-px bg-panel-foreground/30" />
+      <span className="absolute left-0 top-1/2 z-10 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-panel-foreground" />
+      <span className="absolute right-0 top-1/2 z-10 size-2 -translate-y-1/2 translate-x-1/2 rotate-45 bg-panel-foreground" />
+    </span>
   )
 }
 
-/** Signature section: the product in the middle, three benefits on each side, offset from one another. */
+/**
+ * Signature section: six working sketches of the product. Each one floats as
+ * a glass card on its own dark panel, with a title and a line underneath.
+ * On phones the cards form a swipe row. From md up they stack, then sit in
+ * two columns whose rows share one height through a subgrid, and hovering a
+ * cell lifts its card.
+ */
 export function Features() {
   return (
     <section id="features" aria-labelledby="features-heading" className="mx-auto w-full max-w-shell scroll-mt-28">
       <Reveal>
         <SectionHeading
           id="features-heading"
-          title="What your export can tell you"
+          title="What Vizvest shows you"
           description="Six views of your portfolio, all built from the same CSV."
         />
       </Reveal>
 
-      <Reveal className="mt-12 grid grid-cols-1 items-center gap-10 lg:mt-16 lg:grid-cols-[1fr_2.2fr_1fr] lg:gap-12">
-        <div className="order-2 grid gap-8 sm:grid-cols-3 lg:order-1 lg:grid-cols-1 lg:gap-20 lg:pb-24">
-          {left.map((feature) => (
-            <Feature key={feature.title} {...feature} />
-          ))}
-        </div>
-
-        <div className="order-1 lg:order-2">
-          <FeatureVisual />
-        </div>
-
-        <div className="order-3 grid gap-8 sm:grid-cols-3 lg:grid-cols-1 lg:gap-20 lg:pt-24">
-          {right.map((feature) => (
-            <Feature key={feature.title} {...feature} />
-          ))}
-        </div>
-      </Reveal>
+      {/* In the swipe row a chart gives up its own touch scrubbing, so a swipe that starts on it moves the row. */}
+      <SnapRail
+        aria-label="Show a feature"
+        labels={features.map(({ id, label }) => ({ value: id, label }))}
+        className="max-md:[&_.vz-plot]:touch-auto md:mx-auto md:mt-12 md:grid md:max-w-2xl md:gap-x-6 md:gap-y-12 lg:mt-16 lg:max-w-none lg:grid-cols-2"
+      >
+        {features.map(({ id, title, description, Visual }) => (
+          // A card peeking in from the side is never far enough on screen to
+          // trigger its reveal, so the swipe row shows its cards from the start.
+          <Reveal
+            key={id}
+            className="group flex flex-col gap-y-5 max-md:!transform-none max-md:!opacity-100 md:row-span-2 md:grid md:grid-rows-subgrid"
+          >
+            <div className="panel-texture flex items-center rounded-4xl p-3 max-md:flex-1 sm:p-6 xl:p-10">
+              <div className="relative w-full transition-transform duration-400 ease-smooth-out motion-safe:group-hover:-translate-y-1.5">
+                {id === 'profit' ? <Hairline /> : null}
+                <div className="surface-glass relative p-4 text-foreground sm:p-6">
+                  <Visual />
+                </div>
+              </div>
+            </div>
+            <div className="px-1">
+              <h3 className="heading-card">{title}</h3>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{description}</p>
+            </div>
+          </Reveal>
+        ))}
+      </SnapRail>
     </section>
   )
 }

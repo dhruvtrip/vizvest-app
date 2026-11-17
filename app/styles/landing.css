@@ -1,0 +1,110 @@
+/* Landing page pieces that need more than utilities. See components/landing. */
+
+/* --------------------------------------------------------------------------
+   Scroll statement: the field of stock logos behind the sentence.
+   The statement writes its scroll progress to --p (0 to 1) on the sticky box.
+   Without it (reduced motion, no script) --p stays at 1 and nothing moves.
+   -------------------------------------------------------------------------- */
+
+/* Tiles fade toward the centre, where the sentence sits. */
+.logo-field {
+  -webkit-mask-image: radial-gradient(ellipse farthest-side at center, transparent 46%, #000 92%);
+  mask-image: radial-gradient(ellipse farthest-side at center, transparent 46%, #000 92%);
+}
+
+.logo-tile {
+  position: absolute;
+  left: var(--nx);
+  top: var(--ny);
+  width: calc(var(--size) * 0.62);
+  height: calc(var(--size) * 0.62);
+  border-radius: 24%;
+  background: hsl(var(--raised));
+  box-shadow: 0 0 0 1px hsl(var(--border)), var(--shadow-pop);
+  opacity: calc(var(--o) + var(--gain) * var(--p, 1));
+  transform: translate3d(-50%, calc(-50% + (0.5 - var(--p, 1)) * var(--drift)), 0);
+  will-change: transform, opacity;
+}
+
+.logo-tile > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 22%;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .logo-tile {
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Feature sketches
+   -------------------------------------------------------------------------- */
+
+/* Heatmap cells fade and grow in as a wave. Each cell sets its own delay. */
+.fv-heat-fill {
+  animation: fv-heat-in 400ms var(--ease-smooth-out) both;
+}
+
+@keyframes fv-heat-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fv-heat-fill {
+    animation: none;
+  }
+}
+
+/* The orbit's currency chip, laid out in the normal flow and sized for a card. */
+.currency-chip.currency-chip--inline {
+  --flag-size: 1.5rem;
+  position: static;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  box-shadow: 0 0 0 1px hsl(var(--border)), var(--shadow-xs);
+  transform: none;
+  transition:
+    box-shadow var(--dur-ui) var(--ease-ui),
+    transform var(--dur-ui) var(--ease-settle);
+}
+
+.currency-chip--inline .currency-chip__code {
+  font-size: 0.8125rem;
+}
+
+.currency-chip--inline[data-active='true'] {
+  box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.6), var(--shadow-pop);
+}
+
+button.currency-chip--inline:active {
+  transform: scale(var(--press-scale));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.currency-chip--inline:active {
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Snap rail: the swipe row and its label row scroll without a visible bar.
+   They stay scroll containers, so touch, trackpad and keyboard still move them.
+   -------------------------------------------------------------------------- */
+
+.snap-rail-scroll {
+  scrollbar-width: none;
+}
+
+.snap-rail-scroll::-webkit-scrollbar {
+  display: none;
+}

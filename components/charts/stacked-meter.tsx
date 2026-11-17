@@ -15,6 +15,10 @@ export interface StackedMeterProps {
   /** The whole the parts are measured against. Defaults to their sum; a larger total leaves the rest of the track empty. */
   total?: number
   legend?: boolean
+  /** Lights one part from outside, for a legend the caller draws itself. */
+  activeId?: string | null
+  /** Called with the part under the pointer, or null when it leaves the bar. */
+  onActiveChange?: (id: string | null) => void
   className?: string
 }
 
@@ -24,20 +28,32 @@ const share = (v: number, whole: number) => (whole > 0 ? `${Math.round((v / whol
  * One whole split into parts: an 8px bar with 2px gaps and a wrapping legend
  * with values. Hovering a part or its legend entry dims the others.
  */
-export function StackedMeter({ segments, 'aria-label': ariaLabel, total, legend = true, className }: StackedMeterProps) {
+export function StackedMeter({
+  segments,
+  'aria-label': ariaLabel,
+  total,
+  legend = true,
+  activeId: outerActiveId = null,
+  onActiveChange,
+  className,
+}: StackedMeterProps) {
   const rootRef = React.useRef<HTMLDivElement>(null)
   const boxRef = React.useRef<HTMLDivElement>(null)
   const { phase } = useGrowPhase(rootRef, 1)
   const [activeId, setActiveId] = React.useState<string | null>(null)
-  const [hoverId, setHoverId] = React.useState<string | null>(null)
+  const [hoverId, setHoverIdState] = React.useState<string | null>(null)
   const [anchor, setAnchor] = React.useState({ x: 0, y: 0 })
+  const setHoverId = (id: string | null) => {
+    setHoverIdState(id)
+    if (id !== hoverId) onActiveChange?.(id)
+  }
   usePointerDownOutside(boxRef, hoverId !== null, () => setHoverId(null))
 
   const parts = segments.map((s) => ({ ...s, v: Math.max(0, finite(s.value)) }))
   const sum = parts.reduce((a, s) => a + s.v, 0)
   const whole = Math.max(sum, total !== undefined ? finite(total) : 0)
   const rest = whole - sum
-  const lit = hoverId ?? activeId
+  const lit = hoverId ?? outerActiveId ?? activeId
   const hovered = parts.find((p) => p.id === hoverId) ?? null
 
   const segRefs = React.useRef<Record<string, HTMLSpanElement | null>>({})

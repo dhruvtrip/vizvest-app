@@ -26,7 +26,6 @@ import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { getPartialDataExplanation } from '@/lib/partial-data-detector'
 import { EmailSignupDialog } from '@/components/features/email-signup-dialog'
-import { Footer } from '@/components/landing/footer'
 
 const EASE_OUT = [0, 0, 0.58, 1] as const
 
@@ -392,7 +391,6 @@ export default function DashboardPage () {
       </main>
 
     </div>
-      {showWelcome && <Footer />}
     </div>
   )
 }

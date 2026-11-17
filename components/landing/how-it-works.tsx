@@ -1,21 +1,25 @@
 import { Check, Download, FileSpreadsheet } from '@/components/icons'
 import { Reveal } from '@/components/motion/reveal'
 import { SectionHeading } from './section-heading'
+import { SnapRail } from './snap-rail'
 
 const steps = [
   {
+    label: 'Export',
     title: 'Export your history',
     description:
       'In Trading 212, open History and export a CSV. Each file holds up to 12 months, so export as many ranges as you need.',
     visual: <ExportVisual />,
   },
   {
+    label: 'Upload',
     title: 'Drop the files in',
     description:
       'Vizvest checks the format, merges your files and removes duplicate rows. Everything happens on your device.',
     visual: <DropVisual />,
   },
   {
+    label: 'Read',
     title: 'Read your portfolio',
     description:
       'Holdings, dividends, fees and trading activity appear at once. Open any stock to see its full history.',
@@ -34,29 +38,44 @@ export function HowItWorks() {
         />
       </Reveal>
 
-      <ol className="mt-12 grid gap-10 lg:mt-16 lg:grid-cols-3 lg:gap-8">
+      {/* A swipe row on phones with the step numbers in its label row, picture
+          beside text on tablets, three columns on desktop. */}
+      <SnapRail
+        as="ol"
+        aria-label="Show a step"
+        labels={steps.map((step, index) => ({
+          value: `step-${index + 1}`,
+          label: (
+            <>
+              <span className="figure text-muted-foreground">{index + 1}</span>
+              {step.label}
+            </>
+          ),
+        }))}
+        className="md:mt-12 md:grid md:gap-10 lg:mt-16 lg:grid-cols-3 lg:gap-8"
+      >
         {steps.map((step, index) => (
           <li key={step.title}>
-            {/* One column on phones, picture beside text on tablets, three columns on desktop. */}
+            {/* The swipe row shows its cards from the start: one peeking in from the side would never trigger its reveal. */}
             <Reveal
               delay={index * 0.1}
-              className="flex flex-col gap-6 md:max-lg:flex-row md:max-lg:items-center md:max-lg:gap-10"
+              className="flex flex-col gap-5 max-md:!transform-none max-md:!opacity-100 md:gap-6 md:max-lg:flex-row md:max-lg:items-center md:max-lg:gap-10"
             >
               <div
                 aria-hidden="true"
-                className="relative flex h-48 items-center justify-center overflow-hidden rounded-3xl bg-muted p-6 md:max-lg:w-1/2"
+                className="relative flex h-40 items-center justify-center overflow-hidden rounded-3xl bg-muted p-4 max-md:[&>*]:scale-90 md:h-48 md:p-6 md:max-lg:w-1/2"
               >
                 {step.visual}
               </div>
               <div className="md:max-lg:w-1/2">
-                <p className="figure text-sm font-normal text-muted-foreground">Step {index + 1}</p>
-                <h3 className="heading-card mt-1">{step.title}</h3>
+                <p className="figure text-sm font-normal text-muted-foreground max-md:hidden">Step {index + 1}</p>
+                <h3 className="heading-card md:mt-1">{step.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
               </div>
             </Reveal>
           </li>
         ))}
-      </ol>
+      </SnapRail>
     </section>
   )
 }

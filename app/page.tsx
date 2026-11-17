@@ -3,6 +3,7 @@ import {
   Hero,
   ProductDemo,
   ProofTable,
+  ScrollStatement,
   Features,
   Currencies,
   HowItWorks,
@@ -40,13 +41,14 @@ export default function HomePage() {
         <Navbar />
         <main
           id="main-content"
-          className="relative flex flex-col gap-28 px-4 pb-28 pt-32 lg:gap-section lg:pb-section lg:pt-40"
+          className="relative flex flex-col gap-20 px-4 pb-20 pt-32 lg:gap-section lg:pb-section lg:pt-40"
         >
-          <div className="flex flex-col gap-12 lg:gap-16">
+          <div className="flex flex-col gap-10 sm:gap-12 lg:gap-16">
             <Hero />
             <ProductDemo />
             <ProofTable />
           </div>
+          <ScrollStatement />
           <Features />
           <Currencies />
           <HowItWorks />

@@ -39,6 +39,6 @@ export const FAQS = [
   {
     id: 'price',
     question: 'Is Vizvest free?',
-    answer: 'Yes. Vizvest is free to use and there is no account to create.',
+    answer: 'Yes. Vizvest is free to use, and no account is required.',
   },
 ] as const
