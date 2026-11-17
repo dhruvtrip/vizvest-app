@@ -3,6 +3,7 @@
 @import './styles/charts.css';
 @import './styles/orbit.css';
 @import './styles/landing.css';
+@import './styles/shine-ring.css';
 
 @tailwind base;
 @tailwind components;

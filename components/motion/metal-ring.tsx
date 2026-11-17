@@ -52,11 +52,12 @@ export function MetalRing({ tone, children }: MetalRingProps) {
 
   // metal-fx strips the child's background and border (`!important`) and
   // paints its own grey or white fill on the wrapper, so our pill fill, hover
-  // and press move onto the wrapper, marked important to win. `px-px` stands
-  // in for the removed 1px border so the button keeps its width.
+  // and press move onto the wrapper, marked important to win. The button's
+  // own press scale is switched off so it doesn't scale twice. `px-px`
+  // stands in for the removed 1px border so the button keeps its width.
   return (
     <MetalFx
-      className="!bg-primary px-px transition-[background-color,transform] duration-150 ease-ui has-[:hover]:!bg-brand/90 motion-safe:has-[:active]:scale-[0.96]"
+      className="!bg-primary px-px transition-[background-color,transform] duration-150 ease-ui has-[:hover]:!bg-brand/90 motion-safe:has-[:active]:scale-[0.96] [&_.metal-fx-content>*]:!transform-none"
       variant="button"
       preset={tone}
       theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
