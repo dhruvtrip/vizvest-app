@@ -3,6 +3,7 @@ import { Logo } from '@/components/logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ManageAnalyticsButton } from '@/components/manage-analytics-button'
 import { FooterSignup } from './footer-signup'
+import { FooterWordmark } from './footer-wordmark'
 
 const columns = [
   {
@@ -78,6 +79,10 @@ export function Footer() {
           </p>
         </div>
         <ThemeToggle />
+      </div>
+
+      <div className="mx-auto w-full max-w-shell pb-4 pt-6 sm:pb-6 sm:pt-10 lg:pt-14">
+        <FooterWordmark className="text-foreground/10" />
       </div>
     </footer>
   )
