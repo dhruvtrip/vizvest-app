@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Papa from 'papaparse'
@@ -591,6 +592,13 @@ export function CSVUpload({ onDataParsed, isHidden = false, className }: CSVUplo
       <p className="mt-5 text-balance text-center text-sm text-muted-foreground">
         <Lock size={14} className="me-1.5 inline-block align-[-2px]" aria-hidden="true" />
         Your file is read in your browser and never uploaded
+      </p>
+      <p className="mx-auto mt-2 max-w-md text-balance text-center text-xs text-muted-foreground">
+        For information only, not financial or tax advice. Figures may contain errors, so check them against your
+        Trading&nbsp;212 statements.{' '}
+        <Link href="/terms" className="underline decoration-muted-foreground/40 underline-offset-2 transition-colors duration-150 ease-ui hover:text-foreground">
+          Terms
+        </Link>
       </p>
 
       <div className="mt-12 border-y border-border">

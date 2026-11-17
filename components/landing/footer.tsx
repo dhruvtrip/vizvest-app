@@ -19,11 +19,15 @@ const columns = [
     links: [
       { label: 'Articles', href: '/articles' },
       { label: 'FAQ', href: '/#faqs' },
+      { label: 'About', href: '/about' },
     ],
   },
   {
     heading: 'Legal',
-    links: [{ label: 'Privacy policy', href: '/privacy' }],
+    links: [
+      { label: 'Privacy policy', href: '/privacy' },
+      { label: 'Terms of use', href: '/terms' },
+    ],
   },
 ]
 
@@ -69,6 +73,17 @@ export function Footer() {
           </nav>
         ))}
       </div>
+
+      <p className="mx-auto w-full max-w-shell border-t border-border py-4 text-xs leading-relaxed text-muted-foreground">
+        Vizvest is for information only and is not financial, investment or tax advice. Figures are worked out from
+        your export and may contain errors, so check them against your official Trading&nbsp;212 statements. Do not
+        use Vizvest for tax purposes: always consult a qualified tax adviser. Vizvest is not affiliated with
+        Trading&nbsp;212. See the{' '}
+        <Link href="/terms" className="underline decoration-muted-foreground/40 underline-offset-2 transition-colors duration-150 ease-ui hover:text-foreground">
+          terms of use
+        </Link>
+        .
+      </p>
 
       <div className="mx-auto flex w-full max-w-shell items-center justify-between gap-4 border-t border-border py-4">
         <div className="flex flex-col gap-x-6 gap-y-1 sm:flex-row sm:items-center">

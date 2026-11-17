@@ -8,13 +8,18 @@ import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/motion/reveal'
 import { Navbar, Footer } from '@/components/landing'
 import { getMDXComponents } from '@/components/articles/mdx-components'
-import { getArticleBySlug, getAllSlugs } from '@/lib/articles'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vizvest.cc'
+import { ArticleCard } from '@/components/articles/article-card'
+import { getArticleBySlug, getAllSlugs, getRelatedArticles } from '@/lib/articles'
+import { pageMetadata } from '@/lib/metadata'
+import { ORGANIZATION_ID, SITE_NAME, WEBSITE_ID, absoluteUrl } from '@/lib/site'
 
 interface Props {
   params: Promise<{ slug: string }>
 }
+
+// Scheduled articles (future `date`) render on demand once their day arrives.
+export const revalidate = 3600
+export const dynamicParams = true
 
 export async function generateStaticParams() {
   const slugs = getAllSlugs()
@@ -27,27 +32,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!result) return {}
 
   const { meta } = result
-  const url = `${SITE_URL}/articles/${slug}`
 
-  return {
+  return pageMetadata({
     title: meta.title.length <= 50 ? `${meta.title} | Vizvest` : meta.title,
+    socialTitle: meta.title,
     description: meta.description,
-    keywords: meta.tags,
-    openGraph: {
-      type: 'article',
-      title: meta.title,
-      description: meta.description,
-      url,
-      publishedTime: meta.date,
-      tags: meta.tags,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: meta.title,
-      description: meta.description,
-    },
-    alternates: { canonical: url },
-  }
+    path: `/articles/${slug}`,
+    type: 'article',
+    publishedTime: meta.date,
+    modifiedTime: meta.lastModified,
+    tags: meta.tags,
+  })
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
 }
 
 export default async function ArticlePage({ params }: Props) {
@@ -56,39 +60,47 @@ export default async function ArticlePage({ params }: Props) {
   if (!result) notFound()
 
   const { meta, content } = result
-  const url = `${SITE_URL}/articles/${slug}`
+  const url = absoluteUrl(`/articles/${slug}`)
+  const related = getRelatedArticles(slug)
+  const updated = meta.lastModified && meta.lastModified > meta.date ? meta.lastModified : undefined
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: meta.title,
-    description: meta.description,
-    datePublished: meta.date,
-    ...(meta.lastModified && { dateModified: meta.lastModified }),
-    author: meta.author
-      ? {
-          '@type': 'Person',
-          name: meta.author,
-          jobTitle: 'Founder',
-          worksFor: {
-            '@type': 'Organization',
-            name: 'Vizvest',
-            url: SITE_URL,
-          },
-        }
-      : {
-          '@type': 'Organization',
-          name: 'Vizvest',
-          url: SITE_URL,
-        },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Vizvest',
-      url: SITE_URL,
-    },
-    url,
-    keywords: meta.tags.join(', '),
-    ...(meta.image && { image: `${SITE_URL}${meta.image}` }),
+    '@graph': [
+      {
+        '@type': 'BlogPosting',
+        '@id': `${url}#article`,
+        headline: meta.title,
+        description: meta.description,
+        datePublished: meta.date,
+        dateModified: meta.lastModified ?? meta.date,
+        inLanguage: 'en-GB',
+        url,
+        mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+        isPartOf: { '@id': WEBSITE_ID },
+        image: meta.image ? absoluteUrl(meta.image) : `${url}/opengraph-image`,
+        author: meta.author
+          ? {
+              '@type': 'Person',
+              name: meta.author,
+              jobTitle: 'Founder',
+              url: absoluteUrl('/about'),
+              worksFor: { '@id': ORGANIZATION_ID },
+            }
+          : { '@id': ORGANIZATION_ID },
+        publisher: { '@id': ORGANIZATION_ID },
+        keywords: meta.tags.join(', '),
+        wordCount: content.split(/\s+/).filter(Boolean).length,
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: SITE_NAME, item: absoluteUrl('/') },
+          { '@type': 'ListItem', position: 2, name: 'Articles', item: absoluteUrl('/articles') },
+          { '@type': 'ListItem', position: 3, name: meta.title, item: url },
+        ],
+      },
+    ],
   }
 
   const faqJsonLd = meta.faqs && meta.faqs.length > 0
@@ -105,12 +117,6 @@ export default async function ArticlePage({ params }: Props) {
         })),
       }
     : null
-
-  const formattedDate = new Date(meta.date).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
 
   return (
     <>
@@ -149,7 +155,15 @@ export default async function ArticlePage({ params }: Props) {
                   {meta.title}
                 </h1>
                 <p className="figure mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-normal text-muted-foreground">
-                  <time dateTime={meta.date}>{formattedDate}</time>
+                  <time dateTime={meta.date}>{formatDate(meta.date)}</time>
+                  {updated && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>
+                        Updated <time dateTime={updated}>{formatDate(updated)}</time>
+                      </span>
+                    </>
+                  )}
                   <span aria-hidden="true">·</span>
                   <span>{meta.readingTime}</span>
                   {meta.author && (
@@ -157,7 +171,12 @@ export default async function ArticlePage({ params }: Props) {
                       <span aria-hidden="true" className="hidden sm:inline">
                         ·
                       </span>
-                      <span className="basis-full sm:basis-auto">{meta.author}, founder of Vizvest</span>
+                      <span className="basis-full sm:basis-auto">
+                        <Link href="/about" className="underline decoration-foreground/30 underline-offset-4 transition-colors duration-150 ease-ui hover:text-foreground">
+                          {meta.author}
+                        </Link>
+                        , founder of Vizvest
+                      </span>
                     </>
                   )}
                 </p>
@@ -171,6 +190,19 @@ export default async function ArticlePage({ params }: Props) {
                 />
               </div>
             </article>
+
+            {related.length > 0 && (
+              <section aria-labelledby="related-heading" className="mt-16 border-t border-border pt-12 lg:mt-20">
+                <h2 id="related-heading" className="heading-card text-foreground">
+                  Keep reading
+                </h2>
+                <div className="mt-6 grid grid-cols-1 gap-4">
+                  {related.map((article, i) => (
+                    <ArticleCard key={article.slug} article={article} index={i} headingLevel={3} />
+                  ))}
+                </div>
+              </section>
+            )}
 
             <Reveal className="mt-16 lg:mt-20">
               <aside

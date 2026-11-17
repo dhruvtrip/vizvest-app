@@ -34,7 +34,7 @@ export const FAQS = [
     id: 'export',
     question: 'Where do I get my Trading 212 export?',
     answer:
-      'In your Trading 212 account, open Settings, then History, and choose Export. Pick a date range and confirm. The CSV downloads to your device, ready to upload here.',
+      'In the Trading 212 app or on the web, open the Menu in your Invest or Stocks ISA account, choose History, then tap the export icon in the top-right corner. Pick a date range of up to 12 months and the data types you want, confirm, and the CSV downloads to your device, ready to upload here.',
   },
   {
     id: 'price',

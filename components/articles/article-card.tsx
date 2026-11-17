@@ -7,17 +7,21 @@ import type { ArticleMeta } from '@/types/article'
 interface ArticleCardProps {
   article: ArticleMeta
   index: number
+  /** h2 on the articles index, h3 where the cards sit under their own heading. */
+  headingLevel?: 2 | 3
 }
 
 // Cards land one after another, the last no more than 400ms behind the first.
 const STAGGER = 0.08
 const MAX_DELAY = 0.4
 
-export function ArticleCard({ article, index }: ArticleCardProps) {
+export function ArticleCard({ article, index, headingLevel = 2 }: ArticleCardProps) {
+  const Heading = headingLevel === 3 ? 'h3' : 'h2'
   const formattedDate = new Date(article.date).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'UTC',
   })
 
   return (
@@ -27,7 +31,7 @@ export function ArticleCard({ article, index }: ArticleCardProps) {
           className="flex h-full flex-col p-6 transition-[background-color,border-color] duration-150 ease-ui group-hover:border-muted-foreground/30 group-hover:bg-muted dark:group-hover:bg-muted-foreground/20"
         >
           <article className="flex h-full flex-col">
-            <h2 className="heading-card text-foreground">{article.title}</h2>
+            <Heading className="heading-card text-foreground">{article.title}</Heading>
             <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
               {article.description}
             </p>

@@ -1,6 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
+  // Article pages, the sitemap, RSS and llms.txt read content/articles at
+  // request time when they revalidate (scheduled articles go live that way),
+  // so the MDX files have to ship with the server functions.
+  outputFileTracingIncludes: {
+    '/**': ['./content/articles/**/*'],
+  },
+  experimental: {
+    // Inline the (small) stylesheet into the HTML so it no longer blocks first
+    // render as a separate request. Lighthouse flagged ~150 ms on mobile.
+    inlineCss: true,
+  },
   async rewrites() {
     return [
       {
