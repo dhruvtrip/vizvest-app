@@ -6,7 +6,9 @@
 
 @property --shine-angle {
   syntax: '<angle>';
-  inherits: true;
+  /* Read only on .shine-ring, where --shine-gradient resolves, so the
+     button underneath isn't restyled every frame. */
+  inherits: false;
   initial-value: 0deg;
 }
 
@@ -15,7 +17,9 @@
   --shine-warm: hsl(var(--brand));
   --shine-hot: color-mix(in oklab, hsl(var(--brand)) 40%, white);
   --shine-gradient: conic-gradient(
-    from var(--shine-angle),
+    /* The fallback keeps a still ring in browsers without @property, where
+       the unregistered angle would otherwise blink in and out. */
+    from var(--shine-angle, 0deg),
     var(--shine-dim) 0deg,
     var(--shine-warm) 40deg,
     var(--shine-hot) 70deg,
