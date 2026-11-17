@@ -72,10 +72,13 @@ export interface SplitEvent {
   cutoff: string
   source: SplitSource
   /**
-   * Ticker of the CSV split rows. Used to match trade rows only when the
-   * split rows carried no ISIN (`isins` is empty).
+   * CSV events only: the tickers of the split rows the event was read from
+   * (several when same-second pairs of different listings were merged).
+   * Used (a) so that when one split is recorded once per listing, each listing
+   * follows its own event, and (b) to match trade rows by ticker when `isins`
+   * is empty. Absent on table events.
    */
-  tickerFallback?: string
+  sourceTickers?: string[]
 }
 
 /**

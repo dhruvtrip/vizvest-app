@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NormalizedTransaction, Trading212Transaction } from '@/types/trading212'
+import { normalizeAllTransactions } from '@/lib/currency-normalizer'
 import { useDashboardStore } from './useDashboardStore'
 
 const mockNormalized: NormalizedTransaction[] = [
@@ -119,5 +120,97 @@ describe('useDashboardStore', () => {
     expect(state.selectedTicker).toBeNull()
     expect(state.currentView).toBe('portfolio')
     expect(state.showDividendsDashboard).toBe(false)
+  })
+
+  describe('stock splits', () => {
+    // Synthetic rows. US0378331005 is Apple in the bundled split table
+    // (4-for-1, effective 2020-08-31).
+    function trade(action: string, time: string, shares: number, price: number): NormalizedTransaction {
+      return {
+        Action: action,
+        Time: time,
+        ISIN: 'US0378331005',
+        Ticker: 'AAPL',
+        Name: 'Apple',
+        'No. of shares': shares,
+        'Price / share': price,
+        'Currency (Price / share)': 'USD',
+        Total: shares * price,
+        'Currency (Total)': 'USD',
+        totalInBaseCurrency: shares * price,
+        detectedBaseCurrency: 'USD'
+      }
+    }
+    const buyBefore = trade('Market buy', '2020-08-03 15:00:00', 1, 400)
+    const sellAfter = trade('Market sell', '2020-09-15 15:00:00', 4, 110)
+    const lonelySplitRow: NormalizedTransaction = {
+      Action: 'Stock split open',
+      Time: '2025-06-10 05:00:00',
+      ISIN: 'ZZ0000000018',
+      Ticker: 'ABC',
+      'No. of shares': 4,
+      Total: 40,
+      'Currency (Total)': 'USD',
+      totalInBaseCurrency: 40,
+      detectedBaseCurrency: 'USD'
+    }
+
+    function upload(rows: NormalizedTransaction[]) {
+      vi.mocked(normalizeAllTransactions).mockReturnValueOnce(rows)
+      useDashboardStore.getState().handleDataParsed(rows, { fileName: 'test.csv', rowCount: rows.length })
+    }
+
+    it('starts with no applied splits', () => {
+      const state = useDashboardStore.getState()
+      expect(state.appliedSplits).toEqual([])
+      expect(state.unpairedSplitRows).toBe(0)
+      expect(state.isSplitBannerDismissed).toBe(false)
+    })
+
+    it('populates appliedSplits after upload and clears them on uploadAnother', () => {
+      upload([buyBefore, sellAfter, lonelySplitRow])
+      let state = useDashboardStore.getState()
+      expect(state.appliedSplits).toHaveLength(1)
+      expect(state.appliedSplits[0]).toMatchObject({
+        name: 'Apple',
+        ratioLabel: '4-for-1',
+        cutoff: '2020-08-31 02:00:00',
+        source: 'table',
+        tickers: ['AAPL'],
+        rowsAdjusted: 1
+      })
+      expect(state.unpairedSplitRows).toBe(1)
+      expect(state.normalizedTransactions[0]).toMatchObject({
+        'No. of shares': 1,
+        adjustedShares: 4,
+        adjustedPricePerShare: 100,
+        splitFactor: 4,
+        Total: 400
+      })
+
+      useDashboardStore.getState().dismissSplitBanner()
+      expect(useDashboardStore.getState().isSplitBannerDismissed).toBe(true)
+
+      useDashboardStore.getState().uploadAnother()
+      state = useDashboardStore.getState()
+      expect(state.appliedSplits).toEqual([])
+      expect(state.unpairedSplitRows).toBe(0)
+      expect(state.isSplitBannerDismissed).toBe(false)
+    })
+
+    it('runs partial-data detection on split-adjusted shares', () => {
+      // Buy 1 before a 4-for-1 and sell 4 after: no "sold more than bought" warning.
+      upload([buyBefore, sellAfter])
+      const state = useDashboardStore.getState()
+      expect(state.appliedSplits).toHaveLength(1)
+      expect(state.partialDataWarning?.isPartialData).toBe(false)
+      expect(state.partialDataWarning?.affectedTickers).toEqual([])
+    })
+
+    it('still warns when shares are genuinely missing after adjustment', () => {
+      // 1 share before the 4-for-1 is 4 today; selling 6 means 2 came from elsewhere.
+      upload([buyBefore, trade('Market sell', '2020-09-15 15:00:00', 6, 110)])
+      expect(useDashboardStore.getState().partialDataWarning?.affectedTickers).toEqual(['AAPL'])
+    })
   })
 })

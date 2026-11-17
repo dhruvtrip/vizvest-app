@@ -1,5 +1,5 @@
 import type { NormalizedTransaction, PartialDataWarning } from '@/types/trading212'
-import { isTradeAction, isBuyAction, isSellAction } from './transaction-utils'
+import { isTradeAction, isBuyAction, isSellAction, getAdjustedShares } from './transaction-utils'
 
 /**
  * Detects if the uploaded CSV contains partial transaction data
@@ -52,7 +52,7 @@ function analyzeTickerData(transactions: NormalizedTransaction[], ticker: string
   let minRunningShares = 0
 
   for (const t of tickerTransactions) {
-    const shares = t['No. of shares'] || 0
+    const shares = getAdjustedShares(t)
 
     if (isBuyAction(t.Action)) {
       netShares += shares

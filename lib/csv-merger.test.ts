@@ -32,6 +32,51 @@ describe('dedupeKey', () => {
     const tx = makeTx({ ID: '   ' })
     expect(dedupeKey(tx).startsWith('composite:')).toBe(true)
   })
+
+  it('appends the action to the ID key for stock split rows', () => {
+    expect(dedupeKey(makeTx({ ID: 'split-1', Action: 'Stock split open' }))).toBe(
+      'id:split-1|Stock split open'
+    )
+    expect(dedupeKey(makeTx({ ID: 'split-1', Action: 'Stock split close' }))).toBe(
+      'id:split-1|Stock split close'
+    )
+    expect(dedupeKey(makeTx({ ID: 'split-1', Action: 'Stock Split' }))).toBe('id:split-1|Stock Split')
+  })
+})
+
+describe('mergeAndDedupe with stock split rows', () => {
+  const splitClose = makeTx({
+    ID: 'shared-split-id',
+    Action: 'Stock split close',
+    Time: '2025-06-10 05:00:00',
+    'No. of shares': 3,
+    Total: 0
+  })
+  const splitOpen = makeTx({
+    ID: 'shared-split-id',
+    Action: 'Stock split open',
+    Time: '2025-06-10 05:00:00',
+    'No. of shares': 12,
+    Total: 0
+  })
+
+  it('keeps both halves of a split pair that share an ID', () => {
+    const result = mergeAndDedupe([
+      { fileName: 'a.csv', data: [splitClose] },
+      { fileName: 'b.csv', data: [splitOpen] }
+    ])
+    expect(result.merged).toHaveLength(2)
+    expect(result.duplicatesRemoved).toBe(0)
+  })
+
+  it('still removes a split half that appears in two overlapping files', () => {
+    const result = mergeAndDedupe([
+      { fileName: 'a.csv', data: [splitClose, splitOpen] },
+      { fileName: 'b.csv', data: [{ ...splitClose }, { ...splitOpen }] }
+    ])
+    expect(result.merged).toHaveLength(2)
+    expect(result.duplicatesRemoved).toBe(2)
+  })
 })
 
 describe('mergeAndDedupe', () => {
