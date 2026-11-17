@@ -1,0 +1,85 @@
+/* Shine ring: a CSS-only light sweep around a pill button. See
+   components/motion/shine-ring.tsx. Two bronze highlights travel around the
+   edge (::before, masked to a 1.5px ring) with a blurred copy behind for the
+   glow (::after). The angle is a registered property so the conic gradient
+   can animate. Reduced motion leaves the highlights still. */
+
+@property --shine-angle {
+  syntax: '<angle>';
+  /* Read only on .shine-ring, where --shine-gradient resolves, so the
+     button underneath isn't restyled every frame. */
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.shine-ring {
+  --shine-dim: hsl(var(--brand) / 0.25);
+  --shine-warm: hsl(var(--brand));
+  --shine-hot: color-mix(in oklab, hsl(var(--brand)) 40%, white);
+  --shine-gradient: conic-gradient(
+    /* The fallback keeps a still ring in browsers without @property, where
+       the unregistered angle would otherwise blink in and out. */
+    from var(--shine-angle, 0deg),
+    var(--shine-dim) 0deg,
+    var(--shine-warm) 40deg,
+    var(--shine-hot) 70deg,
+    var(--shine-warm) 100deg,
+    var(--shine-dim) 150deg 180deg,
+    var(--shine-warm) 220deg,
+    var(--shine-hot) 250deg,
+    var(--shine-warm) 280deg,
+    var(--shine-dim) 330deg
+  );
+  position: relative;
+  display: inline-flex;
+  border-radius: 9999px;
+  isolation: isolate;
+  transition: transform var(--dur-ui) var(--ease-settle);
+}
+
+.shine-ring::before,
+.shine-ring::after {
+  content: '';
+  position: absolute;
+  border-radius: inherit;
+  background: var(--shine-gradient);
+  pointer-events: none;
+}
+
+/* The ring sits over the button's transparent 1px border. */
+.shine-ring::before {
+  inset: 0;
+  padding: 1.5px;
+  z-index: 1;
+  -webkit-mask: linear-gradient(black 0 0) content-box, linear-gradient(black 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.shine-ring::after {
+  inset: -2px;
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0.55;
+}
+
+/* The wrapper takes the press so ring, glow and button scale together. The
+   button's own press scale is switched off so it doesn't scale twice. */
+.shine-ring > * {
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shine-ring {
+    animation: shine-spin 3.2s linear infinite;
+  }
+  .shine-ring:has(> :active) {
+    transform: scale(0.96);
+  }
+}
+
+@keyframes shine-spin {
+  to {
+    --shine-angle: 360deg;
+  }
+}

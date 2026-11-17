@@ -1,16 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
-  Upload,
+  Activity,
+  HandCoins,
   LayoutDashboard,
-  DollarSign,
-  Activity
-} from 'lucide-react'
+  PanelLeftClose,
+  PanelLeftOpen,
+  Upload,
+  X
+} from '@/components/icons'
+import { Logo } from '@/components/logo'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogOverlay, DialogPortal } from '@/components/ui/dialog'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
+import { DASHBOARD_MENU_BUTTON_ID } from './dashboard-header'
 
 // Hook to detect if we're on desktop
 function useIsDesktop() {
@@ -40,7 +48,7 @@ function scrollToTop () {
 const NAV_ICONS: Record<string, React.ElementType> = {
   upload: Upload,
   portfolio: LayoutDashboard,
-  dividends: DollarSign,
+  dividends: HandCoins,
   activity: Activity
 }
 
@@ -53,6 +61,54 @@ interface SidebarOption {
 
 interface DashboardSidebarProps {
   className?: string
+}
+
+const itemBase =
+  'flex h-10 w-full items-center gap-3 rounded-full px-3 text-left text-sm transition-colors duration-150 ease-ui'
+const itemIdle = 'text-muted-foreground hover:bg-muted hover:text-foreground'
+const itemActive = 'bg-muted font-medium text-foreground'
+
+function NavItem ({
+  option,
+  showLabel,
+  withTooltip
+}: {
+  option: SidebarOption
+  showLabel: boolean
+  withTooltip: boolean
+}) {
+  const Icon = NAV_ICONS[option.id]
+  const isActive = option.isActive || false
+
+  const button = (
+    <button
+      type="button"
+      onClick={option.onClick}
+      className={cn(itemBase, isActive ? itemActive : itemIdle)}
+      aria-label={option.label}
+      aria-current={isActive ? 'page' : undefined}
+    >
+      {Icon && <Icon size={16} strokeWidth={isActive ? 2 : 1.5} aria-hidden="true" />}
+      <span
+        className={cn(
+          'whitespace-nowrap transition-opacity duration-150 ease-ui',
+          showLabel ? 'opacity-100' : 'opacity-0'
+        )}
+        aria-hidden={!showLabel || undefined}
+      >
+        {option.label}
+      </span>
+    </button>
+  )
+
+  if (!withTooltip) return button
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="right">{option.label}</TooltipContent>
+    </Tooltip>
+  )
 }
 
 export function DashboardSidebar (props: DashboardSidebarProps = {}) {
@@ -106,139 +162,113 @@ export function DashboardSidebar (props: DashboardSidebarProps = {}) {
     },
     {
       id: 'activity',
-      label: 'Trading Activity',
+      label: 'Trading activity',
       onClick: () => handleOptionClick(() => handleNavigate('activity')),
       isActive: currentView === 'activity'
     }
   ]
 
-  return (
-    <>
-      {/* Mobile backdrop */}
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setMobileSidebarOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-      </AnimatePresence>
+  // The drawer only exists below lg. Resizing past lg closes it.
+  const drawerOpen = isMobileOpen && !isDesktop
 
-      {/* Sidebar */}
-      <motion.nav
-        initial={false}
-        animate={{
-          width: isDesktop ? (isOpen ? 256 : 64) : 256 // Only animate width on desktop
-        }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
+  return (
+    <TooltipProvider delayDuration={300}>
+      {/* Desktop: sticky rail under the header, collapsible to icons. */}
+      <nav
+        aria-label="Dashboard views"
         className={cn(
-          // Mobile: fixed overlay, always full width (256px) when open
-          'fixed inset-y-0 left-0 z-50',
-          'w-64', // Fixed width on mobile
-          'transform transition-transform duration-300',
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full',
-          // Disable pointer events when closed on mobile
-          isMobileOpen ? 'pointer-events-auto' : 'pointer-events-none lg:pointer-events-auto',
-          // Desktop: sticky positioning, always visible, animated width
-          'lg:sticky lg:top-[4rem] lg:z-auto lg:translate-x-0 lg:w-auto',
-          // Desktop: always visible
-          'lg:flex',
-          // Common styles
-          'top-[4rem] h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)]',
-          'shrink-0 border-r border-border bg-background',
-          'flex flex-col',
-          'lg:self-start',
+          'sticky top-16 hidden h-[calc(100dvh-4rem)] shrink-0 flex-col self-start overflow-hidden border-r border-border bg-background lg:flex',
+          'transition-[width] duration-300 ease-smooth-out',
+          isOpen ? 'w-60' : 'w-16',
           className
         )}
       >
-        {/* Mobile close button */}
-        <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
-          <span className="text-sm font-semibold text-foreground">Menu</span>
-          <button
-            onClick={() => setMobileSidebarOpen(false)}
-            className="px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            aria-label="Close menu"
-          >
-            Close
-          </button>
-        </div>
-      {/* Navigation Options */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {options.map((option) => {
-          const isActive = option.isActive || false
-          const Icon = NAV_ICONS[option.id]
+        <ul className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
+          {options.map((option) => (
+            <li key={option.id}>
+              <NavItem option={option} showLabel={isOpen} withTooltip={!isOpen} />
+            </li>
+          ))}
+        </ul>
 
-          return (
-            <button
-              key={option.id}
-              onClick={option.onClick}
-              className={cn(
-                'relative flex h-11 w-full items-center rounded-lg transition-all duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                isActive
-                  ? 'border-l-[3px] border-primary bg-primary/8 font-semibold text-foreground'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-              )}
-              aria-label={option.label}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <div className="grid h-full w-12 place-content-center flex-shrink-0">
-                {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
-              </div>
-              <AnimatePresence mode="wait">
-                {(isOpen || isMobileOpen) && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-sm font-medium whitespace-nowrap"
-                  >
-                    {option.label}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </button>
-          )
-        })}
-      </div>
-
-        {/* Toggle Button - Desktop only */}
-        <div className="border-t border-border p-2 hidden lg:block">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className={cn(
-              'flex h-11 w-full items-center rounded-lg transition-colors',
-              'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
-            )}
-            aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-            aria-expanded={isOpen}
-          >
-            <div className="grid h-full w-12 place-content-center flex-shrink-0">
-              <span className="text-sm" aria-hidden="true">{isOpen ? '\u2039' : '\u203A'}</span>
-            </div>
-            <AnimatePresence mode="wait">
-              {isOpen && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-sm font-medium whitespace-nowrap"
+        <div className="border-t border-border p-3">
+          {(() => {
+            const toggle = (
+              <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={cn(itemBase, itemIdle)}
+                aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                aria-expanded={isOpen}
+              >
+                {isOpen
+                  ? <PanelLeftClose size={16} aria-hidden="true" />
+                  : <PanelLeftOpen size={16} aria-hidden="true" />}
+                <span
+                  className={cn(
+                    'whitespace-nowrap transition-opacity duration-150 ease-ui',
+                    isOpen ? 'opacity-100' : 'opacity-0'
+                  )}
+                  aria-hidden="true"
                 >
                   Collapse
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
+                </span>
+              </button>
+            )
+            if (isOpen) return toggle
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>{toggle}</TooltipTrigger>
+                <TooltipContent side="right">Expand sidebar</TooltipContent>
+              </Tooltip>
+            )
+          })()}
         </div>
-      </motion.nav>
-    </>
+      </nav>
+
+      {/* Below lg: a modal drawer. Focus is trapped inside it, Escape closes it,
+          the page behind is hidden from assistive tech, and nothing of it is in
+          the tab order while it is closed. */}
+      <Dialog open={drawerOpen} onOpenChange={setMobileSidebarOpen}>
+        <DialogPortal>
+          <DialogOverlay className="lg:hidden" />
+          <DialogPrimitive.Content
+            id="dashboard-drawer"
+            aria-describedby={undefined}
+            onCloseAutoFocus={(event) => {
+              event.preventDefault()
+              document.getElementById(DASHBOARD_MENU_BUTTON_ID)?.focus()
+            }}
+            className={cn(
+              'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[calc(100vw-3rem)] flex-col border-r border-border bg-background shadow-lift lg:hidden',
+              'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-300 data-[state=open]:ease-smooth-out',
+              'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-200 data-[state=closed]:ease-ui',
+              'motion-safe:data-[state=open]:slide-in-from-left motion-safe:data-[state=closed]:slide-out-to-left'
+            )}
+          >
+            <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border pe-3 ps-4">
+              <DialogPrimitive.Title className="flex items-center">
+                <Logo height={15} />
+                <span className="sr-only">Menu</span>
+              </DialogPrimitive.Title>
+              <DialogPrimitive.Close asChild>
+                <Button variant="ghost" size="icon" aria-label="Close menu">
+                  <X size={20} />
+                </Button>
+              </DialogPrimitive.Close>
+            </div>
+            <nav aria-label="Dashboard views" className="flex-1 overflow-y-auto overscroll-contain p-3">
+              <ul className="flex flex-col gap-1">
+                {options.map((option) => (
+                  <li key={option.id}>
+                    <NavItem option={option} showLabel withTooltip={false} />
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </DialogPrimitive.Content>
+        </DialogPortal>
+      </Dialog>
+    </TooltipProvider>
   )
 }

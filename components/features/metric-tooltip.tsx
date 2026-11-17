@@ -1,6 +1,8 @@
 'use client'
 
-import { Info } from 'lucide-react'
+import { useState } from 'react'
+import { Info } from '@/components/icons'
+import { cn } from '@/lib/utils'
 import {
   Tooltip,
   TooltipContent,
@@ -15,28 +17,30 @@ interface MetricTooltipProps {
 }
 
 /**
- * Tooltip component for metric cards
- * Provides contextual information about metrics, especially for partial data scenarios
+ * Info button with an explanation for a figure. Opens on hover, keyboard
+ * focus or a tap, so it also works on touch screens.
  */
 export function MetricTooltip ({ label, explanation, className }: MetricTooltipProps) {
+  const [open, setOpen] = useState(false)
   return (
     <TooltipProvider delayDuration={200}>
-      <Tooltip>
+      <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger asChild>
           <button
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            className={cn(
+              "relative inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 ease-ui before:absolute before:-inset-2 before:content-[''] hover:text-foreground",
+              className
+            )}
             aria-label={`More information about ${label}`}
           >
-            <Info className="h-3 w-3" />
+            <Info size={14} />
           </button>
         </TooltipTrigger>
-        <TooltipContent
-          side="top"
-          className="max-w-xs text-xs"
-          sideOffset={5}
-        >
-          <p className="font-medium mb-1">{label}</p>
-          <p className="text-muted-foreground">{explanation}</p>
+        <TooltipContent side="top" className="max-w-xs">
+          <p className="font-medium">{label}</p>
+          <p className="mt-1 text-muted-foreground">{explanation}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

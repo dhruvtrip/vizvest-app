@@ -1,5 +1,11 @@
 'use client'
 
+// The root layout is replaced while this renders, so it loads the global
+// styles itself and falls back to the system font through `font-sans`.
+import './globals.css'
+import { Button } from '@/components/ui/button'
+import { CircleAlert } from '@/components/icons'
+
 export default function GlobalError({
   error,
   reset,
@@ -9,16 +15,17 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en">
-      <body>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Something went wrong</h2>
-          <button
-            onClick={reset}
-            style={{ padding: '0.5rem 1rem', borderRadius: '0.375rem', border: '1px solid #ccc', cursor: 'pointer' }}
-          >
+      <body className="bg-background font-sans text-foreground antialiased">
+        <main className="flex min-h-screen flex-col items-center justify-center px-4 py-16 text-center">
+          <CircleAlert size={24} className="text-muted-foreground" />
+          <h1 className="heading-page mt-4">Something went wrong</h1>
+          <p className="mt-3 max-w-md text-base text-muted-foreground">
+            Vizvest hit an unexpected error. Try again, and if that does not help, reload the page.
+          </p>
+          <Button className="mt-8" onClick={reset}>
             Try again
-          </button>
-        </div>
+          </Button>
+        </main>
       </body>
     </html>
   )

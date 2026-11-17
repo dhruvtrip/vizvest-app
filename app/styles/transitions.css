@@ -1,0 +1,727 @@
+/* Transition snippets from transitions.dev, pasted verbatim. See components/motion.
+   Changes from the originals: comment wording, and the matrix loader writes its
+   columns with the grid shorthand. The variables live in motion-tokens.css. */
+
+/* ── 16-tabs-sliding: Tabs sliding ─────────────────────────────── */
+/* The bar is just a flex container with padding for the pill
+   to sit inside. Tabs sit on z-index: 1, the pill on z-index: 0,
+   so labels read above the pill background. */
+.t-tabs {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 48px;
+  background: var(--tabs-bar-bg);
+}
+.t-tab {
+  position: relative;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  height: 30px;
+  padding: 4px 12px;
+  color: var(--tabs-text-muted);
+  cursor: pointer;
+  border-radius: 48px;
+  z-index: 1;
+  transition: color var(--tabs-dur) var(--tabs-ease);
+}
+.t-tab:not([aria-selected="true"]):hover,
+.t-tab[aria-selected="true"] {
+  color: var(--tabs-text-active);
+}
+
+/* The pill: width + transform are written inline by JS so
+   the transition tweens between the previous and next
+   measured positions. */
+.t-tabs-pill {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 30px;
+  width: 0;
+  background: var(--tabs-pill-bg);
+  border-radius: 48px;
+  transform: translateX(0);
+  transition:
+    transform var(--tabs-dur) var(--tabs-ease),
+    width     var(--tabs-dur) var(--tabs-ease);
+  will-change: transform, width;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Project addition: auto-advance cue, a line that fills the active pill.
+   SlidingTabs listens for its animationend to move to the next tab. */
+.t-tabs-pill:has(.t-tabs-progress) {
+  overflow: hidden;
+}
+.t-tabs-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: hsl(var(--foreground) / 0.35);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: tabs-progress var(--tabs-progress-dur) linear forwards;
+}
+@keyframes tabs-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-tabs-pill, .t-tab { transition: none !important; }
+  .t-tabs-progress { display: none; }
+}
+
+/* ── 21-accordion: Accordion expand ─────────────────────────────── */
+/* Growing the grid rows from 0fr to 1fr gives a clean height animation
+   with no JS measurement; the inner element clips overflow. */
+.t-acc-panel {
+  display: grid;
+  /* Row track 0fr -> 1fr, written with the grid shorthand (rows / columns). */
+  grid: 0fr / none;
+  transition: grid var(--acc-collapse) var(--acc-ease);
+}
+.t-acc[data-open="true"] .t-acc-panel {
+  grid: 1fr / none;
+  transition: grid var(--acc-expand) var(--acc-ease);
+}
+.t-acc-panel-inner {
+  overflow: hidden;
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    opacity var(--acc-collapse) var(--acc-ease),
+    filter var(--acc-collapse) var(--acc-ease);
+}
+.t-acc[data-open="true"] .t-acc-panel-inner {
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity var(--acc-expand) var(--acc-ease),
+    filter var(--acc-expand) var(--acc-ease);
+}
+/* Flip the chevron vertically to turn the "v" into a "^".
+   scaleY(-1) about the centre passes through a flat line at
+   the midpoint (same look as a `d:` path morph) but animates
+   in every browser, unlike CSS `d:` morphing (Chromium only).
+   The chevron path is symmetric about the 16x16 viewBox
+   centre, so the flip lands exactly on the "^"; non-scaling
+   -stroke keeps the stroke width constant through the flip. */
+.t-acc-chevron {
+  display: inline-flex;
+  transform: scaleY(1);
+  transform-origin: center;
+  transition: transform var(--acc-chevron) var(--acc-ease);
+}
+.t-acc-chevron path { vector-effect: non-scaling-stroke; }
+.t-acc[data-open="true"] .t-acc-chevron {
+  transform: scaleY(-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron {
+    transition: none !important;
+  }
+}
+
+/* ── 04-text-states-swap: Text states swap ─────────────────────────────── */
+.t-text-swap {
+  display: inline-block;
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--text-swap-dur) var(--text-swap-ease),
+    filter    var(--text-swap-dur) var(--text-swap-ease),
+    opacity   var(--text-swap-dur) var(--text-swap-ease);
+  will-change: transform, filter, opacity;
+}
+.t-text-swap.is-exit {
+  transform: translateY(calc(var(--text-swap-translate-y) * -1));
+  filter: blur(var(--text-swap-blur));
+  opacity: 0;
+}
+.t-text-swap.is-enter-start {
+  transform: translateY(var(--text-swap-translate-y));
+  filter: blur(var(--text-swap-blur));
+  opacity: 0;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-text-swap { transition: none !important; }
+}
+
+/* ── 36-number-subtle-change: Number subtle change ─────────────────────────────── */
+.t-subtle-number {
+  display: inline-flex;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.t-subtle-slot { position: relative; display: inline-block; }
+.t-subtle-new { display: inline-block; }
+.t-subtle-old { position: absolute; inset: 0; text-align: center; pointer-events: none; }
+.t-subtle-number.is-animating .t-subtle-new {
+  animation: t-subtle-in var(--subtle-dur) var(--subtle-ease) both;
+}
+.t-subtle-number.is-animating .t-subtle-old {
+  animation: t-subtle-out var(--subtle-dur) var(--subtle-ease) both;
+}
+@keyframes t-subtle-in {
+  from {
+    transform: translateY(calc(var(--subtle-distance) * var(--subtle-dir, 1)));
+    opacity: 0;
+    filter: blur(var(--subtle-blur));
+  }
+}
+@keyframes t-subtle-out {
+  to {
+    transform: translateY(calc(var(--subtle-distance) * var(--subtle-dir, 1) * -1));
+    opacity: 0;
+    filter: blur(var(--subtle-blur));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-subtle-number .t-subtle-new { animation: none !important; }
+  .t-subtle-number .t-subtle-old { display: none; }
+}
+
+/* ── 09-icon-swap: Icon swap ─────────────────────────────── */
+.t-icon-swap {
+  position: relative;
+  display: inline-grid;
+}
+.t-icon-swap .t-icon {
+  grid-area: 1 / 1;
+  transition:
+    opacity   var(--icon-swap-dur) var(--icon-swap-ease),
+    filter    var(--icon-swap-dur) var(--icon-swap-ease),
+    transform var(--icon-swap-dur) var(--icon-swap-ease);
+  /* No will-change: it would freeze each icon's raster at its 0.25 start
+     scale, so a large icon scales up blurry and pixelated. */
+}
+.t-icon-swap[data-state="a"] .t-icon[data-icon="a"],
+.t-icon-swap[data-state="b"] .t-icon[data-icon="b"] {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+.t-icon-swap[data-state="a"] .t-icon[data-icon="b"],
+.t-icon-swap[data-state="b"] .t-icon[data-icon="a"] {
+  opacity: 0;
+  filter: blur(var(--icon-swap-blur));
+  transform: scale(var(--icon-swap-start-scale));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-icon-swap .t-icon { transition: none !important; }
+}
+
+/* ── 10-success-check: Success check ─────────────────────────────── */
+/* Wrapper drives the appear animation; it doesn't own any
+   sizing or color so you can drop in any icon. */
+.t-success-check {
+  display: inline-block;
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+/* overflow: visible keeps the stroke from clipping while it
+   draws; display: block kills the inline whitespace under SVGs. */
+.t-success-check svg { display: block; overflow: visible; }
+/* Stroke-draw setup. Replace 20 with the result of
+   path.getTotalLength() for your path; round caps mean any
+   sub-pixel overshoot is invisible. */
+.t-success-check svg path {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+}
+
+.t-success-check[data-state="in"] {
+  animation:
+    t-check-fade   var(--check-opacity-dur) var(--check-ease-opacity) forwards,
+    t-check-rotate var(--check-rotate-dur)  var(--check-ease-rotate)  forwards,
+    t-check-blur   var(--check-blur-dur)    var(--check-ease-out)     forwards,
+    t-check-bob    var(--check-bob-dur)     var(--check-ease-bob)     forwards;
+}
+.t-success-check[data-state="in"] svg path {
+  animation: t-check-draw var(--check-path-dur) var(--check-ease-path) var(--check-path-delay, 0ms) forwards;
+}
+
+@keyframes t-check-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes t-check-rotate {
+  from { transform: rotate(var(--check-rotate-from)); }
+  to   { transform: rotate(0deg); }
+}
+@keyframes t-check-blur {
+  from { filter: blur(var(--check-blur-from)); }
+  to   { filter: blur(0); }
+}
+@keyframes t-check-bob {
+  from { translate: 0 var(--check-y-amount); }
+  to   { translate: 0 0; }
+}
+@keyframes t-check-draw { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-success-check { animation: none !important; opacity: 1; }
+  .t-success-check svg path { animation: none !important; stroke-dashoffset: 0 !important; }
+}
+
+/* ── 12-error-state-shake: Error state shake ─────────────────────────────── */
+/* Border-color tween. Define your input's default / focused
+   / error border-color in your own component CSS — this rule
+   only owns the interpolation. Use a constant border-width
+   across states so the tween never shifts inner content. */
+.t-input {
+  transition: border-color 150ms ease-out;
+  will-change: transform;
+}
+.t-input.is-error {
+  /* Error border auto-reverts on the hold timer, so the
+     fade-out uses the slower revert duration (matches the
+     message fade). */
+  transition: border-color var(--revert-dur, 280ms) ease-out;
+}
+
+/* Error message reveal. Visibility is delayed by --revert-dur
+   on hide so the message stays painted for the full opacity
+   fade-out. Entering .is-error drops the delay to 0 so the
+   message becomes visible immediately. */
+.t-error-msg {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity    var(--revert-dur, 280ms) ease-out,
+    visibility 0s linear var(--revert-dur, 280ms);
+}
+.t-input-wrap.is-error .t-error-msg {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity    var(--revert-dur, 280ms) ease-out,
+    visibility 0s linear 0s;
+}
+
+/* Multi-segment keyframe with per-stop easing so each leg
+   of the shake follows its own cubic-bezier independently.
+   %-stops are cumulative durations as a fraction of the
+   total (80, 60, 80, 60 = 280ms): 28.57%, 57.14%, 78.57%,
+   100%. Recompute if any segment duration changes. */
+.t-input.is-shaking {
+  animation: t-input-shake calc(
+      var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2
+    ) linear;
+}
+@keyframes t-input-shake {
+  0%      { transform: translateX(0);                                 animation-timing-function: var(--shake-ease); }
+  28.57%  { transform: translateX(var(--shake-distance));             animation-timing-function: var(--shake-ease); }
+  57.14%  { transform: translateX(calc(var(--shake-distance) * -1)); animation-timing-function: var(--shake-ease); }
+  78.57%  { transform: translateX(var(--shake-overshoot));            animation-timing-function: var(--shake-ease); }
+  100%    { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-input { animation: none !important; transform: none !important; }
+}
+
+/* ── 14-skeleton-reveal: Skeleton loader and reveal ─────────────────────────────── */
+/* The wrap stacks two layers on the same coordinates. The
+   skeleton owns the cold pulse + the fade-out side of the
+   reveal; the content owns the fade-in side. They share the
+   same duration / ease so the swap reads as one motion. */
+.t-skel { position: relative; }
+.t-skel-skeleton,
+.t-skel-content {
+  position: absolute;
+  inset: 0;
+}
+
+.t-skel-skeleton {
+  z-index: 1;
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease),
+    filter  var(--reveal-dur) var(--reveal-ease);
+}
+.t-skel-content {
+  z-index: 2;
+  opacity: 0;
+  filter: blur(var(--reveal-blur));
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease),
+    filter  var(--reveal-dur) var(--reveal-ease);
+}
+.t-skel.is-revealed .t-skel-skeleton {
+  opacity: 0;
+  filter: blur(var(--reveal-blur));
+}
+.t-skel.is-revealed .t-skel-content {
+  opacity: 1;
+  filter: blur(0);
+}
+/* Snap-back when replaying: kill transitions so the reverse
+   (revealed → skeleton) is instant. Drop `.is-resetting`
+   after a forced reflow and the next reveal animates again. */
+.t-skel.is-resetting .t-skel-skeleton,
+.t-skel.is-resetting .t-skel-content {
+  transition: none !important;
+}
+
+/* Pulse: place the animation on the bar/avatar children, not
+   on the skeleton itself, so the skeleton's opacity / filter
+   stay free for the cross-fade transition above. */
+.t-skel-skeleton.is-pulsing > * {
+  animation: t-skel-pulse var(--pulse-dur) ease-in-out var(--pulse-count);
+}
+@keyframes t-skel-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: var(--pulse-min); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-skel-skeleton, .t-skel-content {
+    transition: none !important;
+  }
+  .t-skel-skeleton.is-pulsing > * { animation: none !important; }
+}
+
+/* ── 18-texts-reveal: Texts reveal ─────────────────────────────── */
+/* Lines start translated down + blurred + invisible; .is-shown
+   on the parent flips them to their resting state. The second
+   line's transition-delay holds it back by --stagger-stagger
+   so the eye lands on the headline first. */
+.t-stagger-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(var(--stagger-distance));
+  filter: blur(var(--stagger-blur));
+  transition:
+    opacity   var(--stagger-dur) var(--stagger-ease),
+    transform var(--stagger-dur) var(--stagger-ease),
+    filter    var(--stagger-dur) var(--stagger-ease);
+  will-change: transform, opacity, filter;
+}
+.t-stagger-line--2 { transition-delay: var(--stagger-stagger); }
+
+.t-stagger.is-shown .t-stagger-line {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+/* Exit decouples from the stagger: same fade for every line,
+   no Y return, no blur — so the disappearance reads as a
+   single quiet fade instead of a reverse reveal. */
+.t-stagger.is-hiding .t-stagger-line {
+  opacity: 0;
+  transform: translateY(0);
+  filter: blur(0);
+  transition:
+    opacity 200ms ease,
+    transform 0s linear,
+    filter 0s linear;
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-stagger-line { transition: none !important; }
+}
+
+/* ── 24-learn-more-hover: Learn more hover ─────────────────────────────── */
+.t-learn-chevron {
+  display: inline-flex;
+  transform: translateX(0);
+  transition: transform var(--learn-out) var(--learn-ease);
+}
+.t-learn-arm {
+  transform-box: view-box;
+  transform-origin: 10px 8px;
+  vector-effect: non-scaling-stroke;
+  transition: transform var(--learn-out) var(--learn-ease);
+}
+.t-learn:hover .t-learn-chevron { transform: translateX(var(--learn-shift)); transition-duration: var(--learn-in); }
+.t-learn:hover .t-learn-arm { transition-duration: var(--learn-in); }
+.t-learn:hover .t-learn-arm-top { transform: rotate(var(--learn-spread)); }
+.t-learn:hover .t-learn-arm-bot { transform: rotate(calc(var(--learn-spread) * -1)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-learn-chevron, .t-learn-arm { transition: none !important; }
+}
+
+/* ── 01-card-resize: Card resize ─────────────────────────────── */
+.t-resize {
+  transition:
+    width  var(--resize-dur) var(--resize-ease),
+    height var(--resize-dur) var(--resize-ease);
+  will-change: width, height;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-resize { transition: none !important; }
+}
+
+/* ── 07-panel-reveal: Panel reveal ─────────────────────────────── */
+.t-panel-slide {
+  transform: translateY(var(--panel-translate-y));
+  opacity: 0;
+  filter: blur(var(--panel-blur));
+  pointer-events: none;
+  transition:
+    transform var(--panel-close-dur) var(--panel-ease),
+    opacity   var(--panel-close-dur) var(--panel-ease),
+    filter    var(--panel-close-dur) var(--panel-ease);
+  will-change: transform, opacity, filter;
+}
+.t-panel-slide[data-open="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  filter: blur(0);
+  pointer-events: auto;
+  transition:
+    transform var(--panel-open-dur) var(--panel-ease),
+    opacity   var(--panel-open-dur) var(--panel-ease),
+    filter    var(--panel-open-dur) var(--panel-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-panel-slide { transition: none !important; }
+}
+
+/* ── 31-matrix-loader: Matrix dot loader ─────────────────────────────── */
+.t-matrix {
+  display: grid;
+  grid: auto-flow 2px / repeat(4, 2px); /* four 2px columns, 2px rows */
+  gap: 2px;
+}
+.t-matrix i {
+  display: block;
+  background: var(--matrix-base);
+  animation: t-matrix-pulse var(--matrix-cycle) var(--matrix-ease) infinite;
+  animation-delay: calc(var(--d, 0) * 1ms);
+}
+/* Hole positions (rounded variants) render nothing. */
+.t-matrix i.is-gap { visibility: hidden; animation: none; }
+@keyframes t-matrix-pulse {
+  0%, 45%, 100% { background-color: var(--matrix-base); }
+  15%           { background-color: var(--matrix-active); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-matrix i { animation: none !important; }
+}
+
+/* ── 15-shimmer-text: Shimmer text ─────────────────────────────── */
+/* Two-layer construction:
+   1. The base text renders normally in --shimmer-base.
+   2. ::before duplicates it via content: attr(data-text),
+      paints a transparent → highlight → transparent gradient
+      onto it, and clips that gradient to the glyphs via
+      background-clip: text. Animating background-position
+      sweeps the band across the text. */
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+  color: var(--shimmer-base);
+}
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent          0%,
+    transparent         40%,
+    var(--shimmer-highlight) 50%,
+    transparent         60%,
+    transparent        100%
+  );
+  background-size: var(--shimmer-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
+}
+@keyframes t-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-shimmer::before { animation: none !important; }
+}
+
+/* ── 11-avatar-group-hover: Avatar group hover ─────────────────────────────── */
+/* Hover-spring transition only — bring your own avatar/chip
+   styling (size, shape, border, stacking, background). */
+.t-avatar {
+  transform-origin: center;
+  /* translateY before scale so scale doesn't amplify the lift offset. */
+  transform:
+    translateY(var(--shift, 0px))
+    scale(var(--scale-active, 1));
+  transition: transform var(--avatar-dur) var(--avatar-ease-in);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-avatar { transition: none !important; transform: none !important; }
+}
+
+/* ==========================================================================
+   Vizvest wiring for the snippets above.
+   Colours come from the design tokens, so light and dark both work without
+   a .dark override (the tokens flip on .dark already). Layout hooks and the
+   reduced-motion fallbacks live here too: under reduced motion the snippets
+   drop movement, scale and blur, and these rules keep a plain opacity fade.
+   ========================================================================== */
+
+/* Tabs sliding: track, pill and label colours per surface and tone. */
+.t-tabs {
+  --tabs-text-muted: hsl(var(--muted-foreground));
+  --tabs-text-active: hsl(var(--foreground));
+  --tabs-bar-bg: hsl(var(--tile));
+  --tabs-pill-bg: hsl(var(--background));
+}
+.t-tabs[data-surface="tile"] {
+  --tabs-bar-bg: hsl(var(--background));
+  --tabs-pill-bg: hsl(var(--tile-hover));
+}
+.t-tabs[data-tone="panel"] {
+  --tabs-text-muted: hsl(var(--panel-foreground) / 0.7);
+  --tabs-text-active: hsl(var(--panel-foreground));
+  --tabs-bar-bg: hsl(var(--panel-foreground) / 0.08);
+  --tabs-pill-bg: hsl(var(--panel-foreground) / 0.16);
+}
+/* Segmented variant: radios carry aria-checked instead of aria-selected. */
+.t-tab[aria-checked="true"] {
+  color: var(--tabs-text-active);
+}
+
+/* Text states swap: keep the fade under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .t-text-swap { transition: opacity var(--text-swap-dur) var(--text-swap-ease) !important; }
+  .t-text-swap.is-exit,
+  .t-text-swap.is-enter-start { transform: none; filter: none; }
+  .t-text-swap.is-enter-start { transition: none !important; }
+}
+
+/* Number subtle change: keep a fade-in of the new digits under reduced motion. */
+@keyframes t-subtle-fade {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-subtle-number.is-animating .t-subtle-new {
+    animation: t-subtle-fade var(--subtle-dur) var(--subtle-ease) both !important;
+  }
+}
+
+/* Icon swap: opacity only under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .t-icon-swap .t-icon {
+    transform: none !important;
+    filter: none !important;
+    transition: opacity var(--icon-swap-dur) var(--icon-swap-ease) !important;
+  }
+}
+
+/* Success check: fade in under reduced motion, path already drawn. */
+@media (prefers-reduced-motion: reduce) {
+  .t-success-check[data-state="in"] {
+    animation: t-check-fade var(--check-opacity-dur) var(--check-ease-opacity) both !important;
+  }
+}
+
+/* Skeleton: both layers share one grid cell, so the wrapper takes the
+   height of the taller layer and the content keeps its natural flow. */
+.t-skel-stack { display: grid; }
+.t-skel-stack > .t-skel-skeleton,
+.t-skel-stack > .t-skel-content {
+  position: relative;
+  inset: auto;
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+/* Once the reveal is over, drop the blur(0) filter so the content does not
+   stay a containing block for fixed-position descendants. */
+.t-skel-stack[data-phase="done"] > .t-skel-content { filter: none; }
+/* A standalone placeholder block pulses for as long as it is shown. */
+.t-skel-bone {
+  animation: t-skel-pulse var(--pulse-dur) ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-skel-bone { animation: none !important; }
+  .t-skel-skeleton,
+  .t-skel-content {
+    filter: none !important;
+    transition: opacity var(--reveal-dur) var(--reveal-ease) !important;
+  }
+}
+
+/* Texts reveal: opacity only under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .t-stagger-line {
+    transform: none !important;
+    filter: none !important;
+    transition: opacity var(--stagger-dur) var(--stagger-ease) !important;
+  }
+}
+
+/* Learn more: keyboard focus opens the arrow the same way hover does. */
+.t-learn:focus-visible .t-learn-chevron { transform: translateX(var(--learn-shift)); transition-duration: var(--learn-in); }
+.t-learn:focus-visible .t-learn-arm { transition-duration: var(--learn-in); }
+.t-learn:focus-visible .t-learn-arm-top { transform: rotate(var(--learn-spread)); }
+.t-learn:focus-visible .t-learn-arm-bot { transform: rotate(calc(var(--learn-spread) * -1)); }
+
+/* Panel swap: a short travel suits an in-place content swap. */
+.t-panel-swap { --panel-translate-y: var(--distance-base); }
+/* At rest (no outgoing panel beside it) the panel drops its transform, filter
+   and layer hint, so it is not a containing block for fixed descendants.
+   none and the open values look the same, so nothing jumps. */
+.t-panel-swap > .t-panel-slide[data-open="true"]:only-child {
+  transform: none;
+  filter: none;
+  will-change: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-panel-slide {
+    transform: none !important;
+    filter: none !important;
+    transition: opacity var(--panel-open-dur) var(--panel-ease) !important;
+  }
+}
+
+/* Accordion: the body still fades in under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .t-acc-panel-inner {
+    filter: none !important;
+    transition: opacity var(--acc-expand) var(--acc-ease) !important;
+  }
+}
+
+/* Matrix dot loader: dots follow the text colour. */
+.t-matrix {
+  --matrix-base: color-mix(in srgb, currentColor 22%, transparent);
+  --matrix-active: currentColor;
+}
+
+/* Shimmer text: token colours, and keep the duplicated layer out of the
+   accessible name where the alt-text syntax is supported. */
+.t-shimmer {
+  --shimmer-base: hsl(var(--muted-foreground));
+  --shimmer-highlight: hsl(var(--foreground));
+}
+.t-shimmer::before {
+  content: attr(data-text) / "";
+}

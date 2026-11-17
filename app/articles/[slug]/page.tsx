@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { ArrowLeft, Clock, Calendar, User } from 'lucide-react'
+import remarkGfm from 'remark-gfm'
+import { ArrowLeft } from '@/components/icons'
+import { Button } from '@/components/ui/button'
+import { Reveal } from '@/components/motion/reveal'
 import { Navbar, Footer } from '@/components/landing'
 import { getMDXComponents } from '@/components/articles/mdx-components'
 import { getArticleBySlug, getAllSlugs } from '@/lib/articles'
@@ -110,92 +113,91 @@ export default async function ArticlePage({ params }: Props) {
   })
 
   return (
-    <main className="min-h-screen">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {faqJsonLd && (
+    <>
+      {/* PostHog inserts its add-on scripts before the first `body > script`.
+          Keeping JSON-LD inside this div stops that from breaking hydration. */}
+      <div className="relative overflow-x-clip">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      )}
-      <Navbar />
+        {faqJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          />
+        )}
+        <div className="page-glow" aria-hidden="true" />
+        <Navbar />
+        <main id="main-content" className="relative px-4 pb-28 pt-32 lg:pb-section lg:pt-40">
+          <div className="mx-auto w-full max-w-prose">
+            <Link
+              href="/articles"
+              className="group -ml-1 inline-flex h-9 items-center gap-1.5 rounded-md px-1 text-sm font-medium text-muted-foreground transition-colors duration-150 ease-ui hover:text-foreground"
+            >
+              <ArrowLeft
+                size={16}
+                strokeWidth={2}
+                className="transition-transform duration-150 ease-ui motion-safe:group-hover:-translate-x-0.5"
+              />
+              All articles
+            </Link>
 
-        <div className="relative pt-28 pb-20 overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/10" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_-10%,rgba(120,119,198,0.1),transparent)] dark:bg-[radial-gradient(ellipse_60%_40%_at_50%_-10%,rgba(120,119,198,0.2),transparent)]" />
-          </div>
-
-          <div className="container mx-auto px-6">
-            <div className="max-w-3xl mx-auto">
-              {/* Back link */}
-              <Link
-                href="/articles"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground/60 hover:text-primary transition-colors mb-10 group"
-              >
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" />
-                Back to Articles
-              </Link>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {meta.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="font-mono text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full border border-border text-muted-foreground/60 bg-muted/50"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Title */}
-              <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-foreground leading-tight mb-6">
-                {meta.title}
-              </h1>
-
-              {/* Meta bar */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground/60 border-y border-border py-4 mb-10">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
+            <article className="mt-8">
+              <header className="border-b border-border pb-8">
+                <h1 className="text-[1.75rem] font-light leading-[2.125rem] tracking-[-0.035em] min-[360px]:text-[2rem] min-[360px]:leading-[2.375rem] text-foreground sm:text-[2.5rem] sm:leading-[2.875rem] lg:text-5xl lg:leading-[3.375rem]">
+                  {meta.title}
+                </h1>
+                <p className="figure mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-normal text-muted-foreground">
                   <time dateTime={meta.date}>{formattedDate}</time>
-                </span>
-                <span className="flex items-center gap-1.5 font-mono">
-                  <Clock className="w-3.5 h-3.5" />
-                  {meta.readingTime}
-                </span>
-                {meta.author && (
-                  <span className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" />
-                    {meta.author} · Founder, Vizvest
-                  </span>
-                )}
-              </div>
+                  <span aria-hidden="true">·</span>
+                  <span>{meta.readingTime}</span>
+                  {meta.author && (
+                    <>
+                      <span aria-hidden="true" className="hidden sm:inline">
+                        ·
+                      </span>
+                      <span className="basis-full sm:basis-auto">{meta.author}, founder of Vizvest</span>
+                    </>
+                  )}
+                </p>
+              </header>
 
-              {/* MDX Content */}
-              <article className="prose-custom">
-                <MDXRemote source={content} components={getMDXComponents()} />
-              </article>
-
-              {/* Footer nav */}
-              <div className="mt-16 pt-8 border-t border-border">
-                <Link
-                  href="/articles"
-                  className="inline-flex items-center gap-2 text-sm text-muted-foreground/60 hover:text-primary transition-colors group"
-                >
-                  <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" />
-                  All Articles
-                </Link>
+              <div className="mt-10">
+                <MDXRemote
+                  source={content}
+                  components={getMDXComponents()}
+                  options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+                />
               </div>
-            </div>
+            </article>
+
+            <Reveal className="mt-16 lg:mt-20">
+              <aside
+                aria-labelledby="article-cta-heading"
+                className="panel-texture rounded-4xl px-6 py-12 text-center sm:px-12 sm:py-14"
+              >
+                <h2 id="article-cta-heading" className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
+                  See your own numbers
+                </h2>
+                <p className="mx-auto mt-3 max-w-md text-base text-white/70">
+                  Upload your Trading 212 export and get dividends, profit and fees in one dashboard. The file stays in
+                  your browser.
+                </p>
+                <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+                  <Button asChild variant="light" className="w-full sm:w-auto">
+                    <Link href="/dashboard">Open the dashboard</Link>
+                  </Button>
+                  <Button asChild variant="outline-light" className="w-full sm:w-auto">
+                    <Link href="/articles">More articles</Link>
+                  </Button>
+                </div>
+              </aside>
+            </Reveal>
           </div>
-        </div>
-
+        </main>
         <Footer />
-    </main>
+      </div>
+    </>
   )
 }

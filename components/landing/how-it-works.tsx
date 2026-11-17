@@ -1,131 +1,161 @@
-'use client'
-
-import { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
-import { Wrench } from 'lucide-react'
+import { Check, Download, FileSpreadsheet } from '@/components/icons'
+import { Reveal } from '@/components/motion/reveal'
+import { SectionHeading } from './section-heading'
+import { SnapRail } from './snap-rail'
 
 const steps = [
   {
-    number: '01',
-    progress: 0.33,
-    title: 'Upload your data',
-    description: 'Export your Trading 212 transaction history as a CSV and drop it in. Supports drag-and-drop with instant validation.',
+    label: 'Export',
+    title: 'Export your history',
+    description:
+      'In Trading 212, open History and export a CSV. Each file holds up to 12 months, so export as many ranges as you need.',
+    visual: <ExportVisual />,
   },
   {
-    number: '02',
-    progress: 0.66,
-    title: 'Explore insights',
-    description: 'Get an instant overview — allocation, performance charts, and dividend tracking, all built automatically.',
+    label: 'Upload',
+    title: 'Drop the files in',
+    description:
+      'Vizvest checks the format, merges your files and removes duplicate rows. Everything happens on your device.',
+    visual: <DropVisual />,
   },
   {
-    number: '03',
-    progress: 1,
-    title: 'Track performance',
-    description: 'Drill into individual stocks, review transaction history, and watch P/L evolve over time.',
+    label: 'Read',
+    title: 'Read your portfolio',
+    description:
+      'Holdings, dividends, fees and trading activity appear at once. Open any stock to see its full history.',
+    visual: <ExploreVisual />,
   },
 ]
 
-const RING_RADIUS = 42
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
-
 export function HowItWorks() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
-
   return (
-    <section id="how-it-works" className="py-24 lg:py-32 relative overflow-hidden" ref={ref}>
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background" />
+    <section id="how-it-works" aria-labelledby="how-heading" className="mx-auto w-full max-w-content scroll-mt-28">
+      <Reveal>
+        <SectionHeading
+          id="how-heading"
+          title="From export to answers in three steps"
+          description="One export from Trading 212 is all it takes."
+        />
+      </Reveal>
 
-      <div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 max-w-7xl relative">
-        {/* Section Header */}
-        <motion.div
-          className="text-center max-w-2xl mx-auto mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-6"
-            role="status"
-            aria-label="How it works section"
-          >
-            <Wrench className="w-3 h-3" aria-hidden="true" />
-            How it works
-          </motion.div>
-          <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
-            Get started in seconds
-          </h2>
-          <p className="text-muted-foreground">
-            No account required. Everything processes in your browser.
-          </p>
-        </motion.div>
-
-        {/* Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 auto-rows-[280px]">
-          {steps.map((step, index) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.1 + index * 0.1, duration: 0.5 }}
-              className="relative"
+      {/* A swipe row on phones with the step numbers in its label row, picture
+          beside text on tablets, three columns on desktop. */}
+      <SnapRail
+        as="ol"
+        aria-label="Show a step"
+        labels={steps.map((step, index) => ({
+          value: `step-${index + 1}`,
+          label: (
+            <>
+              <span className="figure text-muted-foreground">{index + 1}</span>
+              {step.label}
+            </>
+          ),
+        }))}
+        className="md:mt-12 md:grid md:gap-10 lg:mt-16 lg:grid-cols-3 lg:gap-8"
+      >
+        {steps.map((step, index) => (
+          <li key={step.title}>
+            {/* The swipe row shows its cards from the start: one peeking in from the side would never trigger its reveal. */}
+            <Reveal
+              delay={index * 0.1}
+              className="flex flex-col gap-5 max-md:!transform-none max-md:!opacity-100 md:gap-6 md:max-lg:flex-row md:max-lg:items-center md:max-lg:gap-10"
             >
-              <Card className="relative h-full overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
-                <CardContent className="relative z-10 h-full p-6 flex flex-col">
-                  {/* Content */}
-                  <div>
-                    <h3 className="text-lg font-normal text-foreground tracking-tight mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
-                  </div>
-
-                  {/* Progress ring with step number */}
-                  <div className="mt-auto flex items-center justify-center pt-6">
-                    <div className="relative w-20 h-20" role="img" aria-label={`Step ${step.number} of 3`}>
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r={RING_RADIUS}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          className="text-border/60"
-                        />
-                        <motion.circle
-                          cx="50"
-                          cy="50"
-                          r={RING_RADIUS}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          className="text-brand"
-                          strokeDasharray={RING_CIRCUMFERENCE}
-                          initial={{ strokeDashoffset: RING_CIRCUMFERENCE }}
-                          animate={isInView ? { strokeDashoffset: RING_CIRCUMFERENCE * (1 - step.progress) } : {}}
-                          transition={{ delay: 0.4 + index * 0.15, duration: 1, ease: 'easeOut' }}
-                        />
-                      </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-lg font-mono font-medium text-foreground tabular-nums tracking-tight">
-                        {step.number}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+              <div
+                aria-hidden="true"
+                className="relative flex h-40 items-center justify-center overflow-hidden rounded-3xl bg-muted p-4 max-md:[&>*]:scale-90 md:h-48 md:p-6 md:max-lg:w-1/2"
+              >
+                {step.visual}
+              </div>
+              <div className="md:max-lg:w-1/2">
+                <p className="figure text-sm font-normal text-muted-foreground max-md:hidden">Step {index + 1}</p>
+                <h3 className="heading-card md:mt-1">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
+              </div>
+            </Reveal>
+          </li>
+        ))}
+      </SnapRail>
     </section>
+  )
+}
+
+/* Small product sketches. Decorative, so the whole frame is aria-hidden. */
+
+function ExportVisual() {
+  return (
+    <div className="w-full max-w-[15rem] rounded-2xl bg-background p-3 shadow-xs ring-1 ring-foreground/10">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium">History</span>
+        <span className="figure text-2xs font-normal text-muted-foreground">Last 12 months</span>
+      </div>
+      <div className="mt-3 flex flex-col gap-1.5">
+        {['Orders', 'Dividends', 'Transactions'].map((row) => (
+          <div key={row} className="flex items-center gap-2 text-xs font-normal">
+            <span className="grid size-4 place-items-center rounded-[5px] bg-foreground text-background">
+              <Check size={10} strokeWidth={2} />
+            </span>
+            {row}
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex h-8 items-center justify-center gap-1.5 rounded-full bg-foreground text-xs font-medium text-background">
+        <Download size={14} strokeWidth={2} />
+        Export CSV
+      </div>
+    </div>
+  )
+}
+
+function DropVisual() {
+  const files = [
+    { name: '2024 history.csv', rows: '412 rows', hue: 1 },
+    { name: '2025 history.csv', rows: '389 rows', hue: 4 },
+  ]
+  return (
+    <div className="flex w-full max-w-[15rem] flex-col gap-2 rounded-2xl border border-dashed border-foreground/25 p-3">
+      {files.map((file) => (
+        <div key={file.name} className="flex items-center gap-2.5 rounded-xl bg-background p-2 shadow-xs">
+          <span
+            style={{ color: `rgb(var(--chart-${file.hue}))`, backgroundColor: `rgb(var(--chart-${file.hue}) / 0.12)` }}
+            className="grid size-8 shrink-0 place-items-center rounded-lg"
+          >
+            <FileSpreadsheet size={16} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-xs font-medium">{file.name}</span>
+            <span className="figure block text-2xs font-normal text-muted-foreground">{file.rows}</span>
+          </span>
+          <Check size={14} strokeWidth={2} className="text-up" />
+        </div>
+      ))}
+      <p className="figure pt-0.5 text-center text-2xs font-normal text-muted-foreground">
+        2 files merged, 14 duplicates removed
+      </p>
+    </div>
+  )
+}
+
+function ExploreVisual() {
+  const bars = [34, 52, 41, 68, 47, 80, 58, 92]
+  return (
+    <div className="w-full max-w-[15rem] rounded-2xl bg-background p-3 shadow-xs ring-1 ring-foreground/10">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-2xs font-normal text-muted-foreground">Net dividends</p>
+          <p className="figure text-lg font-semibold leading-6 tracking-tight">€1,284.20</p>
+        </div>
+        <span className="figure text-2xs font-medium text-up">+18.4%</span>
+      </div>
+      <div className="mt-3 flex h-16 items-end gap-1">
+        {bars.map((height, index) => (
+          <span
+            key={index}
+            style={{ height: `${height}%` }}
+            className={index === bars.length - 1 ? 'flex-1 rounded-t-[3px] bg-chart-2' : 'flex-1 rounded-t-[3px] bg-chart-2/40'}
+          />
+        ))}
+      </div>
+    </div>
   )
 }

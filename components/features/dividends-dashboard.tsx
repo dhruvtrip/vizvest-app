@@ -3,8 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import posthog from 'posthog-js'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { AnimatedCurrency } from '@/components/ui/animated-number'
+import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
   TableBody,
@@ -13,23 +12,26 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+import { Tile, TileNote } from '@/components/ui/tile'
+import { Pagination } from '@/components/ui/pagination'
 import { cn } from '@/lib/utils'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-  CartesianGrid
-} from 'recharts'
 import groupBy from 'lodash/groupBy'
 import { isDividendAction } from '@/lib/transaction-utils'
+import {
+  AreaTrend,
+  BarRows,
+  ChartCard,
+  ColumnPlot,
+  KpiTile,
+  StackedMeter,
+  type BarRow,
+  type ColumnDatum
+} from '@/components/charts'
+import { SlidingTabs } from '@/components/motion'
+import { DashboardPage, PageHeader, Region, chartGrid, kpiGridFive } from '@/components/features/dashboard-layout'
+import { ArrowDown, ArrowUp, ArrowUpDown, HandCoins } from '@/components/icons'
 
 /**
  * Currency symbols for common currencies
@@ -335,7 +337,8 @@ function calculateGrowthRate(byYear: Map<string, number>): YearComparison[] {
 }
 
 /**
- * Renders children only when scrolled into view, triggering Recharts mount animations.
+ * Renders children only when scrolled into view, fading them in once. Kept as an export
+ * for callers outside this file; the charts on this page animate themselves.
  * Accepts an optional minHeight so the placeholder matches the eventual content height
  * and avoids layout shift when the chart mounts.
  */
@@ -383,79 +386,44 @@ export function AnimateOnView ({
 }
 
 /**
- * Custom tooltip for charts
+ * Formats a date string as "Dec 8, 2024"
  */
-function CustomTooltip({
-  active,
-  payload,
-  baseCurrency
-}: {
-  active?: boolean
-  payload?: Array<{ value: number; dataKey?: string }>
-  baseCurrency: string
-}) {
-  if (!active || !payload || payload.length === 0) return null
-
-  return (
-    <div className="bg-popover/90 backdrop-blur-md border border-border/50 rounded-lg shadow-xl shadow-black/10 px-4 py-2.5">
-      {payload.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-brand flex-shrink-0" />
-          <p className="text-sm font-semibold text-foreground">
-            {entry.dataKey === 'cumulative' ? 'Cumulative: ' : ''}
-            {formatCurrency(entry.value, baseCurrency)}
-          </p>
-        </div>
-      ))}
-    </div>
-  )
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(date)
 }
 
 /**
- * Metric card component
+ * Short currency figure for chart labels: "€1.2K", "€85", "€8.7"
  */
-function MetricCard({
-  label,
-  value,
-  subValue,
-  className,
-  valueClassName,
-  rawValue,
-  currency
-}: {
-  label: string
-  value: string
-  subValue?: string
-  className?: string
-  valueClassName?: string
-  rawValue?: number
-  currency?: string
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="h-full"
-    >
-      <Card className={cn('relative overflow-hidden transition-all duration-300 border-border/50 hover:border-border hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col', `border-l-[3px]`, className)}>
-        <CardContent className="p-5 flex flex-col h-full">
-          <p className="metric-label text-muted-foreground flex-shrink-0">{label}</p>
-          <p className={cn('metric-value text-foreground mt-1 flex-shrink-0', valueClassName)}>
-            {rawValue !== undefined && currency ? (
-              <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
-            ) : value}
-          </p>
-          {subValue ? (
-            <p className="text-body-sm text-muted-foreground mt-1 flex-shrink-0">{subValue}</p>
-          ) : (
-            <div className="text-body-sm text-muted-foreground mt-1 flex-shrink-0 h-[20px]">&nbsp;</div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  )
+function formatCompactCurrency(amount: number, currency: string): string {
+  const symbol = getCurrencySymbol(currency)
+  const abs = Math.abs(amount)
+  const formatted = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: abs > 0 && abs < 10 ? 1 : 0
+  }).format(abs)
+  return `${amount < 0 ? '-' : ''}${symbol}${formatted}`
 }
+
+function formatPercent(value: number): string {
+  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(value)}%`
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+const PAGE_SIZE = 15
+
+type SortField = 'dividends' | 'avgPayment' | 'payments'
 
 interface DividendsDashboardProps {
   transactions?: NormalizedTransaction[]
@@ -475,6 +443,8 @@ export function DividendsDashboard ({
   const [viewMode, setViewMode] = useState<'month' | 'quarter'>('month')
   const [sortField, setSortField] = useState<'dividends' | 'avgPayment' | 'payments'>('dividends')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [selectedStock, setSelectedStock] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   // Calculate global dividend metrics
   const globalData = useMemo(
@@ -534,16 +504,153 @@ export function DividendsDashboard ({
     }
   }
 
+  const handleViewModeChange = (mode: 'month' | 'quarter') => {
+    if (mode === 'month') {
+      setViewMode('month')
+      posthog.capture('dividend_view_mode_changed', { view_mode: 'month' })
+    } else {
+      setViewMode('quarter')
+      posthog.capture('dividend_view_mode_changed', { view_mode: 'quarter' })
+    }
+  }
+
+  // ---- Display data derived from what is computed above ----
+
+  const cumulativeSeries = useMemo(
+    () =>
+      incomeOverTimeData.map((point) => ({
+        id: point.period,
+        label: point.period,
+        value: point.cumulative || 0,
+        display: formatCurrency(point.cumulative || 0, baseCurrency)
+      })),
+    [incomeOverTimeData, baseCurrency]
+  )
+
+  // Number of payments in each month or quarter, for the column tooltips.
+  const paymentsPerPeriod = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const dividend of globalData.dividends) {
+      const key = viewMode === 'month' ? formatMonthYear(dividend.date) : formatQuarter(dividend.date)
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return counts
+  }, [globalData.dividends, viewMode])
+
+  const periodColumns: ColumnDatum[] = useMemo(
+    () =>
+      trendData.map((point) => {
+        const count = paymentsPerPeriod.get(point.period) || 0
+        return {
+          id: point.period,
+          label: point.period,
+          value: point.amount,
+          display: formatCurrency(point.amount, baseCurrency),
+          note: `${count} ${count === 1 ? 'payment' : 'payments'}`
+        }
+      }),
+    [trendData, paymentsPerPeriod, baseCurrency]
+  )
+
+  const periodMedian = useMemo(() => median(trendData.map((point) => point.amount)), [trendData])
+
+  const bestPeriod = useMemo(
+    () => trendData.reduce<ChartDataPoint | null>((best, point) => (!best || point.amount > best.amount ? point : best), null),
+    [trendData]
+  )
+
+  const paymentsPerYear = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const dividend of globalData.dividends) {
+      const key = formatYear(dividend.date)
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return counts
+  }, [globalData.dividends])
+
+  const yearRows: BarRow[] = useMemo(
+    () =>
+      yearComparisons.map((comparison) => {
+        const count = paymentsPerYear.get(comparison.year) || 0
+        const growth = comparison.growth
+        return {
+          id: comparison.year,
+          label: comparison.year,
+          note: `${count} ${count === 1 ? 'payment' : 'payments'}`,
+          value: comparison.total,
+          display: formatCurrency(comparison.total, baseCurrency),
+          delta:
+            growth !== undefined
+              ? {
+                  display: `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`,
+                  tone: growth > 0 ? 'up' : growth < 0 ? 'down' : 'neutral'
+                }
+              : undefined
+        }
+      }),
+    [yearComparisons, paymentsPerYear, baseCurrency]
+  )
+
+  const lastPaymentDate = useMemo(
+    () =>
+      globalData.dividends.reduce<string>(
+        (latest, d) => (!latest || new Date(d.date).getTime() > new Date(latest).getTime() ? d.date : latest),
+        ''
+      ),
+    [globalData.dividends]
+  )
+
+  // Gross, tax, net and last payment per stock, for the inline detail.
+  const stockTotals = useMemo(() => {
+    const totals = new Map<string, { gross: number; tax: number; net: number; lastDate: string }>()
+    for (const dividend of globalData.dividends) {
+      const current = totals.get(dividend.ticker) ?? { gross: 0, tax: 0, net: 0, lastDate: '' }
+      current.gross += dividend.gross
+      current.tax += dividend.tax
+      current.net += dividend.net
+      if (!current.lastDate || new Date(dividend.date).getTime() > new Date(current.lastDate).getTime()) {
+        current.lastDate = dividend.date
+      }
+      totals.set(dividend.ticker, current)
+    }
+    return totals
+  }, [globalData.dividends])
+
+  const stockRows: BarRow[] = useMemo(
+    () =>
+      Array.from(globalData.byStock.values())
+        .sort((a, b) => b.totalDividends - a.totalDividends)
+        .map((stock) => ({
+          id: stock.ticker,
+          label: stock.ticker,
+          note: stock.name,
+          value: stock.totalDividends,
+          display: formatCurrency(stock.totalDividends, baseCurrency),
+          delta: {
+            display: formatPercent(globalData.totalNet > 0 ? (stock.totalDividends / globalData.totalNet) * 100 : 0),
+            tone: 'neutral' as const
+          }
+        })),
+    [globalData.byStock, globalData.totalNet, baseCurrency]
+  )
+
+  const totalPages = Math.max(1, Math.ceil(sortedStockDividends.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const pagedStockDividends = sortedStockDividends.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
   if (!hasDividends) {
     return (
-      <div className={cn('container mx-auto px-6 py-6', className)}>
-        <Card className="p-8 text-center border-dashed">
-          <p className="text-sm text-muted-foreground">No dividends received</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Upload transaction data to see dividend analytics
+      <DashboardPage className={className}>
+        <PageHeader title="Dividends" description="Dividend income from the stocks in your file." />
+        <Tile className="flex flex-col items-center px-6 py-14 text-center">
+          <HandCoins size={28} className="text-muted-foreground" />
+          <p className="mt-4 text-sm font-medium">No dividends in this file</p>
+          <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            None of the transactions are dividend payments. Upload an export that covers a period when your
+            holdings paid out to see your income here.
           </p>
-        </Card>
-      </div>
+        </Tile>
+      </DashboardPage>
     )
   }
 
@@ -551,349 +658,313 @@ export function DividendsDashboard ({
     ? globalData.totalNet / globalData.paymentCount
     : 0
 
+  const taxShare = globalData.totalGross > 0 ? (globalData.totalTax / globalData.totalGross) * 100 : 0
+  const stockCount = globalData.byStock.size
+  const periodWord = viewMode === 'month' ? 'month' : 'quarter'
+  const meterTitle = baseCurrency.toUpperCase() === 'EUR' ? 'Where each euro went' : 'Net income and tax'
+
+  const sortLabel: Record<SortField, string> = {
+    dividends: 'total dividends',
+    payments: 'payments',
+    avgPayment: 'average per payment'
+  }
+
+  const sortHeader = (field: SortField, label: string) => {
+    const active = sortField === field
+    const Icon = active ? (sortDirection === 'desc' ? ArrowDown : ArrowUp) : ArrowUpDown
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          handleSort(field)
+          setPage(1)
+        }}
+        className={cn(
+          'ml-auto inline-flex h-9 items-center gap-1 rounded-md font-medium transition-colors duration-150 ease-ui hover:text-foreground',
+          active && 'text-foreground'
+        )}
+      >
+        {label}
+        <Icon size={14} className={cn(!active && 'text-muted-foreground')} />
+      </button>
+    )
+  }
+
+  const ariaSort = (field: SortField) =>
+    sortField === field ? (sortDirection === 'desc' ? 'descending' : 'ascending') : undefined
+
   return (
-    <div className={cn('container mx-auto px-6 py-6 space-y-8', className)}>
-      {/* Header */}
-      <div>
-        <h1 className="text-h2 text-foreground">Dividend Income Dashboard</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Comprehensive view of all dividend income across your portfolio
-        </p>
-      </div>
+    <DashboardPage className={className}>
+      <PageHeader
+        title="Dividends"
+        description={`Every dividend payment in your file, in ${baseCurrency}.`}
+      />
 
-      {/* Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
-        <MetricCard
-          label="Total Dividends"
-          value={formatCurrency(globalData.totalGross, baseCurrency)}
-          rawValue={globalData.totalGross}
-          currency={baseCurrency}
-        />
-        <MetricCard
-          label="Withholding Tax"
-          value={formatCurrency(globalData.totalTax, baseCurrency)}
-          rawValue={globalData.totalTax}
-          currency={baseCurrency}
-          valueClassName="text-muted-foreground"
-        />
-        <MetricCard
-          label="Net Dividends"
-          value={formatCurrency(globalData.totalNet, baseCurrency)}
-          rawValue={globalData.totalNet}
-          currency={baseCurrency}
-          valueClassName="text-emerald-600 dark:text-emerald-400"
-        />
-        <MetricCard
-          label="Total Payments"
-          value={globalData.paymentCount.toString()}
-        />
-        <MetricCard
-          label="Avg per Payment"
-          value={formatCurrency(averagePerPayment, baseCurrency)}
-          rawValue={averagePerPayment}
-          currency={baseCurrency}
-          subValue={`${globalData.paymentCount} payments`}
-        />
-      </div>
+      {/* Summary */}
+      <Region label="Summary" id="dividends-summary">
+        <div className={kpiGridFive}>
+          <KpiTile
+            label="Gross dividends"
+            value={<AnimatedCurrency amount={globalData.totalGross} currency={baseCurrency} formatFn={formatCurrency} />}
+            sub="Before withholding tax"
+            hint="What the companies paid out: the net amount you received plus the tax withheld at source."
+          />
+          <KpiTile
+            label="Withholding tax"
+            value={<AnimatedCurrency amount={globalData.totalTax} currency={baseCurrency} formatFn={formatCurrency} />}
+            sub={`${formatPercent(taxShare)} of gross`}
+            hint="Tax taken at source before the payment reached your account, converted at each payment's exchange rate."
+          />
+          <KpiTile
+            label="Net dividends"
+            tone="up"
+            value={
+              <AnimatedCurrency
+                amount={globalData.totalNet}
+                currency={baseCurrency}
+                formatFn={(amount, currency) => `+${formatCurrency(amount, currency)}`}
+              />
+            }
+            sub="Paid into your account"
+          />
+          <KpiTile
+            label="Payments"
+            value={<AnimatedCount value={globalData.paymentCount} />}
+            sub={`From ${stockCount} ${stockCount === 1 ? 'stock' : 'stocks'}`}
+          />
+          <KpiTile
+            label="Average per payment"
+            value={<AnimatedCurrency amount={averagePerPayment} currency={baseCurrency} formatFn={formatCurrency} />}
+            sub="Net, per payment"
+            className="min-[380px]:max-md:col-span-2"
+          />
+        </div>
+      </Region>
 
-      {/* Total Income Over Time */}
-      {incomeOverTimeData.length > 0 && (
-        <AnimateOnView minHeight={450}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-normal">Total Dividend Income Over Time</CardTitle>
-              <CardDescription className="text-sm">
-                Cumulative dividend income by month
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={incomeOverTimeData}>
-                    <defs>
-                      <linearGradient id="dividendGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--brand))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="hsl(var(--brand))" stopOpacity={0.02} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                    <XAxis
-                      dataKey="period"
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                      width={75}
-                    />
-                    <Tooltip content={<CustomTooltip baseCurrency={baseCurrency} />} />
-                    <Area
-                      type="natural"
-                      dataKey="cumulative"
-                      stroke="hsl(var(--brand))"
-                      strokeWidth={2.5}
-                      fillOpacity={1}
-                      fill="url(#dividendGradient)"
-                      dot={{ r: 3, fill: 'hsl(var(--brand))', strokeWidth: 0 }}
-                      activeDot={{ r: 5, fill: 'hsl(var(--brand))', strokeWidth: 2, stroke: 'hsl(var(--background))' }}
-                      animationDuration={1000}
-                      animationEasing="ease-out"
-                      animationBegin={100}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimateOnView>
-      )}
+      {/* Income */}
+      <Region label="Income" id="dividends-income">
+        <div className={chartGrid}>
+          <ChartCard
+            title="Income over time"
+            color={4}
+            note={`${formatCurrency(globalData.totalNet, baseCurrency)} net`}
+            footnote="Net dividends added up month by month."
+          >
+            <AreaTrend
+              data={cumulativeSeries}
+              color={4}
+              height={168}
+              yLabels
+              formatTick={(value) => formatCompactCurrency(value, baseCurrency)}
+              aria-label="Cumulative net dividend income by month"
+            />
+          </ChartCard>
 
-      {/* Monthly/Quarterly Trends */}
-      {trendData.length > 0 && (
-        <AnimateOnView minHeight={400}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-normal">Dividend Trends</CardTitle>
-                  <CardDescription className="text-sm">
-                    {viewMode === 'month' ? 'Monthly' : 'Quarterly'} dividend income
-                  </CardDescription>
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    variant={viewMode === 'month' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setViewMode('month')
-                      posthog.capture('dividend_view_mode_changed', { view_mode: 'month' })
-                    }}
-                    className="text-xs h-7"
-                  >
-                    Monthly
-                  </Button>
-                  <Button
-                    variant={viewMode === 'quarter' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setViewMode('quarter')
-                      posthog.capture('dividend_view_mode_changed', { view_mode: 'quarter' })
-                    }}
-                    className="text-xs h-7"
-                  >
-                    Quarterly
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trendData}>
-                    <defs>
-                      <linearGradient id="barGradientTrend" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--brand))" stopOpacity={1} />
-                        <stop offset="100%" stopColor="hsl(var(--brand))" stopOpacity={0.7} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                    <XAxis
-                      dataKey="period"
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                      width={75}
-                    />
-                    <Tooltip
-                      content={<CustomTooltip baseCurrency={baseCurrency} />}
-                      cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
-                    />
-                    <Bar
-                      dataKey="amount"
-                      fill="url(#barGradientTrend)"
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={40}
-                      animationDuration={800}
-                      animationEasing="ease-out"
-                      animationBegin={100}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimateOnView>
-      )}
+          <ChartCard
+            title="Dividends by period"
+            color={2}
+            action={
+              <SlidingTabs
+                variant="segmented"
+                size="sm"
+                surface="tile"
+                aria-label="Group dividends by"
+                value={viewMode}
+                onValueChange={handleViewModeChange}
+                items={[
+                  { value: 'month', label: 'Monthly' },
+                  { value: 'quarter', label: 'Quarterly' }
+                ]}
+              />
+            }
+            footnote={
+              bestPeriod
+                ? `Best ${periodWord}: ${bestPeriod.period}, ${formatCurrency(bestPeriod.amount, baseCurrency)}. Dashed line: the median ${periodWord}, ${formatCurrency(periodMedian, baseCurrency)}.`
+                : undefined
+            }
+          >
+            <ColumnPlot
+              data={periodColumns}
+              color={2}
+              height={168}
+              reference={{ value: periodMedian, label: `median ${formatCompactCurrency(periodMedian, baseCurrency)}` }}
+              emphasize={(d) => d.id === bestPeriod?.period}
+              aria-label={`Net dividends by ${periodWord}`}
+            />
+          </ChartCard>
+        </div>
+      </Region>
 
-      {/* Year-over-Year Growth */}
-      {yearComparisons.length > 1 && (
-        <AnimateOnView minHeight={460}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-normal">Year-over-Year Growth</CardTitle>
-              <CardDescription className="text-sm">
-                Annual dividend income comparison
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={yearComparisons}>
-                    <defs>
-                      <linearGradient id="barGradientYoY" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--brand))" stopOpacity={1} />
-                        <stop offset="100%" stopColor="hsl(var(--brand))" stopOpacity={0.7} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                    <XAxis
-                      dataKey="year"
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                      width={75}
-                    />
-                    <Tooltip
-                      content={<CustomTooltip baseCurrency={baseCurrency} />}
-                      cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
-                    />
-                    <Bar
-                      dataKey="total"
-                      fill="url(#barGradientYoY)"
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={50}
-                      animationDuration={800}
-                      animationEasing="ease-out"
-                      animationBegin={100}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            <div className="mt-4 space-y-2">
-              {yearComparisons.map((comparison, index) => {
-                if (index === 0) return null
-                const isPositive = (comparison.growth || 0) >= 0
+      {/* Tax and growth */}
+      <Region label="Tax and growth" id="dividends-tax-growth">
+        <div className={chartGrid}>
+          <ChartCard
+            title={meterTitle}
+            footnote="Withholding tax is taken at source, before a payment reaches your account."
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="figure-kpi whitespace-nowrap">{formatCurrency(globalData.totalGross, baseCurrency)}</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                gross, {formatPercent(taxShare)} withheld
+              </span>
+            </div>
+            <StackedMeter
+              className="mt-4"
+              aria-label={`Gross dividends split into net income and withholding tax`}
+              segments={[
+                {
+                  id: 'net',
+                  label: 'Net received',
+                  value: globalData.totalNet,
+                  display: formatCurrency(globalData.totalNet, baseCurrency),
+                  color: 2
+                },
+                {
+                  id: 'tax',
+                  label: 'Tax withheld',
+                  value: globalData.totalTax,
+                  display: formatCurrency(globalData.totalTax, baseCurrency),
+                  color: 5
+                }
+              ]}
+            />
+          </ChartCard>
+
+          <ChartCard
+            title="Year over year"
+            color={2}
+            footnote={
+              yearRows.length > 1
+                ? `Change against the previous calendar year. ${yearRows[yearRows.length - 1].label} counts payments up to ${formatDate(lastPaymentDate)}.`
+                : 'Growth shows once your file covers a second calendar year.'
+            }
+          >
+            <BarRows rows={yearRows} color={2} labelWidth={96} aria-label="Net dividends by calendar year" />
+          </ChartCard>
+        </div>
+      </Region>
+
+      {/* By stock */}
+      <Region label="By stock" id="dividends-by-stock">
+        <div className="space-y-3">
+          <ChartCard
+            title="Income by stock"
+            color={2}
+            note={`${stockCount} ${stockCount === 1 ? 'stock' : 'stocks'}`}
+            footnote="Share of your net dividends on the right. Select a stock for its payments."
+          >
+            <BarRows
+              rows={stockRows}
+              color={2}
+              emphasis="max"
+              maxRows={10}
+              labelWidth={120}
+              selectedId={selectedStock}
+              onSelect={(id) => setSelectedStock((current) => (current === id ? null : id))}
+              aria-label="Net dividends by stock"
+              renderDetail={(row) => {
+                const stock = globalData.byStock.get(row.id)
+                const totals = stockTotals.get(row.id)
+                if (!stock || !totals) return null
+                const items: Array<[string, string]> = [
+                  ['Payments', String(stock.paymentCount)],
+                  ['Gross', formatCurrency(totals.gross, baseCurrency)],
+                  ['Tax withheld', formatCurrency(totals.tax, baseCurrency)],
+                  ['Net', formatCurrency(totals.net, baseCurrency)],
+                  [
+                    'Average per payment',
+                    formatCurrency(stock.paymentCount > 0 ? stock.totalDividends / stock.paymentCount : 0, baseCurrency)
+                  ],
+                  ['Last payment', totals.lastDate ? formatDate(totals.lastDate) : '—'],
+                  [
+                    'Last per share',
+                    stock.lastDividendPerShare
+                      ? `${getCurrencySymbol(stock.lastDividendPerShare.currency)}${stock.lastDividendPerShare.amount.toFixed(4)}`
+                      : '—'
+                  ]
+                ]
                 return (
-                  <div key={comparison.year} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{comparison.year}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-foreground">
-                        {formatCurrency(comparison.total, baseCurrency)}
-                      </span>
-                      {comparison.growth !== undefined && (
-                        <span className={cn(
-                          'font-medium',
-                          isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                        )}>
-                          {isPositive ? '+' : ''}{comparison.growth.toFixed(1)}%
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-background p-3 sm:grid-cols-4">
+                    {items.map(([label, value]) => (
+                      <div key={label} className="min-w-0">
+                        <dt className="truncate text-xs font-normal text-muted-foreground">{label}</dt>
+                        <dd className="figure mt-0.5 whitespace-nowrap text-sm font-medium">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-        </AnimateOnView>
-      )}
+              }}
+            />
+          </ChartCard>
 
-      {/* Dividend Income by Stock */}
-      {sortedStockDividends.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-normal">Dividend Income by Stock</CardTitle>
-            <CardDescription className="text-sm">
-              All dividend-paying stocks in your portfolio
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Stock</TableHead>
-                    <TableHead className="text-xs">Company</TableHead>
-                    <TableHead className="text-xs text-right">
-                      <button
-                        onClick={() => handleSort('dividends')}
-                        className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors underline-offset-2 hover:underline"
-                      >
-                        Total Dividends
-                        <span className="text-[10px]">{sortField === 'dividends' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-xs text-right">
-                      <button
-                        onClick={() => handleSort('payments')}
-                        className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors underline-offset-2 hover:underline"
-                      >
-                        Payments
-                        <span className="text-[10px]">{sortField === 'payments' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-xs text-right">
-                      <button
-                        onClick={() => handleSort('avgPayment')}
-                        className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors underline-offset-2 hover:underline"
-                      >
-                        Avg/Payment
-                        <span className="text-[10px]">{sortField === 'avgPayment' ? (sortDirection === 'desc' ? '\u2193' : '\u2191') : '\u2195'}</span>
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-xs text-right">Last Div/Share</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedStockDividends.map((stock) => {
-                    const avgPerPayment = stock.paymentCount > 0
-                      ? stock.totalDividends / stock.paymentCount
-                      : 0
-                    return (
-                      <TableRow key={stock.ticker}>
-                        <TableCell className="text-xs font-medium">{stock.ticker}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {stock.name}
-                        </TableCell>
-                        <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400">
-                          {formatCurrency(stock.totalDividends, baseCurrency)}
-                        </TableCell>
-                        <TableCell className="text-xs text-right">
-                          {stock.paymentCount}
-                        </TableCell>
-                        <TableCell className="text-xs text-right">
-                          {formatCurrency(avgPerPayment, baseCurrency)}
-                        </TableCell>
-                        <TableCell className="text-xs text-right text-muted-foreground">
-                          {stock.lastDividendPerShare
-                            ? `${getCurrencySymbol(stock.lastDividendPerShare.currency)}${stock.lastDividendPerShare.amount.toFixed(4)}/share`
-                            : '\u2014'}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+          <Tile size="flush" className="overflow-hidden">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 pt-4 sm:px-5">
+              <h3 className="text-sm font-medium leading-5">All dividend payers</h3>
+              <TileNote>
+                Sorted by {sortLabel[sortField]}, {sortDirection === 'desc' ? 'highest' : 'lowest'} first
+              </TileNote>
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead scope="col" className="ps-4 sm:ps-5">Stock</TableHead>
+                  <TableHead scope="col" className="hidden sm:table-cell">Company</TableHead>
+                  <TableHead scope="col" className="text-right" aria-sort={ariaSort('dividends')}>
+                    {sortHeader('dividends', 'Total')}
+                  </TableHead>
+                  <TableHead scope="col" className="text-right" aria-sort={ariaSort('payments')}>
+                    {sortHeader('payments', 'Payments')}
+                  </TableHead>
+                  <TableHead scope="col" className="hidden text-right sm:table-cell" aria-sort={ariaSort('avgPayment')}>
+                    {sortHeader('avgPayment', 'Per payment')}
+                  </TableHead>
+                  <TableHead scope="col" className="hidden pe-4 text-right sm:pe-5 md:table-cell">Last per share</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pagedStockDividends.map((stock) => {
+                  const avgPerPayment = stock.paymentCount > 0
+                    ? stock.totalDividends / stock.paymentCount
+                    : 0
+                  return (
+                    <TableRow key={stock.ticker}>
+                      <TableCell className="ps-4 sm:ps-5">
+                        <span className="ticker">{stock.ticker}</span>
+                      </TableCell>
+                      <TableCell className="hidden text-muted-foreground sm:table-cell">
+                        <span className="block max-w-[14rem] truncate" title={stock.name}>{stock.name}</span>
+                      </TableCell>
+                      <TableCell className="figure whitespace-nowrap text-right">
+                        {formatCurrency(stock.totalDividends, baseCurrency)}
+                      </TableCell>
+                      <TableCell className="figure whitespace-nowrap text-right">
+                        {stock.paymentCount}
+                      </TableCell>
+                      <TableCell className="figure hidden whitespace-nowrap text-right sm:table-cell">
+                        {formatCurrency(avgPerPayment, baseCurrency)}
+                      </TableCell>
+                      <TableCell className="figure hidden whitespace-nowrap pe-4 text-right text-muted-foreground sm:pe-5 md:table-cell">
+                        {stock.lastDividendPerShare
+                          ? `${getCurrencySymbol(stock.lastDividendPerShare.currency)}${stock.lastDividendPerShare.amount.toFixed(4)}/share`
+                          : '—'}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+            {totalPages > 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3 sm:px-5">
+                <TileNote className="figure">
+                  {(currentPage - 1) * PAGE_SIZE + 1}&ndash;{Math.min(currentPage * PAGE_SIZE, sortedStockDividends.length)} of{' '}
+                  {sortedStockDividends.length}
+                </TileNote>
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+              </div>
+            )}
+          </Tile>
+        </div>
+      </Region>
+    </DashboardPage>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreHorizontal } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -70,14 +70,13 @@ export function Pagination({
       {/* Previous */}
       <Button
         variant="outline"
-        size="icon"
-        className="h-8 w-8"
+        size="icon-sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         aria-label="Go to previous page"
         aria-disabled={currentPage === 1}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft size={16} />
       </Button>
 
       {/* Page numbers */}
@@ -88,14 +87,14 @@ export function Pagination({
             className="flex h-8 w-8 items-center justify-center text-xs text-muted-foreground"
             aria-hidden="true"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal size={16} />
           </span>
         ) : (
           <Button
             key={item}
-            variant={item === currentPage ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 w-8 p-0 text-xs"
+            variant={item === currentPage ? 'default' : 'ghost'}
+            size="icon-sm"
+            className="figure text-xs"
             onClick={() => onPageChange(item)}
             aria-label={`Go to page ${item}`}
             aria-current={item === currentPage ? 'page' : undefined}
@@ -108,14 +107,13 @@ export function Pagination({
       {/* Next */}
       <Button
         variant="outline"
-        size="icon"
-        className="h-8 w-8"
+        size="icon-sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         aria-label="Go to next page"
         aria-disabled={currentPage === totalPages}
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight size={16} />
       </Button>
     </nav>
   )

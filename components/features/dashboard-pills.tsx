@@ -1,6 +1,9 @@
 'use client'
 
 import { useMemo } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Calendar } from '@/components/icons'
+import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -9,40 +12,11 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric'
 })
 
-const pillBase =
-  'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium'
-
-function DateRangePill ({ formattedRange }: { formattedRange: string }) {
-  return (
-    <span
-      className={`${pillBase} bg-primary/12 dark:bg-primary/8 border border-primary/20 dark:border-primary/10 text-primary`}
-      aria-label={`Data range: ${formattedRange}`}
-    >
-      {formattedRange}
-    </span>
-  )
-}
-
-function BaseCurrencyPill ({ baseCurrency }: { baseCurrency: string }) {
-  return (
-    <span
-      className={`${pillBase} bg-emerald-500/12 dark:bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400`}
-      aria-label={`Base currency: ${baseCurrency}`}
-    >
-      Base currency: {baseCurrency}
-    </span>
-  )
-}
-
-/**
- * Dashboard context bar showing date range and base currency as pills.
- * Renders only when there is transaction data (date range can be computed).
- */
-export function DashboardPills () {
+/** Date range covered by the loaded transactions, or null before data loads. */
+function useFormattedRange () {
   const normalizedTransactions = useDashboardStore((state) => state.normalizedTransactions)
-  const baseCurrency = useDashboardStore((state) => state.baseCurrency)
 
-  const formattedRange = useMemo(() => {
+  return useMemo(() => {
     if (normalizedTransactions.length === 0) return null
     const dates = normalizedTransactions
       .map((t) => new Date(t.Time).getTime())
@@ -54,14 +28,53 @@ export function DashboardPills () {
     const maxStr = dateFormatter.format(new Date(max))
     return min === max ? minStr : `${minStr} – ${maxStr}`
   }, [normalizedTransactions])
+}
+
+/**
+ * The two context chips (date range and base currency). Used in the header
+ * from `lg` up and in the slim row under it on smaller screens.
+ */
+export function DashboardContextChips ({ className }: { className?: string }) {
+  const formattedRange = useFormattedRange()
+  const baseCurrency = useDashboardStore((state) => state.baseCurrency)
 
   if (formattedRange === null) return null
 
   return (
-    <div className="border-b border-border bg-muted/30 relative z-30" role="region" aria-label="Dashboard context">
-      <div className="container mx-auto px-4 sm:px-8 py-3 flex flex-wrap items-center gap-2">
-        <DateRangePill formattedRange={formattedRange} />
-        <BaseCurrencyPill baseCurrency={baseCurrency} />
+    <div className={cn('flex min-w-0 flex-wrap items-center gap-1.5', className)}>
+      <Badge
+        variant="secondary"
+        className="min-w-0 font-normal"
+        aria-label={`Data range: ${formattedRange}`}
+      >
+        <Calendar size={12} className="shrink-0 text-muted-foreground" />
+        <span className="figure truncate">{formattedRange}</span>
+      </Badge>
+      <Badge
+        variant="secondary"
+        className="font-normal"
+        aria-label={`Base currency: ${baseCurrency}`}
+      >
+        <span className="text-muted-foreground">Base currency</span>
+        <span className="font-medium">{baseCurrency}</span>
+      </Badge>
+    </div>
+  )
+}
+
+/**
+ * Slim context row shown under the header below `lg`, where the header has
+ * no room for the chips. Renders only when there is transaction data.
+ */
+export function DashboardPills () {
+  const formattedRange = useFormattedRange()
+
+  if (formattedRange === null) return null
+
+  return (
+    <div className="lg:hidden" role="region" aria-label="Dashboard context">
+      <div className="mx-auto w-full max-w-shell px-4 pt-4 sm:px-6">
+        <DashboardContextChips />
       </div>
     </div>
   )

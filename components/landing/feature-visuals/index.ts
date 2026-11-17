@@ -1,0 +1,6 @@
+export { HeatmapVisual } from './heatmap-visual'
+export { PnlVisual } from './pnl-visual'
+export { FeesVisual } from './fees-visual'
+export { DividendVisual } from './dividend-visual'
+export { TradesVisual } from './trades-visual'
+export { CurrencyVisual } from './currency-visual'

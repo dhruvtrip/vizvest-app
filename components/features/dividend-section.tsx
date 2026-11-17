@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
@@ -11,19 +10,12 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+import { Tile, TileNote } from '@/components/ui/tile'
 import type { NormalizedTransaction } from '@/types/trading212'
 import { isDividendAction } from '@/lib/transaction-utils'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid
-} from 'recharts'
-import { AnimateOnView } from '@/components/features/dividends-dashboard'
+import { ChartCard, ColumnPlot, KpiTile, type ColumnDatum } from '@/components/charts'
+import { Region, kpiGrid } from '@/components/features/dashboard-layout'
+import { HandCoins } from '@/components/icons'
 
 /**
  * Currency symbols for common currencies
@@ -197,64 +189,6 @@ function prepareChartData(dividends: DividendTransaction[]): ChartDataPoint[] {
 }
 
 /**
- * Individual metric card component
- */
-function MetricCard({
-  label,
-  value,
-  className,
-  valueClassName,
-  rawValue,
-  currency
-}: {
-  label: string
-  value: string
-  className?: string
-  valueClassName?: string
-  rawValue?: number
-  currency?: string
-}) {
-  return (
-    <Card className={className}>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn('text-sm font-semibold text-foreground mt-0.5', valueClassName)}>
-          {rawValue !== undefined && currency ? (
-            <AnimatedCurrency amount={rawValue} currency={currency} formatFn={formatCurrency} />
-          ) : value}
-        </p>
-      </CardContent>
-    </Card>
-  )
-}
-
-/**
- * Custom tooltip for the bar chart
- */
-function CustomTooltip({
-  active,
-  payload,
-  baseCurrency
-}: {
-  active?: boolean
-  payload?: Array<{ value: number }>
-  baseCurrency: string
-}) {
-  if (!active || !payload || payload.length === 0) return null
-
-  return (
-    <div className="bg-popover/90 backdrop-blur-md border border-border/50 rounded-lg shadow-xl shadow-black/10 px-3 py-2">
-      <div className="flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-        <p className="text-xs font-semibold text-foreground">
-          {formatCurrency(payload[0].value, baseCurrency)}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-/**
  * Dividend Section Component
  * Displays dividend income analytics for a single stock
  */
@@ -278,141 +212,132 @@ export function DividendSection({
 
   const hasDividends = dividends.length > 0
 
-  return (
-    <section className={cn('space-y-3', className)} aria-labelledby="dividend-heading">
-      {/* Section Header */}
-      <h2 id="dividend-heading" className="text-sm font-semibold text-foreground">
-        Dividend Income
-      </h2>
+  // Column data for the monthly chart, with the number of payments in each month.
+  const monthColumns: ColumnDatum[] = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const dividend of dividends) {
+      const key = formatMonthYear(dividend.date)
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return chartData.map((point) => {
+      const count = counts.get(point.month) || 0
+      return {
+        id: point.month,
+        label: point.month,
+        value: point.amount,
+        display: formatCurrency(point.amount, baseCurrency),
+        note: `${count} ${count === 1 ? 'payment' : 'payments'}`
+      }
+    })
+  }, [chartData, dividends, baseCurrency])
 
+  const bestMonth = useMemo(
+    () => chartData.reduce<ChartDataPoint | null>((best, point) => (!best || point.amount > best.amount ? point : best), null),
+    [chartData]
+  )
+
+  return (
+    <Region label="Dividends" id="dividend-heading" className={className}>
       {!hasDividends ? (
-        <Card className="p-6 text-center border-dashed">
-          <p className="text-xs text-muted-foreground">No dividends received</p>
-        </Card>
+        <Tile size="sm" className="flex items-center gap-2.5 px-4">
+          <HandCoins size={16} className="shrink-0 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">{ticker} paid no dividends in this file.</p>
+        </Tile>
       ) : (
-        <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <MetricCard
-              label="Total Dividends"
-              value={formatCurrency(metrics.totalGross, baseCurrency)}
-              rawValue={metrics.totalGross}
-              currency={baseCurrency}
+        <div className="space-y-3">
+          {/* Summary */}
+          <div className={kpiGrid}>
+            <KpiTile
+              label="Gross dividends"
+              value={<AnimatedCurrency amount={metrics.totalGross} currency={baseCurrency} formatFn={formatCurrency} />}
+              sub="Before withholding tax"
             />
-            <MetricCard
-              label="Withholding Tax"
-              value={formatCurrency(metrics.totalTax, baseCurrency)}
-              rawValue={metrics.totalTax}
-              currency={baseCurrency}
-              valueClassName="text-muted-foreground"
+            <KpiTile
+              label="Withholding tax"
+              value={<AnimatedCurrency amount={metrics.totalTax} currency={baseCurrency} formatFn={formatCurrency} />}
+              sub="Taken at source"
             />
-            <MetricCard
-              label="Net Dividends"
-              value={formatCurrency(metrics.totalNet, baseCurrency)}
-              rawValue={metrics.totalNet}
-              currency={baseCurrency}
-              valueClassName="text-emerald-600 dark:text-emerald-400"
+            <KpiTile
+              label="Net dividends"
+              tone="up"
+              value={
+                <AnimatedCurrency
+                  amount={metrics.totalNet}
+                  currency={baseCurrency}
+                  formatFn={(amount, currency) => `+${formatCurrency(amount, currency)}`}
+                />
+              }
+              sub="Paid into your account"
             />
-            <MetricCard
+            <KpiTile
               label="Payments"
-              value={metrics.paymentCount.toString()}
+              value={<AnimatedCount value={metrics.paymentCount} />}
+              sub={metrics.paymentCount === 1 ? 'One payment' : `Average ${formatCurrency(metrics.totalNet / metrics.paymentCount, baseCurrency)} net`}
             />
           </div>
 
-          {/* Bar Chart */}
+          {/* Dividends by month */}
           {chartData.length > 1 && (
-            <AnimateOnView minHeight={240}>
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="text-xs text-muted-foreground mb-3">
-                    Dividend History
-                  </h3>
-                  <div className="h-44" role="img" aria-label={`Bar chart showing dividend income by month for ${ticker}. Total net dividends: ${formatCurrency(metrics.totalNet, baseCurrency)}`}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} aria-label={`Dividend income chart for ${ticker}`}>
-                        <defs>
-                          <linearGradient id="barGradientSection" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                        <XAxis
-                          dataKey="month"
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => formatCurrency(value, baseCurrency)}
-                          width={65}
-                        />
-                        <Tooltip
-                          content={<CustomTooltip baseCurrency={baseCurrency} />}
-                          cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
-                        />
-                        <Bar
-                          dataKey="amount"
-                          fill="url(#barGradientSection)"
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={36}
-                          animationDuration={800}
-                          animationEasing="ease-out"
-                          animationBegin={100}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </AnimateOnView>
+            <ChartCard
+              title="Dividends by month"
+              color={2}
+              note={`${formatCurrency(metrics.totalNet, baseCurrency)} net`}
+              footnote={bestMonth ? `Darkest column: the best month, ${bestMonth.month}.` : undefined}
+            >
+              <ColumnPlot
+                data={monthColumns}
+                color={2}
+                height={152}
+                emphasize={(d) => d.id === bestMonth?.month}
+                aria-label={`Net dividends by month for ${ticker}. Total net dividends: ${formatCurrency(metrics.totalNet, baseCurrency)}`}
+              />
+            </ChartCard>
           )}
 
-          {/* Dividend Table */}
-          <Card>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs" scope="col">Date</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Gross</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Tax</TableHead>
-                    <TableHead className="text-xs text-right" scope="col">Net</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dividends.map((dividend, index) => {
-                    const dateStr = formatDate(dividend.date)
-                    const gross = formatCurrency(dividend.gross, baseCurrency)
-                    const tax = dividend.tax > 0 ? formatCurrency(dividend.tax, baseCurrency) : '—'
-                    const net = formatCurrency(dividend.net, baseCurrency)
-                    
-                    return (
-                      <TableRow key={`${dividend.date}-${index}`}>
-                        <TableCell className="text-xs text-muted-foreground py-2">
-                          {dateStr}
-                        </TableCell>
-                        <TableCell className="text-xs text-right py-2" aria-label={`Gross dividend: ${gross}`}>
-                          {gross}
-                        </TableCell>
-                        <TableCell className="text-xs text-right text-muted-foreground py-2" aria-label={`Withholding tax: ${tax}`}>
-                          {tax}
-                        </TableCell>
-                        <TableCell className="text-xs text-right font-medium text-emerald-600 dark:text-emerald-400 py-2" aria-label={`Net dividend: ${net}`}>
-                          {net}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+          {/* Payments */}
+          <Tile size="flush" className="overflow-hidden">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 pt-4 sm:px-5">
+              <h3 className="text-sm font-medium leading-5">Payments</h3>
+              <TileNote>Newest first</TileNote>
             </div>
-          </Card>
-        </>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pe-2 ps-4 sm:pe-4 sm:ps-5" scope="col">Date</TableHead>
+                  <TableHead className="hidden text-right sm:table-cell" scope="col">Gross</TableHead>
+                  <TableHead className="px-2 text-right sm:px-4" scope="col">Tax</TableHead>
+                  <TableHead className="pe-4 ps-2 text-right sm:pe-5 sm:ps-4" scope="col">Net</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dividends.map((dividend, index) => {
+                  const dateStr = formatDate(dividend.date)
+                  const gross = formatCurrency(dividend.gross, baseCurrency)
+                  const tax = dividend.tax > 0 ? formatCurrency(dividend.tax, baseCurrency) : '—'
+                  const net = formatCurrency(dividend.net, baseCurrency)
+
+                  return (
+                    <TableRow key={`${dividend.date}-${index}`}>
+                      <TableCell className="figure whitespace-nowrap pe-2 ps-4 text-muted-foreground sm:pe-4 sm:ps-5">
+                        {dateStr}
+                      </TableCell>
+                      <TableCell className="figure hidden whitespace-nowrap text-right sm:table-cell" aria-label={`Gross dividend: ${gross}`}>
+                        {gross}
+                      </TableCell>
+                      <TableCell className="figure whitespace-nowrap px-2 text-right text-muted-foreground sm:px-4" aria-label={`Withholding tax: ${tax}`}>
+                        {tax}
+                      </TableCell>
+                      <TableCell className="figure whitespace-nowrap pe-4 ps-2 text-right font-medium text-up sm:pe-5 sm:ps-4" aria-label={`Net dividend: ${net}`}>
+                        +{net}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </Tile>
+        </div>
       )}
-    </section>
+    </Region>
   )
 }
