@@ -4,7 +4,7 @@ Portfolio analytics for Trading 212. Upload a CSV export and see your holdings, 
 
 ![Vizvest landing page in dark mode](public/assets/readme/landing-dark.png)
 
-![Vizvest portfolio overview in dark mode, loaded with six years of mock Trading 212 exports](public/assets/readme/dashboard-dark.png)
+![Vizvest portfolio overview in dark mode, loaded with three mock Trading 212 exports](public/assets/readme/dashboard-dark.png)
 
 ## Why I built this
 

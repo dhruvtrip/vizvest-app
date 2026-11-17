@@ -24,17 +24,17 @@ export function Hero() {
           </p>
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href="#how-it-works">See how it works</Link>
+              </Button>
               <ShineRing>
                 <Button
                   asChild
                   onClick={() => posthog.capture('dashboard_cta_clicked', { location: 'hero_section' })}
                 >
-                  <Link href="/dashboard">Get Started</Link>
+                  <Link href="/dashboard">Get started</Link>
                 </Button>
               </ShineRing>
-              <Button asChild variant="outline">
-                <Link href="#how-it-works">See how it works</Link>
-              </Button>
             </div>
             <p className="text-sm text-muted-foreground">No account needed.</p>
           </div>
