@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <path id="s" d="M0-1 .2245-.309H.951L.3633.118.588.809 0 .382-.588.809-.3633.118-.951-.309H-.2245Z" fill="#fc0"/>
+  </defs>
+  <rect width="512" height="512" fill="#039"/>
+  <use href="#s" transform="translate(256 106) scale(28)"/>
+  <use href="#s" transform="translate(331 126.1) scale(28)"/>
+  <use href="#s" transform="translate(385.9 181) scale(28)"/>
+  <use href="#s" transform="translate(406 256) scale(28)"/>
+  <use href="#s" transform="translate(385.9 331) scale(28)"/>
+  <use href="#s" transform="translate(331 385.9) scale(28)"/>
+  <use href="#s" transform="translate(256 406) scale(28)"/>
+  <use href="#s" transform="translate(181 385.9) scale(28)"/>
+  <use href="#s" transform="translate(126.1 331) scale(28)"/>
+  <use href="#s" transform="translate(106 256) scale(28)"/>
+  <use href="#s" transform="translate(126.1 181) scale(28)"/>
+  <use href="#s" transform="translate(181 126.1) scale(28)"/>
+</svg>

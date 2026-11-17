@@ -1,6 +1,7 @@
 @import './styles/motion-tokens.css';
 @import './styles/transitions.css';
 @import './styles/charts.css';
+@import './styles/orbit.css';
 
 @tailwind base;
 @tailwind components;

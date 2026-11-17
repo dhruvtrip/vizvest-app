@@ -331,4 +331,31 @@
   --stack-depth1-blur: 1px;
   --stack-depth2-blur: 2px;
   --stack-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Currency orbit (project addition, see orbit.css) */
+  --orbit-dur: 40s;
+  --orbit-tilt: -18deg;
+  --orbit-perspective: 1400px;
+  --orbit-radius: 340px;
+  /* Anchor box for each item. Items may be wider and centre on it. */
+  --orbit-coin: 48px;
+  --orbit-height: 19rem;
+  --orbit-depth-min: 0.3;
+  --orbit-slow-rate: 0.25;
+  --orbit-rate-dur: 600ms;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --orbit-radius: 250px;
+    --orbit-height: 17rem;
+  }
+}
+
+@media (max-width: 639px) {
+  :root {
+    --orbit-perspective: 1000px;
+    --orbit-radius: 142px;
+    --orbit-coin: 32px;
+    --orbit-height: 11rem;
+  }
 }
