@@ -51,6 +51,7 @@ export function SkeletonReveal({ loading, skeleton, children, className }: Skele
     if (!revealed) {
       // Both layers are painted in their start state: reflow, then reveal.
       void el.offsetWidth
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation sequencing: the start state must commit and reflow before the reveal class is added
       setRevealed(true)
       return
     }

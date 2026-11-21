@@ -33,6 +33,13 @@ const AMOUNT_PATTERN = /^\d+[.,]\d{2}$/
 
 const REDACTED = '[Content filtered for privacy]'
 
+// PostHog events and their nested property values are plain JSON-like objects.
+type PropertyBag = Record<string, unknown>
+
+function isRecord(value: unknown): value is PropertyBag {
+  return typeof value === 'object' && value !== null
+}
+
 // True when a string looks like a monetary amount or currency reference.
 function looksFinancial(value: string): boolean {
   return (
@@ -88,8 +95,8 @@ export function sanitizeError(error: Error): {
  * product's "error type/name only" policy: enough to group and count errors,
  * never enough to expose a user's data.
  */
-export function scrubExceptionProperties(event: any): any {
-  if (!event || event.event !== '$exception' || !event.properties) {
+export function scrubExceptionProperties<T>(event: T): T {
+  if (!isRecord(event) || event.event !== '$exception' || !isRecord(event.properties)) {
     return event
   }
 
@@ -102,11 +109,11 @@ export function scrubExceptionProperties(event: any): any {
   // Per-exception entries: keep only the type (+ safe mechanism metadata),
   // drop the message value, the stack trace, and any module/source path.
   if (Array.isArray(props.$exception_list)) {
-    props.$exception_list = props.$exception_list.map((ex: any) => {
-      if (!ex || typeof ex !== 'object') {
+    props.$exception_list = props.$exception_list.map((ex: unknown) => {
+      if (!isRecord(ex)) {
         return ex
       }
-      const scrubbed: any = {}
+      const scrubbed: PropertyBag = {}
       if (ex.type !== undefined) scrubbed.type = ex.type
       if (ex.mechanism !== undefined) scrubbed.mechanism = ex.mechanism
       return scrubbed
@@ -116,29 +123,31 @@ export function scrubExceptionProperties(event: any): any {
   return event
 }
 
-export function filterSensitiveProperties(event: any, hasConsented: boolean = false): any {
-  if (!event || typeof event !== 'object') {
+export function filterSensitiveProperties<T>(event: T, hasConsented: boolean = false): T {
+  if (!isRecord(event)) {
     return event
   }
 
-  const filtered: any = { ...event }
+  const filtered: PropertyBag = { ...event }
 
-  if (filtered.properties) {
+  if (isRecord(filtered.properties)) {
+    const properties = filtered.properties
+
     // Always remove IP addresses (personally identifiable)
-    delete filtered.properties.$ip
-    delete filtered.properties.ip
-    delete filtered.properties.ip_address
+    delete properties.$ip
+    delete properties.ip
+    delete properties.ip_address
 
     // Always remove precise location data (city, coordinates, timezone, postal code)
-    delete filtered.properties.$geoip_city_name
-    delete filtered.properties.$geoip_latitude
-    delete filtered.properties.$geoip_longitude
-    delete filtered.properties.$geoip_time_zone
-    delete filtered.properties.$geoip_subdivision_1_code
-    delete filtered.properties.$geoip_subdivision_1_name
-    delete filtered.properties.$geoip_subdivision_2_code
-    delete filtered.properties.$geoip_subdivision_2_name
-    delete filtered.properties.$geoip_postal_code
+    delete properties.$geoip_city_name
+    delete properties.$geoip_latitude
+    delete properties.$geoip_longitude
+    delete properties.$geoip_time_zone
+    delete properties.$geoip_subdivision_1_code
+    delete properties.$geoip_subdivision_1_name
+    delete properties.$geoip_subdivision_2_code
+    delete properties.$geoip_subdivision_2_name
+    delete properties.$geoip_postal_code
 
     // Before consent we still drop precise location, country-level geo, and the
     // full referrer URL (which can carry PII in its query string). But we KEEP
@@ -147,23 +156,23 @@ export function filterSensitiveProperties(event: any, hasConsented: boolean = fa
     // PostHog needs to attribute the acquisition channel — so channel reporting
     // works even for anonymous, pre-consent visitors, while staying cookieless.
     if (!hasConsented) {
-      delete filtered.properties.$geoip_country_code
-      delete filtered.properties.$geoip_country_name
-      delete filtered.properties.$geoip_continent_code
-      delete filtered.properties.$geoip_continent_name
-      delete filtered.properties.$referrer
-      delete filtered.properties.$initial_referrer
+      delete properties.$geoip_country_code
+      delete properties.$geoip_country_name
+      delete properties.$geoip_continent_code
+      delete properties.$geoip_continent_name
+      delete properties.$referrer
+      delete properties.$initial_referrer
       // Intentionally kept pre-consent: $referring_domain, $initial_referring_domain,
       // and utm_* params (non-personal acquisition/campaign signals).
     }
 
     // Remove any properties that might contain sensitive portfolio data
-    Object.keys(filtered.properties).forEach(key => {
+    Object.keys(properties).forEach(key => {
       const lowerKey = key.toLowerCase()
-      const value = filtered.properties[key]
+      const value = properties[key]
 
       if (SENSITIVE_KEYWORDS.some(keyword => lowerKey.includes(keyword))) {
-        delete filtered.properties[key]
+        delete properties[key]
         return
       }
 
@@ -176,16 +185,17 @@ export function filterSensitiveProperties(event: any, hasConsented: boolean = fa
         if (!key.startsWith('$') && next !== REDACTED && looksFinancial(next)) {
           next = REDACTED
         }
-        filtered.properties[key] = next
+        properties[key] = next
       }
 
       if (typeof value === 'object' && value !== null) {
-        filtered.properties[key] = filterSensitiveProperties(value, hasConsented)
+        properties[key] = filterSensitiveProperties(value, hasConsented)
       }
     })
   }
 
-  return filtered
+  // The shallow copy keeps the caller's shape; only property values change.
+  return filtered as T
 }
 
 
@@ -200,12 +210,12 @@ export function filterSensitiveProperties(event: any, hasConsented: boolean = fa
  * which should never happen in practice — it's defense in depth, not the primary
  * filter.
  */
-export function validateEvent(event: any): boolean {
+export function validateEvent(event: unknown): boolean {
   if (!event) {
     return false
   }
 
-  if (event.properties) {
+  if (isRecord(event) && event.properties) {
     const propertyKeys = Object.keys(event.properties).map(k => k.toLowerCase())
     const hasSensitiveKey = propertyKeys.some(key =>
       SENSITIVE_KEYWORDS.some(keyword => key.includes(keyword))

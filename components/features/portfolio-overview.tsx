@@ -115,8 +115,8 @@ function aggregatePositions(transactions: NormalizedTransaction[]): StockPositio
         totalShares -= shares
         // Net cash flow: money coming in (subtract from deployed cash)
         netCashFlow -= Math.abs(amount)
-        // Track realized gains/losses from CSV Result column (no manual calculation)
-        realizedResult += transaction.Result || 0
+        // Track realized gains/losses from CSV Result column, in base currency (no manual calculation)
+        realizedResult += transaction.resultInBaseCurrency || 0
       }
     }
 

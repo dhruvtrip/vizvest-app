@@ -6,8 +6,9 @@ import './globals.css'
 import { Button } from '@/components/ui/button'
 import { CircleAlert } from '@/components/icons'
 
+// Next passes `error` too; it is part of the required props shape but not
+// rendered, so no message or stack trace can reach the page.
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string }

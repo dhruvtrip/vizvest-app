@@ -212,13 +212,13 @@ export function useTweenedArray(target: number[], duration = 300): number[] {
 
 /** Calls `onOutside` for a pointer press outside `ref` (tap elsewhere hides a tooltip). */
 export function usePointerDownOutside(ref: React.RefObject<Element | null>, active: boolean, onOutside: () => void) {
-  const cb = React.useRef(onOutside)
-  cb.current = onOutside
+  // Always calls the latest `onOutside` without re-subscribing when it changes.
+  const handleOutside = React.useEffectEvent(onOutside)
   React.useEffect(() => {
     if (!active) return
     const handler = (e: PointerEvent) => {
       const el = ref.current
-      if (el && e.target instanceof Node && !el.contains(e.target)) cb.current()
+      if (el && e.target instanceof Node && !el.contains(e.target)) handleOutside()
     }
     document.addEventListener('pointerdown', handler)
     return () => document.removeEventListener('pointerdown', handler)

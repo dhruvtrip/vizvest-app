@@ -7,6 +7,7 @@ import Papa from 'papaparse'
 import posthog from 'posthog-js'
 import { cn } from '@/lib/utils'
 import { validateCSVColumns, validateTransactions } from '@/lib/csv-validator'
+import { normalizeSuffixedHeaders } from '@/lib/csv-headers'
 import type { Trading212Transaction } from '@/types/trading212'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { useShallow } from 'zustand/react/shallow'
@@ -76,13 +77,16 @@ function parseOne(file: File): Promise<{ fileName: string; data: Trading212Trans
       complete: (results) => {
         const errors: string[] = []
 
-        const columnValidation = validateCSVColumns(results.meta.fields || [])
+        // Older exports write the currency into amount headers, e.g. `Total (GBP)`
+        const { fields, rows } = normalizeSuffixedHeaders(results.meta.fields || [], results.data)
+
+        const columnValidation = validateCSVColumns(fields)
         if (!columnValidation.isValid) {
           errors.push(...columnValidation.errors.map(e => `${file.name}: ${e}`))
         }
 
         if (columnValidation.isValid) {
-          const dataValidation = validateTransactions(results.data)
+          const dataValidation = validateTransactions(rows)
           if (!dataValidation.isValid) {
             errors.push(...dataValidation.errors.map(e => `${file.name}: ${e}`))
           }
@@ -90,7 +94,7 @@ function parseOne(file: File): Promise<{ fileName: string; data: Trading212Trans
 
         resolve({
           fileName: file.name,
-          data: results.data as Trading212Transaction[],
+          data: rows as Trading212Transaction[],
           errors
         })
       },

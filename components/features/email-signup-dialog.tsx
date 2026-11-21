@@ -26,6 +26,9 @@ export function EmailSignupDialog({ show }: { show: boolean }) {
   useEffect(() => {
     if (!show) return
     if (localStorage.getItem(STORAGE_KEY)) return
+    // Opening follows the `show` prop flipping on, is gated on localStorage
+    // (client only) and pairs with a one-off analytics event, so it stays here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- opens in response to a prop transition gated on localStorage
     setOpen(true)
     posthog.capture('signup_dialog_shown')
   }, [show])

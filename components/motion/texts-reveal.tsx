@@ -25,6 +25,7 @@ export function TextsReveal({ children, className, delay = 0 }: TextsRevealProps
 
   useEffect(() => {
     void ref.current?.offsetHeight // the hidden state is committed before it flips
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe entrance: SSR and first client render stay hidden, then flip after mount
     setShown(true)
   }, [])
 

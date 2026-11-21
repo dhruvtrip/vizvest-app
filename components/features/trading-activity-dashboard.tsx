@@ -1,12 +1,11 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import posthog from 'posthog-js'
 import { AnimatedCurrency, AnimatedCount } from '@/components/ui/animated-number'
 import {
   Table,
-  TableBody,
   TableCell,
   TableHead,
   TableHeader,
@@ -164,8 +163,8 @@ function calculateTradingMetrics(
       sellCount++
       totalSellVolume += volume
       
-      // Track realized P&L from CSV Result column
-      const result = trade.Result || 0
+      // Track realized P&L from CSV Result column, in base currency
+      const result = trade.resultInBaseCurrency || 0
       realizedPnL += result
       
       // Track win/loss statistics
@@ -326,21 +325,22 @@ export function TradingActivityDashboard ({
   }, [allTrades])
 
   // Year filter state (multi-select) - default to all years
-  const [selectedYears, setSelectedYears] = useState<Set<number>>(new Set<number>())
+  const [selectedYears, setSelectedYears] = useState<Set<number>>(() => new Set(availableYears))
 
-  // Sync selectedYears when availableYears changes - default to all years
-  useEffect(() => {
+  // Sync selectedYears when availableYears changes - default to all years.
+  // Adjusted during render (React's "previous value" pattern) rather than in an
+  // effect, so the corrected selection is used before anything paints.
+  const [syncedYears, setSyncedYears] = useState(availableYears)
+  if (syncedYears !== availableYears) {
+    setSyncedYears(availableYears)
     if (availableYears.length > 0) {
-      setSelectedYears((prev) => {
-        // If current selection is empty or doesn't include all available years, update to all years
-        const hasAllYears = availableYears.every(year => prev.has(year))
-        if (prev.size === 0 || !hasAllYears) {
-          return new Set(availableYears)
-        }
-        return prev
-      })
+      // If current selection is empty or doesn't include all available years, update to all years
+      const hasAllYears = availableYears.every(year => selectedYears.has(year))
+      if (selectedYears.size === 0 || !hasAllYears) {
+        setSelectedYears(new Set(availableYears))
+      }
     }
-  }, [availableYears])
+  }
 
   // Year filter: one segmented control, "All" or a single year. It drives
   // selectedYears, so every figure, chart and the table below follow it.
@@ -375,10 +375,12 @@ export function TradingActivityDashboard ({
     })
   }, [allTrades, selectedYears])
 
-  // Reset to page 1 when the year filter changes
-  useEffect(() => {
+  // Reset to page 1 when the year filter changes (adjusted during render)
+  const [pagedYears, setPagedYears] = useState(selectedYears)
+  if (pagedYears !== selectedYears) {
+    setPagedYears(selectedYears)
     setCurrentPage(1)
-  }, [selectedYears])
+  }
 
   // Memoized sort — avoids re-sorting on every render and prevents array mutation
   const sortedTrades = useMemo(
@@ -703,8 +705,8 @@ export function TradingActivityDashboard ({
                     )
 
                     // Show result only for sell transactions
-                    const result = transaction.Result
-                    const hasResult = !isBuy && result !== null && result !== undefined
+                    const result = transaction.resultInBaseCurrency
+                    const hasResult = !isBuy && transaction.Result !== null && transaction.Result !== undefined
                     const resultTone = hasResult ? (result > 0 ? 'text-up' : result < 0 ? 'text-down' : 'text-foreground') : ''
 
                     return (

@@ -15,6 +15,10 @@ export function PostHogConsentBanner() {
   const [currentConsent, setCurrentConsent] = useState<'accepted' | 'rejected' | null>(null)
 
   useEffect(() => {
+    // Consent lives in localStorage, so it can only be read after hydration;
+    // this post-mount sync is what keeps the server and first client render
+    // identical and gives the banner its entry animation on first visit.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration guard: reads localStorage after mount
     setMounted(true)
     // Check if user has already given consent
     const consent = getConsentStatus()
@@ -46,7 +50,7 @@ export function PostHogConsentBanner() {
         posthog.set_config({ persistence: 'localStorage+cookie' })
         posthog.opt_in_capturing()
         posthog.register({ consent_state: 'accepted' })
-      } catch (error) {
+      } catch {
         // PostHog might not be fully initialized yet, but consent is saved
         console.debug('PostHog opt-in called before initialization')
       }
@@ -62,7 +66,7 @@ export function PostHogConsentBanner() {
     if (typeof window !== 'undefined') {
       try {
         posthog.opt_out_capturing()
-      } catch (error) {
+      } catch {
         // PostHog might not be fully initialized yet, but consent is saved
         console.debug('PostHog opt-out called before initialization')
       }

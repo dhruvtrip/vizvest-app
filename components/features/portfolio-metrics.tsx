@@ -79,9 +79,8 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
     if (!minDate || t.Time < minDate) minDate = t.Time
     if (!maxDate || t.Time > maxDate) maxDate = t.Time
 
-    // Calculate fees (currency conversion fees)
-    const fee = t['Currency conversion fee'] || 0
-    totalFees += Math.abs(fee)
+    // Calculate fees (currency conversion fees, already in base currency)
+    totalFees += Math.abs(t.feeInBaseCurrency || 0)
 
     if (isBuyAction(t.Action)) {
       totalInvested += Math.abs(t.totalInBaseCurrency || 0)
@@ -94,7 +93,7 @@ function calculateGlobalMetrics(transactions: NormalizedTransaction[]) {
       }
     } else if (isSellAction(t.Action)) {
       totalSold += Math.abs(t.totalInBaseCurrency || 0)
-      realizedPnL += t.Result || 0
+      realizedPnL += t.resultInBaseCurrency || 0
 
       // Track shares per ticker
       if (t.Ticker) {

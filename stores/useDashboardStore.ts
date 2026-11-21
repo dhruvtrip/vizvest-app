@@ -3,7 +3,12 @@ import { devtools } from 'zustand/middleware'
 import { normalizeAllTransactions } from '@/lib/currency-normalizer'
 import { detectPartialData } from '@/lib/partial-data-detector'
 import { mergeAndDedupe, type MergeResult, type ParsedFile } from '@/lib/csv-merger'
-import type { Trading212Transaction, NormalizedTransaction, PartialDataWarning } from '@/types/trading212'
+import type {
+  Trading212Transaction,
+  NormalizedTransaction,
+  PartialDataWarning,
+  CurrencyConversionWarning
+} from '@/types/trading212'
 
 export interface UploadInfo {
   fileName: string
@@ -35,6 +40,8 @@ interface DashboardState {
   showTradingActivityDashboard: boolean
   partialDataWarning: PartialDataWarning | null
   isPartialDataDismissed: boolean
+  currencyWarning: CurrencyConversionWarning | null
+  isCurrencyWarningDismissed: boolean
   mergeBanner: MergeBanner | null
   isMergeBannerDismissed: boolean
   pendingMerge: MergeResult | null
@@ -48,6 +55,7 @@ interface DashboardState {
   uploadAnother: () => void
   dismissAlert: () => void
   dismissPartialDataAlert: () => void
+  dismissCurrencyWarning: () => void
   setSelectedTicker: (ticker: string | null) => void
   navigate: (view: string) => void
   setMobileSidebarOpen: (open: boolean) => void
@@ -71,6 +79,8 @@ const initialState = {
   showTradingActivityDashboard: false,
   partialDataWarning: null as PartialDataWarning | null,
   isPartialDataDismissed: false,
+  currencyWarning: null as CurrencyConversionWarning | null,
+  isCurrencyWarningDismissed: false,
   mergeBanner: null as MergeBanner | null,
   isMergeBannerDismissed: false,
   pendingMerge: null as MergeResult | null
@@ -150,7 +160,8 @@ export const useDashboardStore = create<DashboardState>()(
           set({
             normalizedTransactions: [],
             baseCurrency: 'USD',
-            partialDataWarning: null
+            partialDataWarning: null,
+            currencyWarning: null
           })
           return
         }
@@ -158,10 +169,12 @@ export const useDashboardStore = create<DashboardState>()(
         set({ isNormalizing: true, error: null })
 
         try {
-          const normalized = normalizeAllTransactions(raw, forcedBaseCurrency)
-          const detected = normalized[0]?.detectedBaseCurrency || 'USD'
+          const { transactions: normalized, warning: currencyWarning } =
+            normalizeAllTransactions(raw, forcedBaseCurrency)
+          const detected =
+            normalized[0]?.detectedBaseCurrency || currencyWarning?.baseCurrency || 'USD'
 
-          // Detect partial data after normalization
+          // Detect partial data on the rows kept after normalization
           const partialDataWarning = detectPartialData(normalized)
 
           set({
@@ -169,14 +182,20 @@ export const useDashboardStore = create<DashboardState>()(
             baseCurrency: detected,
             isNormalizing: false,
             partialDataWarning,
-            isPartialDataDismissed: false
+            isPartialDataDismissed: false,
+            currencyWarning,
+            isCurrencyWarningDismissed: false,
+            error: normalized.length === 0
+              ? `None of the transactions could be converted to ${detected}.`
+              : null
           })
         } catch (err) {
           set({
             error: err instanceof Error ? err.message : 'Failed to normalize transactions',
             normalizedTransactions: [],
             isNormalizing: false,
-            partialDataWarning: null
+            partialDataWarning: null,
+            currencyWarning: null
           })
         }
       },
@@ -191,6 +210,8 @@ export const useDashboardStore = create<DashboardState>()(
           isAlertDismissed: false,
           partialDataWarning: null,
           isPartialDataDismissed: false,
+          currencyWarning: null,
+          isCurrencyWarningDismissed: false,
           mergeBanner: null,
           isMergeBannerDismissed: false,
           pendingMerge: null
@@ -200,6 +221,8 @@ export const useDashboardStore = create<DashboardState>()(
       dismissAlert: () => set({ isAlertDismissed: true }),
 
       dismissPartialDataAlert: () => set({ isPartialDataDismissed: true }),
+
+      dismissCurrencyWarning: () => set({ isCurrencyWarningDismissed: true }),
 
       setSelectedTicker: (ticker) => set({ selectedTicker: ticker }),
 
