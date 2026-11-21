@@ -29,7 +29,7 @@ export function Currencies() {
       <section aria-labelledby="currencies-heading" className="flex flex-col items-center">
         <SectionHeading
           id="currencies-heading"
-          title="Bought in pence, sold in dollars?"
+          title="Bought in euros, sold in dollars?"
           description={`Vizvest converts every trade at the exchange rate already in your Trading 212 export, so all ${currencies.length} currencies add up in your base currency.`}
         />
         <Orbit className="mt-6 lg:mt-10">
