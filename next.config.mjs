@@ -13,6 +13,19 @@ const nextConfig = {
     // render as a separate request. Lighthouse flagged ~150 ms on mobile.
     inlineCss: true,
   },
+  async redirects() {
+    return [
+      // skipTrailingSlashRedirect (needed for PostHog's /ingest proxy) turns
+      // off Next's own trailing-slash redirect, so /articles/ served a 200
+      // duplicate of /articles. Redirect everything except /ingest ourselves.
+      {
+        source: '/:path((?!ingest(?:/|$)).+)/',
+        destination: '/:path',
+        permanent: true,
+      },
+      { source: '/index', destination: '/', permanent: true },
+    ]
+  },
   async rewrites() {
     return [
       {
