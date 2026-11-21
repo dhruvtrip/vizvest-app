@@ -21,7 +21,9 @@ export const WEBSITE_ID = `${SITE_URL}/#website`
 /** Square brand mark, served by Next from app/icon.png. */
 export const LOGO_URL = `${SITE_URL}/icon.png`
 
+/** Absolute URL for a path. The home page keeps its trailing slash
+ * (`https://www.vizvest.cc/`), matching how Google lists it. */
 export function absoluteUrl(path = '/'): string {
-  if (path === '/' || path === '') return SITE_URL
+  if (path === '/' || path === '') return `${SITE_URL}/`
   return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
 }

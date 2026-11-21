@@ -15,6 +15,7 @@ import {
   SITE_TITLE,
   SITE_URL,
   WEBSITE_ID,
+  absoluteUrl,
 } from '@/lib/site'
 
 // One family for the whole product. Inter is a variable font, so every weight ships in one file.
@@ -71,7 +72,7 @@ const siteJsonLd = {
       '@type': 'Organization',
       '@id': ORGANIZATION_ID,
       name: SITE_NAME,
-      url: SITE_URL,
+      url: absoluteUrl('/'),
       logo: {
         '@type': 'ImageObject',
         url: LOGO_URL,
@@ -85,7 +86,7 @@ const siteJsonLd = {
       '@type': 'WebSite',
       '@id': WEBSITE_ID,
       name: SITE_NAME,
-      url: SITE_URL,
+      url: absoluteUrl('/'),
       inLanguage: 'en-GB',
       description: SITE_DESCRIPTION,
       publisher: { '@id': ORGANIZATION_ID },
