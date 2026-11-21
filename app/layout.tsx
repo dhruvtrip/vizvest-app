@@ -57,6 +57,11 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
   },
+  // Bing Webmaster Tools "HTML meta tag" verification for www.vizvest.cc.
+  // Set BING_SITE_VERIFICATION in Vercel to the content value Bing gives you.
+  ...(process.env.BING_SITE_VERIFICATION && {
+    verification: { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } },
+  }),
   alternates: {
     types: {
       'application/rss+xml': [{ url: '/feed.xml', title: 'Vizvest articles' }],

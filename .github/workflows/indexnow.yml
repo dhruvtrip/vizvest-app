@@ -1,0 +1,31 @@
+name: IndexNow
+
+# Tell Bing and other IndexNow search engines about new or changed pages.
+on:
+  # After each successful production deploy from Vercel: submit every URL.
+  deployment_status:
+  # Daily at 01:20 UTC, after scheduled articles go live at 00:00 UTC
+  # (pages revalidate within the hour): submit only recently changed URLs.
+  schedule:
+    - cron: '20 1 * * *'
+  # Run by hand from the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Submit URLs
+        run: node scripts/indexnow.mjs ${{ github.event_name == 'schedule' && '--recent' || '' }}
