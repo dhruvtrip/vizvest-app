@@ -158,8 +158,6 @@ interface YearComparison {
 function calculateGlobalDividendMetrics(
   transactions: NormalizedTransaction[]
 ): GlobalDividendData {
-  const baseCurrency = transactions[0]?.detectedBaseCurrency || 'USD'
-  
   // Filter all dividend transactions
   const dividendTransactions = transactions.filter(t => 
     t.Ticker && isDividendAction(t.Action)

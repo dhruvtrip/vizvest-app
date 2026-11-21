@@ -173,11 +173,7 @@ function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: num
   const [display, setDisplay] = useState(0)
 
   useEffect(() => {
-    if (!inView) return
-    if (reduced) {
-      setDisplay(value)
-      return
-    }
+    if (!inView || reduced) return
     const controls = animate(0, value, {
       duration: 0.8,
       ease: 'easeOut',
@@ -186,9 +182,12 @@ function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: num
     return () => controls.stop()
   }, [inView, value, reduced])
 
+  // Under reduced motion the final value is shown as soon as it is in view.
+  const shown = inView && reduced ? value : display
+
   return (
     <span ref={ref}>
-      <span aria-hidden="true">{display.toFixed(decimals)}</span>
+      <span aria-hidden="true">{shown.toFixed(decimals)}</span>
       <span className="sr-only">{value.toFixed(decimals)}</span>
     </span>
   )

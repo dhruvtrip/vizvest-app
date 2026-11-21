@@ -119,17 +119,17 @@ export function Donut({
   const ri = ro - thickness
   const key = parts.map((p) => `${p.id}:${p.v}`).join('|')
 
-  // Mid-angle of each segment, for the tooltip anchor.
-  const mids = React.useMemo(() => {
-    const out: Record<string, number> = {}
+  // Mid-angle of each segment, for the tooltip anchor. A single pass over the
+  // segments, so it is simply recomputed each render.
+  const mids: Record<string, number> = {}
+  {
     let a = 0
     for (const p of parts) {
       const span = total > 0 ? (p.v / total) * Math.PI * 2 : 0
-      out[p.id] = a + span / 2
+      mids[p.id] = a + span / 2
       a += span
     }
-    return out
-  }, [key])
+  }
 
   useIsoLayoutEffect(() => {
     // The snippet's tokens are scoped to .t-donut, so read them there.
@@ -165,6 +165,7 @@ export function Donut({
       return
     }
     const ease = easeOf(token('--chart-morph-ease'))
+    // eslint-disable-next-line react-hooks/purity -- false positive: this runs inside useIsoLayoutEffect (useLayoutEffect on the client), not during render
     const t0 = performance.now()
     const step = (now: number) => {
       const t = Math.min(1, (now - t0) / dur)

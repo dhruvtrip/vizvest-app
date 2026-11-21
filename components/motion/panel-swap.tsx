@@ -37,6 +37,7 @@ export function PanelSwap({ activeKey, children, className }: PanelSwapProps) {
   if (shownKey !== activeKey) {
     setShownKey(activeKey)
     // Read once, at the swap: the content the outgoing panel last showed.
+    // eslint-disable-next-line react-hooks/refs -- intentional one-off read at the key swap; the ref holds the last committed panel, which must not drive renders
     setExiting(committed.current)
     // A panel that was on its way out is reused as is and simply transitions
     // back open; a new one mounts closed and opens after a reflow.

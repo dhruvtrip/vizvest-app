@@ -12,41 +12,6 @@ const REQUIRED_COLUMNS = [
 ] as const
 
 /**
- * Transaction types that involve stock trading
- */
-const STOCK_ACTIONS = ['Market buy', 'Market sell'] as const
-
-/**
- * Transaction types that are account-level (no stock involved)
- */
-const ACCOUNT_ACTIONS = ['Deposit', 'Dividend', 'Dividend (Dividend)'] as const
-
-/**
- * All expected columns in Trading 212 CSV export
- */
-const EXPECTED_COLUMNS = [
-  'Action',
-  'Time',
-  'ISIN',
-  'Ticker',
-  'Name',
-  'Notes',
-  'ID',
-  'No. of shares',
-  'Price / share',
-  'Currency (Price / share)',
-  'Exchange rate',
-  'Result',
-  'Currency (Result)',
-  'Total',
-  'Currency (Total)',
-  'Withholding tax',
-  'Currency (Withholding tax)',
-  'Currency conversion fee',
-  'Currency (Currency conversion fee)'
-] as const
-
-/**
  * Validates if CSV has all required Trading 212 columns
  */
 export function validateCSVColumns(headers: string[]): CSVValidationResult {

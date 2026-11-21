@@ -137,10 +137,8 @@ export function ProductPreview() {
   const [minHeight, setMinHeight] = useState(0)
   useLayoutEffect(() => {
     const el = panelsRef.current
-    if (!cycling || !el || typeof ResizeObserver === 'undefined') {
-      setMinHeight(0)
-      return
-    }
+    // Without an observer the lock is never set, so there is nothing to release.
+    if (!cycling || !el || typeof ResizeObserver === 'undefined') return
     let width = el.offsetWidth
     const observer = new ResizeObserver(() => {
       // A new width resets the lock: the tallest view differs by layout.
@@ -152,7 +150,11 @@ export function ProductPreview() {
     })
     observer.observe(el)
     if (el.firstElementChild) observer.observe(el.firstElementChild)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      // Cycling stopped: release the height lock in the same layout pass.
+      setMinHeight(0)
+    }
   }, [cycling])
 
   const advance = () => setView((current) => views[(views.findIndex((v) => v.value === current) + 1) % views.length].value)
