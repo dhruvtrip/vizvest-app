@@ -48,6 +48,7 @@ export function dedupeKey(transaction: Trading212Transaction): string {
  * Merges multiple parsed Trading 212 CSVs into a single transaction list,
  * removing duplicates (first occurrence wins) and reporting which base
  * currency each file used so the caller can prompt the user if they disagree.
+ * When merging several files, each kept row carries `sourceAccountCurrency`.
  */
 export function mergeAndDedupe(files: ParsedFile[]): MergeResult {
   const seen = new Map<string, Trading212Transaction>()
@@ -55,10 +56,16 @@ export function mergeAndDedupe(files: ParsedFile[]): MergeResult {
   let duplicatesRemoved = 0
   let totalRowsBeforeDedupe = 0
 
+  // A single file is returned untouched; with several files each kept row is
+  // tagged (as a copy) with its file's account currency so the normaliser can
+  // spot rows from another account once a base currency is chosen.
+  const tagRows = files.length > 1
+
   for (const file of files) {
+    const accountCurrency = detectBaseCurrency(file.data)
     perFileBaseCurrencies.push({
       fileName: file.fileName,
-      baseCurrency: detectBaseCurrency(file.data),
+      baseCurrency: accountCurrency,
       rowCount: file.data.length
     })
 
@@ -70,7 +77,10 @@ export function mergeAndDedupe(files: ParsedFile[]): MergeResult {
         duplicatesRemoved++
         continue
       }
-      seen.set(key, transaction)
+      seen.set(
+        key,
+        tagRows ? { ...transaction, sourceAccountCurrency: accountCurrency } : transaction
+      )
     }
   }
 

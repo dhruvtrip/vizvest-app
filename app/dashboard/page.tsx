@@ -25,6 +25,7 @@ import { CircleAlert, CircleCheck, GitMerge, TriangleAlert, X } from '@/componen
 import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/useDashboardStore'
 import { getPartialDataExplanation } from '@/lib/partial-data-detector'
+import { getCurrencyWarningExplanation } from '@/lib/currency-normalizer'
 import { EmailSignupDialog } from '@/components/features/email-signup-dialog'
 
 const EASE_OUT = [0, 0, 0.58, 1] as const
@@ -105,11 +106,14 @@ export default function DashboardPage () {
     selectedTicker,
     partialDataWarning,
     isPartialDataDismissed,
+    currencyWarning,
+    isCurrencyWarningDismissed,
     mergeBanner,
     isMergeBannerDismissed,
     uploadAnother,
     dismissAlert,
     dismissPartialDataAlert,
+    dismissCurrencyWarning,
     dismissMergeBanner
   } = useDashboardStore(
     useShallow((state) => ({
@@ -124,11 +128,14 @@ export default function DashboardPage () {
       selectedTicker: state.selectedTicker,
       partialDataWarning: state.partialDataWarning,
       isPartialDataDismissed: state.isPartialDataDismissed,
+      currencyWarning: state.currencyWarning,
+      isCurrencyWarningDismissed: state.isCurrencyWarningDismissed,
       mergeBanner: state.mergeBanner,
       isMergeBannerDismissed: state.isMergeBannerDismissed,
       uploadAnother: state.uploadAnother,
       dismissAlert: state.dismissAlert,
       dismissPartialDataAlert: state.dismissPartialDataAlert,
+      dismissCurrencyWarning: state.dismissCurrencyWarning,
       dismissMergeBanner: state.dismissMergeBanner
     }))
   )
@@ -251,6 +258,27 @@ export default function DashboardPage () {
                   detail={getPartialDataExplanation(partialDataWarning)}
                   onDismiss={dismissPartialDataAlert}
                   dismissLabel="Dismiss partial data warning"
+                />
+              </motion.div>
+            )}
+
+            {/* Shown on every view: excluded amounts change the figures everywhere, not just the overview. */}
+            {currencyWarning && !isCurrencyWarningDismissed && hasData && (
+              <motion.div
+                key="currency"
+                {...noticeMotion}
+                className="overflow-hidden"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <NoticeBody
+                  tone="warning"
+                  icon={TriangleAlert}
+                  lead="Some amounts could not be converted."
+                  detail={getCurrencyWarningExplanation(currencyWarning)}
+                  onDismiss={dismissCurrencyWarning}
+                  dismissLabel="Dismiss currency warning"
                 />
               </motion.div>
             )}

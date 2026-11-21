@@ -27,6 +27,12 @@ export interface Trading212Transaction {
   'Currency (Withholding tax)'?: string
   'Currency conversion fee'?: number
   'Currency (Currency conversion fee)'?: string
+  /**
+   * Internal field, not a CSV column. Set by the CSV merger to the account
+   * currency detected for the file this row came from, so the normaliser can
+   * tell rows from another account apart when files are merged.
+   */
+  sourceAccountCurrency?: string
 }
 
 /**
@@ -35,6 +41,10 @@ export interface Trading212Transaction {
  */
 export interface NormalizedTransaction extends Trading212Transaction {
   totalInBaseCurrency: number
+  /** Realised result in the base currency. 0 when absent or in another currency. */
+  resultInBaseCurrency: number
+  /** Currency conversion fee in the base currency, signed as in the CSV. 0 when absent or in another currency. */
+  feeInBaseCurrency: number
   detectedBaseCurrency: string
 }
 
@@ -107,6 +117,23 @@ export interface PartialDataWarning {
   reasons: string[]
   confidence: 'high' | 'medium' | 'low'
   dateRange: { start: string; end: string }
+}
+
+/**
+ * Currency conversion warning
+ * Emitted when some amounts could not be converted to the base currency
+ * and were left out of base-currency totals rather than counted 1:1.
+ */
+export interface CurrencyConversionWarning {
+  baseCurrency: string
+  /** Rows dropped because their Total could not be converted */
+  excludedRowCount: number
+  /** Dropped rows grouped by their 'Currency (Total)', largest group first */
+  excludedByCurrency: { currency: string; count: number }[]
+  /** Kept rows whose Result was in another currency (counted as 0) */
+  unconvertedResultCount: number
+  /** Kept rows whose currency conversion fee was in another currency (counted as 0) */
+  unconvertedFeeCount: number
 }
 
 /**

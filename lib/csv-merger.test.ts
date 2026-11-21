@@ -91,4 +91,27 @@ describe('mergeAndDedupe', () => {
     ])
     expect(result.uniqueBaseCurrencies).toEqual(['USD'])
   })
+
+  it('tags each kept row with its file\'s account currency without mutating input', () => {
+    const eurRow = makeTx({ ID: 'e1', 'Currency (Total)': 'EUR' })
+    const usdRow = makeTx({ ID: 'u1' })
+    const shared = makeTx({ ID: 'shared', 'Currency (Total)': 'EUR' })
+    const result = mergeAndDedupe([
+      { fileName: 'eur.csv', data: [eurRow, shared] },
+      { fileName: 'usd.csv', data: [usdRow, shared] }
+    ])
+    expect(result.merged.map(t => [t.ID, t.sourceAccountCurrency])).toEqual([
+      ['e1', 'EUR'],
+      ['shared', 'EUR'],
+      ['u1', 'USD']
+    ])
+    expect(eurRow).not.toHaveProperty('sourceAccountCurrency')
+    expect(shared).not.toHaveProperty('sourceAccountCurrency')
+    expect(usdRow).not.toHaveProperty('sourceAccountCurrency')
+  })
+
+  it('does not tag rows from a single file', () => {
+    const result = mergeAndDedupe([{ fileName: 'only.csv', data: [makeTx({ ID: '1' })] }])
+    expect(result.merged[0]).not.toHaveProperty('sourceAccountCurrency')
+  })
 })

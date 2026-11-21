@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { NormalizedTransaction, Trading212Transaction } from '@/types/trading212'
+import type {
+  CurrencyConversionWarning,
+  NormalizedTransaction,
+  Trading212Transaction
+} from '@/types/trading212'
 import { useDashboardStore } from './useDashboardStore'
 
 const mockNormalized: NormalizedTransaction[] = [
@@ -9,19 +13,41 @@ const mockNormalized: NormalizedTransaction[] = [
     Total: 100,
     'Currency (Total)': 'USD',
     totalInBaseCurrency: 100,
+    resultInBaseCurrency: 0,
+    feeInBaseCurrency: 0,
     detectedBaseCurrency: 'USD'
   } as NormalizedTransaction
 ]
 
+const mocks = vi.hoisted(() => ({
+  warning: null as CurrencyConversionWarning | null
+}))
+
+const mockWarning: CurrencyConversionWarning = {
+  baseCurrency: 'USD',
+  excludedRowCount: 2,
+  excludedByCurrency: [{ currency: 'EUR', count: 2 }],
+  unconvertedResultCount: 0,
+  unconvertedFeeCount: 0
+}
+
 vi.mock('@/lib/currency-normalizer', () => ({
   normalizeAllTransactions: vi.fn((raw: Trading212Transaction[]) => {
-    if (raw.length === 0) return []
-    return mockNormalized
+    if (raw.length === 0) return { transactions: [], warning: null }
+    return { transactions: mockNormalized, warning: mocks.warning }
   })
 }))
 
+const rawRow = {
+  Action: 'Market buy',
+  Time: '2024-01-01',
+  Total: 100,
+  'Currency (Total)': 'USD'
+} as Trading212Transaction
+
 describe('useDashboardStore', () => {
   beforeEach(() => {
+    mocks.warning = null
     useDashboardStore.getState().resetStore()
   })
 
@@ -37,6 +63,41 @@ describe('useDashboardStore', () => {
     expect(state.currentView).toBe('portfolio')
     expect(state.showDividendsDashboard).toBe(false)
     expect(state.showTradingActivityDashboard).toBe(false)
+    expect(state.currencyWarning).toBeNull()
+    expect(state.isCurrencyWarningDismissed).toBe(false)
+  })
+
+  it('stores the currency warning from normalisation and resets its dismissal', () => {
+    mocks.warning = mockWarning
+    useDashboardStore.getState().handleDataParsed([rawRow], { fileName: 'a.csv', rowCount: 1 })
+    expect(useDashboardStore.getState().currencyWarning).toEqual(mockWarning)
+    expect(useDashboardStore.getState().isCurrencyWarningDismissed).toBe(false)
+
+    useDashboardStore.getState().dismissCurrencyWarning()
+    expect(useDashboardStore.getState().isCurrencyWarningDismissed).toBe(true)
+
+    // A new upload brings the warning back undismissed
+    useDashboardStore.getState().handleDataParsed([rawRow], { fileName: 'b.csv', rowCount: 1 })
+    expect(useDashboardStore.getState().isCurrencyWarningDismissed).toBe(false)
+
+    mocks.warning = null
+    useDashboardStore.getState().handleDataParsed([rawRow], { fileName: 'c.csv', rowCount: 1 })
+    expect(useDashboardStore.getState().currencyWarning).toBeNull()
+  })
+
+  it('uploadAnother and resetStore clear the currency warning', () => {
+    mocks.warning = mockWarning
+    useDashboardStore.getState().handleDataParsed([rawRow], { fileName: 'a.csv', rowCount: 1 })
+    useDashboardStore.getState().dismissCurrencyWarning()
+    useDashboardStore.getState().uploadAnother()
+    expect(useDashboardStore.getState().currencyWarning).toBeNull()
+    expect(useDashboardStore.getState().isCurrencyWarningDismissed).toBe(false)
+
+    useDashboardStore.getState().handleDataParsed([rawRow], { fileName: 'a.csv', rowCount: 1 })
+    useDashboardStore.getState().dismissCurrencyWarning()
+    useDashboardStore.getState().resetStore()
+    expect(useDashboardStore.getState().currencyWarning).toBeNull()
+    expect(useDashboardStore.getState().isCurrencyWarningDismissed).toBe(false)
   })
 
   it('updates selected ticker', () => {

@@ -164,8 +164,8 @@ function calculateTradingMetrics(
       sellCount++
       totalSellVolume += volume
       
-      // Track realized P&L from CSV Result column
-      const result = trade.Result || 0
+      // Track realized P&L from CSV Result column, in base currency
+      const result = trade.resultInBaseCurrency || 0
       realizedPnL += result
       
       // Track win/loss statistics
@@ -703,8 +703,8 @@ export function TradingActivityDashboard ({
                     )
 
                     // Show result only for sell transactions
-                    const result = transaction.Result
-                    const hasResult = !isBuy && result !== null && result !== undefined
+                    const result = transaction.resultInBaseCurrency
+                    const hasResult = !isBuy && transaction.Result !== null && transaction.Result !== undefined
                     const resultTone = hasResult ? (result > 0 ? 'text-up' : result < 0 ? 'text-down' : 'text-foreground') : ''
 
                     return (

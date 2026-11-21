@@ -120,7 +120,7 @@ function calculateMetrics(
   const sellVolume = sells.reduce((sum, t) => sum + Math.abs(t.totalInBaseCurrency || 0), 0)
 
   // Calculate realized profit/loss from CSV Result column
-  const realizedResult = sells.reduce((sum, t) => sum + (t.Result || 0), 0)
+  const realizedResult = sells.reduce((sum, t) => sum + (t.resultInBaseCurrency || 0), 0)
 
   // Calculate net flows (can be negative for partial data)
   const netShareFlow = buyShares - sellShares
@@ -481,8 +481,8 @@ export function StockDetail ({
                     transaction.totalInBaseCurrency || 0,
                     metrics.baseCurrency
                   )
-                  const result = transaction.Result
-                  const hasResult = !isBuy && typeof result === 'number' && Number.isFinite(result)
+                  const result = transaction.resultInBaseCurrency
+                  const hasResult = !isBuy && typeof transaction.Result === 'number' && Number.isFinite(transaction.Result)
                   const resultStr = hasResult
                     ? `${result >= 0 ? '+' : ''}${formatCurrency(result, metrics.baseCurrency)}`
                     : '—'
