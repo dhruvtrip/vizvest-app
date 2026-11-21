@@ -9,8 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "icons": "node scripts/generate-icons.mjs",
-    "indexnow": "node scripts/indexnow.mjs"
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
